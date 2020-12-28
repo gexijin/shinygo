@@ -35,43 +35,30 @@ getUserDf <- function(userSpecie = NULL, userIDtype = NULL, compare = FALSE,
   query4IDtype <- paste("SELECT * FROM idIndex WHERE idType =", userIDtype)
   userIDtype <- dbGetQuery(convertIDsDatabase, query4IDtype)
   
-  query4IDmap <- paste("SELECT * FROM mapping WHERE species =", as.numeric(specie$id),
-                       "AND idType =", as.numeric(userIDtype$id))
-  userIDdf <- dbGetQuery(convertIDsDatabase, query4IDmap)
-  
-  if (is.null(dim(userIDdf))) { 
-    outputText <- "This combination of database and species did not return any results"
-    message(outputText)
-    returnDf = outputText
-  } else if (compare == FALSE) {
-    returnDf = userIDdf
-  } else {
+  if (compare == FALSE) {
+    query4IDmap <- paste("SELECT * FROM mapping WHERE species =", as.numeric(specie$id),
+                         "AND idType =", as.numeric(userIDtype$id))
+    userIDdf <- dbGetQuery(convertIDsDatabase, query4IDmap)
     
-    foundGenes <- match(geneList, userIDdf$id)
-    if (length(geneList) == sum(is.na(foundGenes))) {
+    if (nrow(userIDdf) == 0) { 
+      outputText <- "This combination of database and species did not return any results"
+      message(outputText)
+      returnDf = outputText
+    } else {
+      returnDf = userIDdf
+    } # end of inner if/else 
+  } else {
+    query4IDmap <- paste("SELECT * FROM mapping WHERE species =", as.numeric(specie$id),
+                                     "AND idType =", as.numeric(userIDtype$id), "AND id IN (", geneList, ")")
+    foundGenes <- dbGetQuery(convertIDsDatabase, query4IDmap)
+    
+    if (nrow(foundGenes) == 0) {
       outputText <- "No matches were found in database of provided gene list."
       message(outputText)
       returnDf = outputText
     } else {
-      foundGenes <- as.list(foundGenes)
-      foundGenesDf <- data.frame("User_genes" = geneList,
-                                 "Ensembl_ID" = character(length(geneList)),
-                                 "Found_in_database" = character(length(geneList)),
-                                 stringsAsFactors=FALSE)
-      index = 1
-      for (val in foundGenes) {
-        
-        if (foundGenes[index] != 'NA') {
-          position = as.numeric(foundGenes[index])
-          foundGenesDf[index, 2] = userIDdf$ens[position]
-          foundGenesDf[index, 3] = "Found"
-        } else {
-          foundGenesDf[index, 3] = foundGenesDf[index, 2] = "Not Found"
-        } # end of if/else 
-        index = index + 1
-      } # end of for loop
-      returnDf = foundGenesDf
-    } # end of inner if/else 
+      returnDf = foundGenes
+    } # end of inner if/else
   } # end of outer if/else 
   
   dbDisconnect(convertIDsDatabase)
@@ -80,33 +67,40 @@ getUserDf <- function(userSpecie = NULL, userIDtype = NULL, compare = FALSE,
 } # end of function
 
 
+
+
 ####################################################
 ###                                              ###
 ###                     MAIN                     ### 
 ###                                              ###
 ####################################################
 
+##testing getUserDf() with different inputs
 userSpecie <- "'Saccharomyces cerevisiae genes (R64-1-1)'"
 userIDtype <- "'entrezgene'"
-geneList <- c("852004", "850307", "854799", "YLL027W")
+geneList <- "'852004', '850307', '854799', 'YLL027W'"
 
-df <- getUserDf(userSpecie = userSpecie, userIDtype = userIDtype)
+ df <- getUserDf(userSpecie = userSpecie, userIDtype = userIDtype)
 
 head(df)
-
 df2 <- getUserDf(userSpecie = userSpecie, userIDtype = userIDtype, compare = TRUE,
-                 geneList = geneList)
+                geneList = geneList)
 
-head(df2)
+ head(df2)
 
-geneList <- c("YLL027W")
+ geneList <- "'YLL827W'"
 
 df3 <- getUserDf(userSpecie = userSpecie, userIDtype = userIDtype, compare = TRUE,
                  geneList = geneList)
 
-head(df3)
+ head(df3)
 
-userIDtype <- "'pdb'"
-df <- getUserDf(userSpecie = userSpecie, userIDtype = userIDtype)
+ userIDtype <- "'pdb'"
+ df <- getUserDf(userSpecie = userSpecie, userIDtype = userIDtype)
 
-head(df)
+ head(df)
+#  to view orginfo
+# convertIDsDatabase <- dbConnect(RSQLite::SQLite(), "../convertIDs.db")
+#
+# query4Specie <- paste("SELECT * FROM orginfo")
+# specie <- dbGetQuery(convertIDsDatabase, query4Specie)
