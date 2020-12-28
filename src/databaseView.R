@@ -29,10 +29,10 @@ getUserDf <- function(userSpecie = NULL, userIDtype = NULL, compare = FALSE,
   returnDf = NULL
   convertIDsDatabase <- dbConnect(RSQLite::SQLite(), "../convertIDs.db")
   
-  query4Specie <- paste("SELECT * FROM orginfo WHERE name =", userSpecie)
+  query4Specie <- paste("SELECT * FROM orginfo WHERE name =", shQuote(userSpecie))
   specie <- dbGetQuery(convertIDsDatabase, query4Specie)
   
-  query4IDtype <- paste("SELECT * FROM idIndex WHERE idType =", userIDtype)
+  query4IDtype <- paste("SELECT * FROM idIndex WHERE idType =", shQuote(userIDtype))
   userIDtype <- dbGetQuery(convertIDsDatabase, query4IDtype)
   
   if (compare == FALSE) {
@@ -48,8 +48,9 @@ getUserDf <- function(userSpecie = NULL, userIDtype = NULL, compare = FALSE,
       returnDf = userIDdf
     } # end of inner if/else 
   } else {
+    geneList4SQL <- paste(shQuote(geneList), collapse = ", ")
     query4IDmap <- paste("SELECT * FROM mapping WHERE species =", as.numeric(specie$id),
-                                     "AND idType =", as.numeric(userIDtype$id), "AND id IN (", geneList, ")")
+                         "AND idType =", as.numeric(userIDtype$id), "AND id IN (", geneList4SQL, ")")
     foundGenes <- dbGetQuery(convertIDsDatabase, query4IDmap)
     
     if (nrow(foundGenes) == 0) {
@@ -76,9 +77,9 @@ getUserDf <- function(userSpecie = NULL, userIDtype = NULL, compare = FALSE,
 ####################################################
 
 ##testing getUserDf() with different inputs
-userSpecie <- "'Saccharomyces cerevisiae genes (R64-1-1)'"
-userIDtype <- "'entrezgene'"
-geneList <- "'852004', '850307', '854799', 'YLL027W'"
+userSpecie <- 'Saccharomyces cerevisiae genes (R64-1-1)'
+userIDtype <- 'entrezgene'
+geneList <- c('852004', '850307', '854799', 'YLL027W')
 
  df <- getUserDf(userSpecie = userSpecie, userIDtype = userIDtype)
 
@@ -88,14 +89,14 @@ df2 <- getUserDf(userSpecie = userSpecie, userIDtype = userIDtype, compare = TRU
 
  head(df2)
 
- geneList <- "'YLL827W'"
+ geneList <- c('YLL827W')
 
 df3 <- getUserDf(userSpecie = userSpecie, userIDtype = userIDtype, compare = TRUE,
                  geneList = geneList)
 
  head(df3)
 
- userIDtype <- "'pdb'"
+ userIDtype <- 'pdb'
  df <- getUserDf(userSpecie = userSpecie, userIDtype = userIDtype)
 
  head(df)
