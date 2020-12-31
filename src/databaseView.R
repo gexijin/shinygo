@@ -43,17 +43,20 @@ getUserDf <- function(userSpecie = NULL, userIDtype = NULL, bestMatchIDtype = NU
     query4idTypeMatch <- paste("SELECT * FROM idIndex WHERE id IN (", idTypes4SQL, ")")
     idIndexDf <- dbGetQuery(convertIDsDatabase, query4idTypeMatch)
     
-    bestMatchIDtypeDf <- data.frame(matrix(NA, nrow = length(foundGenesDf$id),
+    rowname <- c("Count", foundGenesDf$id)
+    bestMatchIDtypeDf <- data.frame(matrix(NA, nrow = length(rowname),
                                ncol = length(idIndexDf$idType)))
     colnames(bestMatchIDtypeDf) <- idIndexDf$idType
-    rownames(bestMatchIDtypeDf) <- make.names(foundGenesDf$id, unique = TRUE)
+    rownames(bestMatchIDtypeDf) <- make.names(rowname, unique = TRUE)
     
-    for (indexR in 1:length(foundGenesDf$id)) {
-      indexC <- which(!is.na(match(idIndexDf$id, foundGenesDf$idType[indexR])))
-      bestMatchIDtypeDf[indexR, indexC] <- foundGenesDf$ens[indexR]
+    for (indexR in 2:length(rowname)) {
+      indexC <- which(!is.na(match(idIndexDf$id, foundGenesDf$idType[indexR-1])))
+      bestMatchIDtypeDf[indexR, indexC] <- foundGenesDf$ens[indexR-1]
     } # end of for loop
-    
-    
+    #get total count 
+    for (indexC in 1:length(idIndexDf$idType)) {
+      bestMatchIDtypeDf[1, indexC] <- length(na.omit(bestMatchIDtypeDf[, indexC]))
+    } # end of for loop
     
     returnDf = bestMatchIDtypeDf
     
@@ -90,7 +93,7 @@ getUserDf <- function(userSpecie = NULL, userIDtype = NULL, bestMatchIDtype = NU
     
   } # end of outer if/else 
   
-  dbDisconnect(convertIDsDatabase)
+  RSQLite::dbDisconnect(convertIDsDatabase)
   return(returnDf)
   
 } # end of function
