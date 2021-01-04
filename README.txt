@@ -12,3 +12,5 @@ Currently this is a text file, I will convert it to a markdown file when I know 
 src folder Are where source code files
 
 Doc folder Plan on putting main documentation here 
+
+testData folder Plan to put test files are for app

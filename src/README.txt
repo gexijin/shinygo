@@ -15,7 +15,12 @@ his means to try to have shorter files which will make them easier to edit in th
 
 File: databaseView.R
 Status: in progress
-Purpose: allow user to view example of our database, and check to see if user genes are in our database.
+Purpose: Allow user to view example of our database, and check to see if user genes are in our database
 
+File: server.R
+Status: in progress
+Purpose: Backend logic for application
 
-
+File: ui.R
+Status: in progress
+Purpose: Frontend logic for application
