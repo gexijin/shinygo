@@ -9,7 +9,7 @@ Data last modified: N/A
 
 Currently this is a text file, I will convert it to a markdown file when I know the language
 
-geneList.txt Took these genes from the current ShinyGO, currently having issues with logic to find gene symbols and convertID.db. This needs further testing
+geneList.txt Took these genes from the current ShinyGO
 
 geneList2.txt This is the file that has 90 genes in it, and this file was generated with the code below. This data set works for all cases that involve a gene list
 Code:

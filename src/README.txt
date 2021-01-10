@@ -14,13 +14,18 @@ I plan to treat this as an file where I can update on the purpose of each file i
 his means to try to have shorter files which will make them easier to edit in the future I believe.
 
 File: databaseView.R
-Status: in progress
+Status: done
 Purpose: Allow user to view example of our database, and check to see if user genes are in our database
 
 File: server.R
-Status: in progress
+Status: done
 Purpose: Backend logic for application
 
 File: ui.R
-Status: in progress
+Status: testing
 Purpose: Frontend logic for application
+
+File: purpose_of_package.txt
+Purpose: Explains use of each package
+
+Update: 01-10-2021 Can be used for testing now

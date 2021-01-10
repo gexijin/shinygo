@@ -14,3 +14,5 @@ src folder Are where source code files
 Doc folder Plan on putting main documentation here 
 
 testData folder Plan to put test files are for app
+
+Update: 01-10-2021 Can be used for testing now
