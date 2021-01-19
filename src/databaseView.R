@@ -1,7 +1,7 @@
 ####################################################
 # Author: Eric Tulowetzke
 # Lab: Ge Lab
-# R version 3.6.3 (2020-02-29) -- "Holding the Windsock"
+# R version 4.0.3 (2020-10-10) -- "Bunny-Wunnies Freak Out"
 # Project: ShinyGO Restructure
 # Purpose of project: rewrite ShinyGO61 code to be easier to develop
 # File: databaseView.R
@@ -10,7 +10,24 @@
 # Data last modified: 01-10-2021 (mm-dd-yyyy)
 #######################################################
 if (!require("pacman")) {install.packages("pacman", dependencies = TRUE)} 
-pacman::p_load(RSQLite, rlang, tuple) #used for SQL datebase, condition handing, matchALL
+pacman::p_load(RSQLite, rlang, stringr, rebus, tuple) #used for SQL datebase, condition handing, matchALL
+
+#################################################################
+# FUNCTION : 
+# DESCRIPTION : 
+# INPUT ARGS : 
+# OUTPUT ARGS : 
+# IN/OUT ARGS :
+# RETURN : 
+#################################################################
+geneListFormatter <- function(inputVec = NULL) {
+  inputVec <- as.vector(as.character(inputVec))
+  inputVec <- stringr::str_to_upper(as.vector(str_split(inputVec, pattern = rebus.base::or(SPC, "\n"),
+                                            simplify = TRUE)))
+  inputVec <- sprintf("'%s'", paste(inputVec, collapse = "','"))
+  return(inputVec)
+}
+
 
 #################################################################
 # FUNCTION : getUserDf
@@ -34,15 +51,18 @@ getUserDf <- function(userSpecie = NULL, path2Database = NULL, userIDtype = NULL
     idTypes4SQL <- paste(idTypes, collapse = ", ")
     query4idTypeMatch <- paste("SELECT * FROM idIndex WHERE id IN (", idTypes4SQL, ")")
     idIndexDf <- dbGetQuery(convertIDsDatabase, query4idTypeMatch)
-    matchIDtypeDf <- data.frame(matrix(NA, nrow = length(5),
-                                       ncol = length(idIndexDf$idType)))
-    colnames(matchIDtypeDf) <- idIndexDf$idType
     
-    for (indexC in 1:length(idIndexDf$idType)) {
-      tmpDf <- foundGenesDf[foundGenesDf$idType == idTypes[indexC],]
-      for (indexR in 1:5) {
-        matchIDtypeDf[indexR, indexC] <- tmpDf$id[indexR]
+    matchIDtypeDf <- data.frame(matrix(NA, nrow = length(idIndexDf$idType),
+                                       ncol = 0))
+    matchIDtypeDf$Database <- idIndexDf$idType
+    for (indexR in 1:length(idIndexDf$idType)) {
+      tmpDf <- foundGenesDf[foundGenesDf$idType == idTypes[indexR],]
+      tmpVec <- c(as.character(tmpDf$id[1]))
+      for (index in 2:5) {
+        tmpVec <- c(tmpVec, tmpDf$id[index])
       } # end of inner for
+      tmpVec <- paste(tmpVec, collapse = ", ")
+      matchIDtypeDf$Genes[indexR] <- tmpVec
     } # end of outer for
     returnDf <- matchIDtypeDf
     
@@ -62,8 +82,7 @@ getUserDf <- function(userSpecie = NULL, path2Database = NULL, userIDtype = NULL
     } # end of inner if/else
     
   } else if (!is.null(geneList) && is.null(userIDtype)) { #if user gives geneList and not id type
-    geneList <- sort(geneList)
-    geneList4SQL <- sprintf("'%s'", paste(geneList, collapse = "','"))
+    geneList4SQL <- geneListFormatter(inputVec = geneList)
     query4IDmap <- paste("SELECT * FROM mapping WHERE species =", as.numeric(specie$id), "AND id IN (", geneList4SQL, ")")
     foundGenesDf <- dbGetQuery(convertIDsDatabase, query4IDmap)
     if (nrow(foundGenesDf) == 0) { # check results
@@ -101,8 +120,7 @@ getUserDf <- function(userSpecie = NULL, path2Database = NULL, userIDtype = NULL
   } else {# if user gives both geneList and id type
     query4IDtype <- paste("SELECT * FROM idIndex WHERE idType =", shQuote(userIDtype))
     userIDtypeNum <- dbGetQuery(convertIDsDatabase, query4IDtype)
-    geneList <- sort(geneList)
-    geneList4SQL <- sprintf("'%s'", paste(geneList, collapse = "','"))
+    geneList4SQL <- geneListFormatter(inputVec = geneList)
     query4IDmap <- paste("SELECT * FROM mapping WHERE species =", as.numeric(specie$id), "AND idType =", as.numeric(userIDtypeNum$id), "AND id IN (", geneList4SQL, ")")
     foundGenesDf <- dbGetQuery(convertIDsDatabase, query4IDmap)
     
@@ -118,3 +136,5 @@ getUserDf <- function(userSpecie = NULL, path2Database = NULL, userIDtype = NULL
   RSQLite::dbDisconnect(convertIDsDatabase)
   return(returnDf)
 } # end of function
+
+

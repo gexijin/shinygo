@@ -19,13 +19,16 @@ rlang This package is used to give messages to the user via consule, do plan on 
 
 tuple This package is used for the matchAll function
 
+stringr This package help convert input of gene list into a usable vector see: https://bourbon0212.github.io/DataCamp-Practice/R/String%20Manipulation%20in%20R%20with%20stringr/String_Manipulation_in_R_with_stringr.html
+
+rebus helps above package and see above link
+
 
 server.R:
 reactable This package improves on table output see: https://glin.github.io/reactable/index.html
 
-stringr This package help convert input of gene list into a usable vector see: https://bourbon0212.github.io/DataCamp-Practice/R/String%20Manipulation%20in%20R%20with%20stringr/String_Manipulation_in_R_with_stringr.html
+vroom This package improves on upload files see: https://vroom.r-lib.org/
 
-rebus helps above package and see above link
 
 ui.R
 No new packages for now

@@ -7,6 +7,8 @@ Purpose of file: Read me file for testdata folder
 Start data: 01-03-2021 (mm-dd-yyyy)
 Data last modified: N/A
 
+datbase is from: wget https://sdsu.box.com/shared/static/sorewt7w6iypmhg2k2xhyi8myeit156o.gz -O convertIDs.db.tar.gz
+
 Currently this is a text file, I will convert it to a markdown file when I know the language
 
 geneList.txt Took these genes from the current ShinyGO

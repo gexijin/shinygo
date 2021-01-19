@@ -1,7 +1,7 @@
 ####################################################
 # Author: Eric Tulowetzke
 # Lab: Ge Lab
-# R version 3.6.3 (2020-02-29) -- "Holding the Windsock"
+# R version 4.0.3 (2020-10-10) -- "Bunny-Wunnies Freak Out"
 # Project: ShinyGO Restructure
 # Purpose of project: rewrite ShinyGO61 code to be easier to develop
 # File: ui.R
@@ -12,7 +12,14 @@
 if (!require("pacman")) {install.packages("pacman", dependencies = TRUE)} 
 pacman::p_load(shiny, reactable)
 
-
+#################################################################
+# FUNCTION : 
+# DESCRIPTION : 
+# INPUT ARGS : 
+# OUTPUT ARGS : 
+# IN/OUT ARGS :
+# RETURN : 
+#################################################################
 ui <- fluidPage(
     titlePanel("View data from Ge Lab Tools"),
     sidebarLayout(
@@ -29,9 +36,21 @@ ui <- fluidPage(
                           value = "", resize = "both",
                           placeholder = "Hus1 Rad1 Tp63 Tp73 Usp28 Rad9b Fanci Hus1b"),
             shiny::tags$h5("Shows example of input above"),
+            
+            fileInput(inputId = "geneListFile", label = "Upload Gene List (CSV or text)",
+                      accept = c(
+                          "text/csv",
+                          "text/comma-separated-values",
+                          "text/tab-separated-values",
+                          "text/plain",
+                          ".csv",
+                          ".tsv"          
+                      ), buttonLabel = "Browse...", placeholder = "No file selected" ),
             actionButton(inputId = "submit", label = "submit") 
         ),##End of side panel
         mainPanel(
+            textOutput(outputId = "textResult"),
+            reactable::reactableOutput(outputId = "tableResult"),
             ##Instructions for the user
             shiny::tags$div(
                 shiny::tags$h1("Instructions for Usage"),
@@ -59,9 +78,7 @@ ui <- fluidPage(
                                        you are receiver table of all the IDs that match to the species and ID type you picked.")
                     )
                 )
-            ), ##End of instructions
-            textOutput(outputId = "textResult"),
-            reactable::reactableOutput(outputId = "tableResult")
+            ) ##End of instructions
         )
     )
 )
