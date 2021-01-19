@@ -7,18 +7,18 @@
 # File: databaseView.R
 # Purpose of file: Allow users example of database
 # Start data: 12-21-2020 (mm-dd-yyyy)
-# Data last modified: 01-10-2021 (mm-dd-yyyy)
+# Data last modified: 01-19-2021 (mm-dd-yyyy)
 #######################################################
 if (!require("pacman")) {install.packages("pacman", dependencies = TRUE)} 
 pacman::p_load(RSQLite, rlang, stringr, rebus, tuple) #used for SQL datebase, condition handing, matchALL
 
 #################################################################
-# FUNCTION : 
-# DESCRIPTION : 
-# INPUT ARGS : 
+# FUNCTION : geneListFormatter
+# DESCRIPTION : Format input of gene list to work with SQL
+# INPUT ARGS : input vector 
 # OUTPUT ARGS : 
 # IN/OUT ARGS :
-# RETURN : 
+# RETURN : vector of  length 1 of characters
 #################################################################
 geneListFormatter <- function(inputVec = NULL) {
   inputVec <- as.vector(as.character(inputVec))

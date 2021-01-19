@@ -7,18 +7,14 @@
 # File: ui.R
 # Purpose of file: ui have shiny
 # Start data: 01-03-2021 (mm-dd-yyyy)
-# Data last modified: 01-10-2021 (mm-dd-yyyy)
+# Data last modified: 01-19-2021 (mm-dd-yyyy)
 #######################################################
 if (!require("pacman")) {install.packages("pacman", dependencies = TRUE)} 
-pacman::p_load(shiny, reactable)
+pacman::p_load(shiny, reactable) #see pupose of package
 
 #################################################################
-# FUNCTION : 
-# DESCRIPTION : 
-# INPUT ARGS : 
-# OUTPUT ARGS : 
-# IN/OUT ARGS :
-# RETURN : 
+# FUNCTION : ui
+# DESCRIPTION : Code for front end of shiny app
 #################################################################
 ui <- fluidPage(
     titlePanel("View data from Ge Lab Tools"),

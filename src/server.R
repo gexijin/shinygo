@@ -7,13 +7,14 @@
 # File: server.R
 # Purpose of file: server file for shiny
 # Start data: 01-03-2021 (mm-dd-yyyy)
-# Data last modified: 01-03-2021 (mm-dd-yyyy)
+# Data last modified: 01-19-2021 (mm-dd-yyyy)
 #######################################################
 if (!require("pacman")) {install.packages("pacman", dependencies = TRUE)} 
-pacman::p_load(shiny, reactable, RSQLite, vroom)
+pacman::p_load(shiny, reactable, RSQLite, vroom) #see pupose of package
 setwd("C:/Users/ericw/Documents/ge_lab/idep/database_shiny_app/shinygo/")
 source("src/databaseView.R")
 
+#Prep work to present species and database ID to user in UI
 path <- "../data/convertIDs.db"
 convertIDsDatabase <- dbConnect(RSQLite::SQLite(), path)
 specie <- dbGetQuery(convertIDsDatabase, paste("SELECT * FROM orginfo"))
@@ -25,14 +26,16 @@ rm(convertIDsDatabase, specie, id)
 
 
 #################################################################
-# FUNCTION : 
-# DESCRIPTION : 
-# INPUT ARGS : 
+# FUNCTION : readFile (Helper function)
+# DESCRIPTION : Reads file from user into a workable data
+# INPUT ARGS : Character vector of path to file and file name
 # OUTPUT ARGS : 
 # IN/OUT ARGS :
-# RETURN : 
+# RETURN : Returns vector that should be a gene list
+# Implementation notes : This seem more like a server end/shiny app function 
 #################################################################
 readFile <- function(datapath = NULL, name = NULL) {
+  #Determines what type of file type is for the necessary delim
   ext <- tools::file_ext(name)
   switch(ext,
          csv = delim <- ",",
@@ -46,12 +49,9 @@ readFile <- function(datapath = NULL, name = NULL) {
 
 
 #################################################################
-# FUNCTION : 
-# DESCRIPTION : 
-# INPUT ARGS : 
-# OUTPUT ARGS : 
-# IN/OUT ARGS :
-# RETURN : 
+# FUNCTION : server
+# DESCRIPTION : Code for back end of shiny app
+# INPUT ARGS : inputs/output from ui.R 
 #################################################################
 server <- function(input, output, session) {
   ##ui logic that needs to be here see lines 21 and 24
@@ -76,7 +76,7 @@ server <- function(input, output, session) {
       
       result <- getUserDf(userSpecie = input$userSpecie, path2Database = path, geneList = input$geneList)
       
-    } else if(input$geneList == "" && input$userIDtype == "None" && !is.null(input$geneListFile)) {
+    } else if(input$geneList == "" && input$userIDtype == "None" && !is.null(input$geneListFile)) {#if user gives geneList file and not id type
       
       geneListVec <- readFile(datapath = input$geneListFile$datapath, name = input$geneListFile$name)
       result <- getUserDf(userSpecie = input$userSpecie, path2Database = path, geneList = geneListVec)
@@ -86,7 +86,7 @@ server <- function(input, output, session) {
       result <- getUserDf(userSpecie = input$userSpecie, path2Database = path, 
                           userIDtype = input$userIDtype, geneList = input$geneList)
       
-    } else {
+    } else {# if user gives both geneList file and id type
       
       geneListVec <- readFile(datapath = input$geneListFile$datapath, name = input$geneListFile$name)
       result <- getUserDf(userSpecie = input$userSpecie, path2Database = path, 
