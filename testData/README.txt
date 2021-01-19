@@ -5,7 +5,10 @@ Purpose of project: rewrite ShinyGO61 code to be easier to develop
 File: README.txt
 Purpose of file: Read me file for testdata folder 
 Start data: 01-03-2021 (mm-dd-yyyy)
-Data last modified: N/A
+Data last modified: 01-11-2021
+
+database can be download by ending 
+wget https://sdsu.box.com/shared/static/sorewt7w6iypmhg2k2xhyi8myeit156o.gz -O convertIDs.db.tar.gz
 
 datbase is from: wget https://sdsu.box.com/shared/static/sorewt7w6iypmhg2k2xhyi8myeit156o.gz -O convertIDs.db.tar.gz
 
