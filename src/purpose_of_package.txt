@@ -9,7 +9,9 @@ Note: I will use package::function either when it's needed, or making it easier 
 Universal:
 RSQLite This package is used to interact with a database
 
-shiny This package is used to make the shining app
+shiny This package is used to make the shiny app
+
+shinyjs this is used for reset feature
 
 pacman This package is nice to use when installing/loading packages, this is a package manager see: https://github.com/trinker/pacman
 

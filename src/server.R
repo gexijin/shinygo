@@ -7,10 +7,10 @@
 # File: server.R
 # Purpose of file: server file for shiny
 # Start data: 01-03-2021 (mm-dd-yyyy)
-# Data last modified: 01-19-2021 (mm-dd-yyyy)
+# Data last modified: 01-20-2021 (mm-dd-yyyy)
 #######################################################
 if (!require("pacman")) {install.packages("pacman", dependencies = TRUE)} 
-pacman::p_load(shiny, reactable, RSQLite, vroom) #see pupose of package
+pacman::p_load(shiny, shinyjs, reactable, RSQLite, vroom) #see purpose of package
 setwd("C:/Users/ericw/Documents/ge_lab/idep/database_shiny_app/shinygo/")
 source("src/databaseView.R")
 
@@ -42,10 +42,10 @@ readFile <- function(datapath = NULL, name = NULL) {
          tsv = delim <- "\t",
          txt = delim <- "\n",
          validate("Invalid file; Please upload a .csv, .tsv, or .txt file")
-  )
-  df <- vroom::vroom(datapath, delim = delim, col_names = FALSE, col_types = "c")
+  )#end of switch 
+  df <- vroom::vroom(datapath, delim = delim, col_names = FALSE)
   return(df$X1)
-}
+} # end of readFile
 
 
 #################################################################
@@ -65,46 +65,90 @@ server <- function(input, output, session) {
     #Decide on what to pass to function
     if (input$geneList == "" && input$userIDtype == "None" && is.null(input$geneListFile)) {#user just gives species 
       
-      result <- getUserDf(userSpecie = input$userSpecie, path2Database = path)
+      getExampleSer <- shiny::reactive({
+        withProgress(message = 'Work be done...', value = 0, {
+          result <- getExample(userSpecie = input$userSpecie, path2Database = path, shiny = TRUE) 
+        })
+        return(result)
+      })
       
     } else if (input$geneList == "" && input$userIDtype != "None" && is.null(input$geneListFile)) { #if user doesn't give genelist
       ## and give id type 
       
-      result <- getUserDf(userSpecie = input$userSpecie, path2Database = path, userIDtype = input$userIDtype)
+      getExampleSer <- shiny::reactive({
+        withProgress(message = 'Work be done...', value = 0, {
+          result <- getExample(userSpecie = input$userSpecie, path2Database = path, userIDtype = input$userIDtype, shiny = TRUE) 
+        })
+        return(result)
+      })
       
     } else if (input$geneList != "" && input$userIDtype == "None" && is.null(input$geneListFile)) {#if user gives geneList and not id type
       
-      result <- getUserDf(userSpecie = input$userSpecie, path2Database = path, geneList = input$geneList)
+      getExampleSer <- shiny::reactive({
+        withProgress(message = 'Work be done...', value = 0, {
+          result <- getExample(userSpecie = input$userSpecie, path2Database = path, geneList = input$geneList, shiny = TRUE) 
+        })
+        return(result)
+      })
       
     } else if(input$geneList == "" && input$userIDtype == "None" && !is.null(input$geneListFile)) {#if user gives geneList file and not id type
       
       geneListVec <- readFile(datapath = input$geneListFile$datapath, name = input$geneListFile$name)
-      result <- getUserDf(userSpecie = input$userSpecie, path2Database = path, geneList = geneListVec)
+      
+      getExampleSer <- shiny::reactive({
+        withProgress(message = 'Work be done...', value = 0, {
+          result <- getExample(userSpecie = input$userSpecie, path2Database = path, geneList = geneListVec, shiny = TRUE) 
+        })
+        return(result)
+      })
       
     } else if (input$geneList != "" && input$userIDtype != "None" && is.null(input$geneListFile)) {# if user gives both geneList and id type
       
-      result <- getUserDf(userSpecie = input$userSpecie, path2Database = path, 
-                          userIDtype = input$userIDtype, geneList = input$geneList)
+      getExampleSer <- shiny::reactive({
+        withProgress(message = 'Work be done...', value = 0, {
+          result <- getExample(userSpecie = input$userSpecie, path2Database = path, 
+                               userIDtype = input$userIDtype, geneList = input$geneList, shiny = TRUE) 
+        })
+        return(result)
+      })
       
     } else {# if user gives both geneList file and id type
       
       geneListVec <- readFile(datapath = input$geneListFile$datapath, name = input$geneListFile$name)
-      result <- getUserDf(userSpecie = input$userSpecie, path2Database = path, 
-                          userIDtype = input$userIDtype, geneList = geneListVec)
       
-    }
+      getExampleSer <- shiny::reactive({
+        withProgress(message = 'Work be done...', value = 0, {
+          result <- getExample(userSpecie = input$userSpecie, path2Database = path, 
+                               userIDtype = input$userIDtype, geneList = geneListVec, shiny = TRUE) 
+        })
+        return(result)
+      })
+      
+    }# end of if/else
     
-    if (is.data.frame(result)) { #check result and how render it
+    res <- getExampleSer()
+    
+    if (is.data.frame(res)) { #check getExampleSer and how render it
+      shinyjs::hide(id = "textgetExampleSer")
+      shinyjs::show(id = "tablegetExampleSer")
       
       output$tableResult <- renderReactable({
-        reactable::reactable(data = result, searchable = TRUE, bordered = TRUE,
-                  highlight = TRUE, resizable = TRUE, minRows = 5)
+        reactable::reactable(data = res, searchable = TRUE, bordered = TRUE,
+                             highlight = TRUE, resizable = TRUE, minRows = 5)
       })
       
     } else {
+      shinyjs::hide(id = "tableResult")
+      shinyjs::show(id = "textResult")
+      output$textResult <- renderText(res)
       
-      output$textResult <- renderText(result)
-      
-    }
-  })
-}
+    }# end of if/else
+  }) #end of observeEvent
+  
+  observeEvent(input$reset, {
+    shinyjs::reset(id = "geneListFile")
+    shinyjs::reset(id = "geneList")
+    shinyjs::hide(id = "tableResult")
+    shinyjs::hide(id = "textResult")
+  }) #end of observeEvent
+} # of server 
