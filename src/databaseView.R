@@ -7,10 +7,10 @@
 # File: databaseView.R
 # Purpose of file: Allow users example of database
 # Start data: 12-21-2020 (mm-dd-yyyy)
-# Data last modified: 01-20-2021 (mm-dd-yyyy)
+# Data last modified: 02-03-2021 (mm-dd-yyyy)
 #######################################################
-if (!require("pacman")) {install.packages("pacman", dependencies = TRUE)} 
-pacman::p_load(RSQLite, rlang, stringr, rebus, tuple, shiny) #see purpose of package
+if (!require('pacman')) {install.packages('pacman', dependencies = TRUE)} 
+pacman::p_load(RSQLite, rlang, stringr, rebus, tuple, shiny, feather) #see purpose of package
 
 #################################################################
 # FUNCTION : geneListFormatter
@@ -24,7 +24,7 @@ geneListFormatter <- function(inputVec = NULL) {
   inputVec <- as.vector(as.character(inputVec))
   inputVec <- stringr::str_to_upper(as.vector(str_split(inputVec, pattern = rebus.base::or(SPC, "\n"),
                                                         simplify = TRUE)))
-  inputVec <- sprintf("'%s'", paste(inputVec, collapse = "','"))
+  inputVec <- sprintf('"%s"', paste(inputVec, collapse = '","'))
   return(inputVec)
 }
 
@@ -43,72 +43,52 @@ getExample <- function(userSpecie = NULL, path2Database = NULL, userIDtype = NUL
                        geneList = NULL, shiny = FALSE) {
   returnDf = NULL
   convertIDsDatabase <- dbConnect(RSQLite::SQLite(), path2Database)
-  query4Specie <- paste("SELECT * FROM orginfo WHERE name2 =", shQuote(userSpecie))
+  query4Specie <- paste('SELECT * FROM orginfo WHERE name2 =', shQuote(userSpecie))
   specie <- dbGetQuery(convertIDsDatabase, query4Specie)
   
-  if (is.null(geneList) && is.null(userIDtype)) {#user just gives species 
-    
-    query4IDmap <- paste("SELECT * FROM mapping WHERE species =", as.numeric(specie$id))
-    foundGenesDf <- dbGetQuery(convertIDsDatabase, query4IDmap)
-    idTypes <- unique(foundGenesDf$idType)
-    idTypes4SQL <- paste(idTypes, collapse = ", ")
-    query4idTypeMatch <- paste("SELECT * FROM idIndex WHERE id IN (", idTypes4SQL, ")")
-    idIndexDf <- dbGetQuery(convertIDsDatabase, query4idTypeMatch)
-    
-    matchIDtypeDf <- data.frame(matrix(NA, nrow = length(idIndexDf$idType),
-                                       ncol = 0))
-    matchIDtypeDf$Database <- idIndexDf$idType
-    for (indexR in 1:length(idIndexDf$idType)) {
-      tmpDf <- foundGenesDf[foundGenesDf$idType == idTypes[indexR],]
-      tmpVec <- c(as.character(tmpDf$id[1]))
-      for (index in 2:5) {
-        tmpVec <- c(tmpVec, tmpDf$id[index])
-      } # end of inner for
-      tmpVec <- paste(tmpVec, collapse = ", ")
-      matchIDtypeDf$Genes[indexR] <- tmpVec
-      if (shiny) {incProgress(1/length(idIndexDf$idType))}
-    } # end of outer for
-    returnDf <- matchIDtypeDf
-    
-  } else if (is.null(geneList) && !is.null(userIDtype)) { #if user doesn't give genelist
+  if (is.null(geneList) && !is.null(userIDtype)) { #if user doesn't give genelist
     ## and give id type 
     
-    query4IDtype <- paste("SELECT * FROM idIndex WHERE idType =", shQuote(userIDtype))
+    query4IDtype <- paste('SELECT * FROM idIndex WHERE idType =', shQuote(userIDtype))
     userIDtypeNum <- dbGetQuery(convertIDsDatabase, query4IDtype)
-    query4IDmap <- paste("SELECT * FROM mapping WHERE species =", as.numeric(specie$id), "AND idType =", as.numeric(userIDtypeNum$id))
+    query4IDmap <- paste('SELECT * FROM mapping WHERE species =', as.numeric(specie$id),
+                         'AND idType =', as.numeric(userIDtypeNum$id))
     userIDdf <- dbGetQuery(convertIDsDatabase, query4IDmap)
     
     if (nrow(userIDdf) == 0) { # check results
       
-      outputText <- "This combination of database and species did not return any results"
+      outputText <- 'This combination of database and species did not return any results'
       rlang::message_cnd(outputText)
       returnDf <- outputText
     } else {
       returnDf <- userIDdf[-c(3,4)]
+      
+      colnames(returnDf) <- c(paste(userIDtype, ' ID'), 'Ensembl ID')
     } # end of inner if/else
     if (shiny) {incProgress(1)}
     
   } else if (!is.null(geneList) && is.null(userIDtype)) { #if user gives geneList and not id type
     
     geneList4SQL <- geneListFormatter(inputVec = geneList)
-    query4IDmap <- paste("SELECT * FROM mapping WHERE species =", as.numeric(specie$id), "AND id IN (", geneList4SQL, ")")
+    query4IDmap <- paste('SELECT * FROM mapping WHERE species =', as.numeric(specie$id),
+                         'AND id IN (', geneList4SQL, ')')
     foundGenesDf <- dbGetQuery(convertIDsDatabase, query4IDmap)
     if (nrow(foundGenesDf) == 0) { # check results
       
-      outputText <- "No matches were found in database of provided gene list."
+      outputText <- 'No matches were found in database of provided gene list.'
       message_cnd(outputText)
       returnDf <- outputText
     } else {
       
       idTypes <- unique(foundGenesDf$idType)
       idTypes4SQL <- paste(idTypes, collapse = ", ")
-      query4idTypeMatch <- paste("SELECT * FROM idIndex WHERE id IN (", idTypes4SQL, ")")
+      query4idTypeMatch <- paste('SELECT * FROM idIndex WHERE id IN (', idTypes4SQL, ')')
       idIndexDf <- dbGetQuery(convertIDsDatabase, query4idTypeMatch)
       
       ##Make table for users to see where each gene turns into ens and what database
       uniqueGene <- unique(foundGenesDf$id)
-      rowname <- c("Count", uniqueGene)
-      colname <- c("Name", idIndexDf$idType)
+      rowname <- c('Count', uniqueGene)
+      colname <- c('Name', idIndexDf$idType)
       bestMatchIDtypeDf <- data.frame(matrix(NA, nrow = length(rowname),
                                              ncol = length(colname)))
       colnames(bestMatchIDtypeDf) <- colname
@@ -130,18 +110,21 @@ getExample <- function(userSpecie = NULL, path2Database = NULL, userIDtype = NUL
     } # end of inner if/else 
   } else {# if user gives both geneList and id type
     
-    query4IDtype <- paste("SELECT * FROM idIndex WHERE idType =", shQuote(userIDtype))
+    query4IDtype <- paste('SELECT * FROM idIndex WHERE idType =', shQuote(userIDtype))
     userIDtypeNum <- dbGetQuery(convertIDsDatabase, query4IDtype)
     geneList4SQL <- geneListFormatter(inputVec = geneList)
-    query4IDmap <- paste("SELECT * FROM mapping WHERE species =", as.numeric(specie$id), "AND idType =", as.numeric(userIDtypeNum$id), "AND id IN (", geneList4SQL, ")")
+    query4IDmap <- paste('SELECT * FROM mapping WHERE species =', as.numeric(specie$id),
+                         'AND idType =', as.numeric(userIDtypeNum$id),
+                         'AND id IN (', geneList4SQL, ')')
     foundGenesDf <- dbGetQuery(convertIDsDatabase, query4IDmap)
     
     if (nrow(foundGenesDf) == 0) { # check results
-      outputText <- "No matches were found in database of provided gene list."
+      outputText <- 'No matches were found in database of provided gene list.'
       message_cnd(outputText)
       returnDf <- outputText
     } else {
       returnDf <- foundGenesDf[-c(3,4)]
+      colnames(returnDf) <- c('User ID', 'Ensembl ID')
     } # end of inner if/else 
     if (shiny) {incProgress(1)}
   }# end of outer if/else
@@ -149,3 +132,21 @@ getExample <- function(userSpecie = NULL, path2Database = NULL, userIDtype = NUL
   RSQLite::dbDisconnect(convertIDsDatabase)
   return(returnDf)
 } # end of function
+
+
+#################################################################
+# FUNCTION : getExampleDfID
+# DESCRIPTION : Gives user example of our IDs, 
+# INPUT ARGS : Organism picked by user
+# OUTPUT ARGS : data frame of genes
+# IN/OUT ARGS :
+# RETURN : returnDf
+# Implementation notes : shiny is only used when this is used in shiny app
+#################################################################
+getExampleDfID <- function(userSpecie = NULL, path2Database = NULL, shiny = FALSE) {
+  allSample <- feather::read_feather(path2Database)
+  returnDF <- allSample[allSample$index == userSpecie,]
+  returnDF <- returnDF[, -c(1)]
+  if (shiny) {incProgress(1)}
+  return(returnDF)
+}

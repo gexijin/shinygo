@@ -7,9 +7,9 @@
 # File: ui.R
 # Purpose of file: ui have shiny
 # Start data: 01-03-2021 (mm-dd-yyyy)
-# Data last modified: 01-20-2021 (mm-dd-yyyy)
+# Data last modified: 02-03-2021 (mm-dd-yyyy)
 #######################################################
-if (!require("pacman")) {install.packages("pacman", dependencies = TRUE)} 
+if (!require('pacman')) {install.packages('pacman', dependencies = TRUE)} 
 pacman::p_load(shiny, shinyjs, reactable) #see purpose of package
 
 #################################################################
@@ -62,25 +62,26 @@ ui <- fluidPage(
                     shiny::tags$li(#Bullet point 1
                         shiny::tags$h4("If you only pick a species,
                                        you are receiving table with all the different IDs
-                                       related to that species. (May be slow)")
+                                       related to that species. (Showen below)")
                     ),#end of bullet point 1
                     shiny::tags$li(#Bullet point 2
                         shiny::tags$h4("If you pick a species and an ID type,
                                        a table with all the IDs of the ID type you pick and how they map to ensembl IDs(our preferred ID database).")
                     ),#end of bullet point 2
                     shiny::tags$li(#Bullet point 3
-                        shiny::tags$h4("If you pick a species and enter a list of genes,
+                        shiny::tags$h4("If you pick a species and enter a list of genes or upload a file,
                                        then all possible genes that match your query will be returned.
                                        Each column tells you the database that your gene matched to,
                                        and then in the entry it shows it being converted to ensembl IDs. 
                                        The first row of the table shows how many genes match to that ID type.")
                     ),#end of bullet point 3
                     shiny::tags$li(#Bullet point 4
-                        shiny::tags$h4("If you enter all three fields,
+                        shiny::tags$h4("If you enter all three fields or upload a file,
                                        you are receiver table of all the IDs that match to the species and ID type you picked.")
                     )#end of bullet point 4
                 )#end of ul
-            ) ##End of instructions
+            ), ##End of instructions
+            reactable::reactableOutput(outputId = "tableDefault")
         )##End of main panel
     )#END of sidebarLayout
 )#end of ui

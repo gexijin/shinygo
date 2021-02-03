@@ -25,6 +25,10 @@ File: ui.R
 Status: testing
 Purpose: Frontend logic for application
 
+File: allsamplePreprocess.R
+Status: testing
+Purpose: Preprocess data from SQLite database, into a feather file where user can easily find example of gene IDs when species picked
+
 File: purpose_of_package.txt
 Purpose: Explains use of each package
 

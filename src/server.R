@@ -9,21 +9,25 @@
 # Start data: 01-03-2021 (mm-dd-yyyy)
 # Data last modified: 01-20-2021 (mm-dd-yyyy)
 #######################################################
-if (!require("pacman")) {install.packages("pacman", dependencies = TRUE)} 
+if (!require('pacman')) {install.packages('pacman', dependencies = TRUE)} 
 pacman::p_load(shiny, shinyjs, reactable, RSQLite, vroom) #see purpose of package
-setwd("C:/Users/ericw/Documents/ge_lab/idep/database_shiny_app/shinygo/")
-source("src/databaseView.R")
+setwd('C:/Users/ericw/Documents/ge_lab/idep/database_shiny_app/shinygo/')
+source('src/databaseView.R')
 
 #Prep work to present species and database ID to user in UI
-path <- "../data/convertIDs.db"
+path <- '../data/convertIDs.db'
+path2 <- '../data/example_of_id.feather'
 convertIDsDatabase <- dbConnect(RSQLite::SQLite(), path)
 specie <- dbGetQuery(convertIDsDatabase, paste("SELECT * FROM orginfo"))
 specieList <- unique(c("Human", sort(specie$name2)))
-id <- dbGetQuery(convertIDsDatabase, paste("SELECT * FROM idIndex"))
+id <- dbGetQuery(convertIDsDatabase, paste('SELECT * FROM idIndex'))
 idtypeList <- c("None", sort(id$idType))
 RSQLite::dbDisconnect(convertIDsDatabase)
 rm(convertIDsDatabase, specie, id)
 
+#Show first Option example to user when first load
+default <- getExampleDfID(userSpecie = specieList[1], path2Database = path2)
+firstTime <- TRUE
 
 #################################################################
 # FUNCTION : readFile (Helper function)
@@ -59,15 +63,21 @@ server <- function(input, output, session) {
                        choices = specieList, server = TRUE)
   updateSelectizeInput(session = session, inputId = "userIDtype",
                        choices = idtypeList, server = TRUE)
-  
+  if (firstTime == TRUE) {
+    output$tableDefault <- renderReactable({
+      reactable::reactable(data = default, searchable = TRUE, bordered = TRUE,
+                           highlight = TRUE, resizable = TRUE, minRows = 5)
+    })
+  }
   
   observeEvent(input$submit, {
+    firstTime <- FALSE
     #Decide on what to pass to function
     if (input$geneList == "" && input$userIDtype == "None" && is.null(input$geneListFile)) {#user just gives species 
       
       getExampleSer <- shiny::reactive({
         withProgress(message = 'Work be done...', value = 0, {
-          result <- getExample(userSpecie = input$userSpecie, path2Database = path, shiny = TRUE) 
+          result <- getExampleDfID(userSpecie = input$userSpecie, path2Database = path2, shiny = TRUE) 
         })
         return(result)
       })
@@ -129,8 +139,9 @@ server <- function(input, output, session) {
     res <- getExampleSer()
     
     if (is.data.frame(res)) { #check getExampleSer and how render it
-      shinyjs::hide(id = "textgetExampleSer")
-      shinyjs::show(id = "tablegetExampleSer")
+      shinyjs::hide(id = "tableDefault")
+      shinyjs::hide(id = "textResult")
+      shinyjs::show(id = "tableResult")
       
       output$tableResult <- renderReactable({
         reactable::reactable(data = res, searchable = TRUE, bordered = TRUE,
@@ -138,6 +149,7 @@ server <- function(input, output, session) {
       })
       
     } else {
+      shinyjs::hide(id = "tableDefault")
       shinyjs::hide(id = "tableResult")
       shinyjs::show(id = "textResult")
       output$textResult <- renderText(res)

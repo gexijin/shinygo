@@ -25,6 +25,8 @@ stringr This package help convert input of gene list into a usable vector see: h
 
 rebus helps above package and see above link
 
+feather This package allows for fast read and write of dataframe format files
+
 
 server.R:
 reactable This package improves on table output see: https://glin.github.io/reactable/index.html
