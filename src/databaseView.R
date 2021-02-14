@@ -63,7 +63,7 @@ getExample <- function(userSpecie = NULL, path2Database = NULL, userIDtype = NUL
     } else {
       returnDf <- userIDdf[-c(3,4)]
       
-      colnames(returnDf) <- c(paste(userIDtype, ' ID'), 'Ensembl ID')
+      colnames(returnDf) <- c('User_ID', 'Ensembl_ID')
     } # end of inner if/else
     if (shiny) {incProgress(1)}
     
@@ -124,7 +124,7 @@ getExample <- function(userSpecie = NULL, path2Database = NULL, userIDtype = NUL
       returnDf <- outputText
     } else {
       returnDf <- foundGenesDf[-c(3,4)]
-      colnames(returnDf) <- c('User ID', 'Ensembl ID')
+      colnames(returnDf) <- c('User_ID', 'Ensembl_ID')
     } # end of inner if/else 
     if (shiny) {incProgress(1)}
   }# end of outer if/else
@@ -150,3 +150,5 @@ getExampleDfID <- function(userSpecie = NULL, path2Database = NULL, shiny = FALS
   if (shiny) {incProgress(1)}
   return(returnDF)
 }
+
+

@@ -28,6 +28,8 @@ rm(convertIDsDatabase, specie, id)
 #Show first Option example to user when first load
 default <- getExampleDfID(userSpecie = specieList[1], path2Database = path2)
 firstTime <- TRUE
+MAX_WIDTH_COL <- 150
+
 
 #################################################################
 # FUNCTION : readFile (Helper function)
@@ -51,6 +53,29 @@ readFile <- function(datapath = NULL, name = NULL) {
   return(df$X1)
 } # end of readFile
 
+################################################################
+# FUNCTION : colDefType (Helper function)
+# DESCRIPTION : Used to format columns in tables 
+# INPUT ARGS : input
+# OUTPUT ARGS : 
+# IN/OUT ARGS :
+# RETURN : list of how to format each column in table 
+#################################################################
+colDefType <- function(input) {
+  if (input$geneList == "" && input$userIDtype == "None") {#user just gives species 
+    return(list(id = colDef(maxWidth = MAX_WIDTH_COL)))
+  } else if (input$geneList == "" && input$userIDtype != "None") { #if user doesn't give genelist
+    ## and give id type 
+    return(list(User_ID = colDef(maxWidth = MAX_WIDTH_COL),
+                Ensembl_ID = colDef(maxWidth = MAX_WIDTH_COL)))
+  } else if (input$geneList != "" && input$userIDtype == "None" ) {#if user gives geneList and not id type
+    return(NULL)
+  } else {# if user gives both geneList file and id type
+    return(list(User_ID = colDef(maxWidth = MAX_WIDTH_COL),
+                Ensembl_ID = colDef(maxWidth = MAX_WIDTH_COL)))
+  }# end of if/else
+}
+
 
 #################################################################
 # FUNCTION : server
@@ -65,7 +90,11 @@ server <- function(input, output, session) {
                        choices = idtypeList, server = TRUE)
   if (firstTime == TRUE) {
     output$tableDefault <- renderReactable({
-      reactable::reactable(data = default, searchable = TRUE, bordered = TRUE,
+      reactable::reactable(data = default,
+                           columns = list(
+                             id = colDef(maxWidth = MAX_WIDTH_COL)
+                           ),
+                           searchable = TRUE, bordered = TRUE,
                            highlight = TRUE, resizable = TRUE, minRows = 5)
     })
   }
@@ -144,7 +173,9 @@ server <- function(input, output, session) {
       shinyjs::show(id = "tableResult")
       
       output$tableResult <- renderReactable({
-        reactable::reactable(data = res, searchable = TRUE, bordered = TRUE,
+        reactable::reactable(data = res,
+                             columns = colDefType(input),
+                             searchable = TRUE, bordered = TRUE, 
                              highlight = TRUE, resizable = TRUE, minRows = 5)
       })
       
