@@ -10,12 +10,12 @@
 # Data last modified: 01-20-2021 (mm-dd-yyyy)
 #######################################################
 if (!require('pacman')) {install.packages('pacman', dependencies = TRUE)} 
-pacman::p_load(shiny, shinyjs, reactable, RSQLite, vroom) #see purpose of package
-setwd('C:/Users/ericw/Documents/ge_lab/idep/database_shiny_app/shinygo/')
+pacman::p_load(shiny, shinyjs, reactable, RSQLite, vroom, rebus) #see purpose of package
+setwd('C:/Users/ericw/Documents/ge_lab/idep/shinygo_app/shinygo_master/')
 source('src/databaseView.R')
 
 #Prep work to present species and database ID to user in UI
-path <- '../data/convertIDs.db'
+path <- '../data/convertIDs_96.db'
 path2 <- '../data/example_of_id.feather'
 convertIDsDatabase <- dbConnect(RSQLite::SQLite(), path)
 specie <- dbGetQuery(convertIDsDatabase, paste("SELECT * FROM orginfo"))
@@ -46,7 +46,7 @@ readFile <- function(datapath = NULL, name = NULL) {
   switch(ext,
          csv = delim <- ",",
          tsv = delim <- "\t",
-         txt = delim <- "\n",
+         txt = delim <- rebus.base::or(SPC, "\n"),
          validate("Invalid file; Please upload a .csv, .tsv, or .txt file")
   )#end of switch 
   df <- vroom::vroom(datapath, delim = delim, col_names = FALSE)
@@ -62,13 +62,14 @@ readFile <- function(datapath = NULL, name = NULL) {
 # RETURN : list of how to format each column in table 
 #################################################################
 colDefType <- function(input) {
-  if (input$geneList == "" && input$userIDtype == "None") {#user just gives species 
-    return(list(id = colDef(maxWidth = MAX_WIDTH_COL)))
-  } else if (input$geneList == "" && input$userIDtype != "None") { #if user doesn't give genelist
+  if (input$geneList == "" && input$userIDtype == "None" && is.null(input$geneListFile)) {#user just gives species 
+    return(list(Database = colDef(maxWidth = MAX_WIDTH_COL)))
+  } else if (input$geneList == "" && input$userIDtype != "None" && is.null(input$geneListFile)) { #if user doesn't give genelist
     ## and give id type 
     return(list(User_ID = colDef(maxWidth = MAX_WIDTH_COL),
                 Ensembl_ID = colDef(maxWidth = MAX_WIDTH_COL)))
-  } else if (input$geneList != "" && input$userIDtype == "None" ) {#if user gives geneList and not id type
+  } else if (input$geneList != "" || !is.null(input$geneListFile) && 
+             input$userIDtype == "None" ) {#if user gives geneList and not id type
     return(NULL)
   } else {# if user gives both geneList file and id type
     return(list(User_ID = colDef(maxWidth = MAX_WIDTH_COL),
@@ -92,7 +93,7 @@ server <- function(input, output, session) {
     output$tableDefault <- renderReactable({
       reactable::reactable(data = default,
                            columns = list(
-                             id = colDef(maxWidth = MAX_WIDTH_COL)
+                             Database = colDef(maxWidth = MAX_WIDTH_COL)
                            ),
                            searchable = TRUE, bordered = TRUE,
                            highlight = TRUE, resizable = TRUE, minRows = 5)

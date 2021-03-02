@@ -15,8 +15,10 @@ if (!require('pacman')) {install.packages('pacman', dependencies = TRUE)}
 pacman::p_load(RSQLite, feather) #see purpose of package
 
 
-path <- readline(prompt="Enter path to SQLite convertIDs.db file: ")
-filename <- readline(prompt="Enter name for feather file: ")
+#path <- readline(prompt="Enter path to SQLite convertIDs.db file: ")
+path <- "../data/convertIDs_96.db"
+#filename <- readline(prompt="Enter name for feather file: ")
+filename <- "example_of_id"
 filename <- paste(filename, '.feather')
 filename <- gsub('\\s', '', filename)
 convertIDsDatabase <- dbConnect(RSQLite::SQLite(), path)
@@ -33,9 +35,6 @@ work <- function(sp) {
   query4Specie <- paste('SELECT * FROM orginfo WHERE name2 =', shQuote(sp))
   specie <- dbGetQuery(convertIDsDatabase, query4Specie)
   
-  if (sp == "Caenorhabditis elegans") {
-    specie <- specie[-c(2), ]
-  }
   
   if (specie$totalGenes == 0) {
     matchIDtypeDf <- data.frame('index' = sp,

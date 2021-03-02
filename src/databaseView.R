@@ -147,6 +147,7 @@ getExampleDfID <- function(userSpecie = NULL, path2Database = NULL, shiny = FALS
   allSample <- feather::read_feather(path2Database)
   returnDF <- allSample[allSample$index == userSpecie,]
   returnDF <- returnDF[, -c(1)]
+  colnames(returnDF) <- c('Database', 'Example_genes')
   if (shiny) {incProgress(1)}
   return(returnDF)
 }
