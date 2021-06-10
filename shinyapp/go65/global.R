@@ -47,7 +47,7 @@ library(reshape2)
 library(visNetwork)
 
 # relative path to data files
-datapath <- "../../data103/"   # production server
+datapath <- "../../data/data103/"   # production server
 
 Min_overlap <- 2
 minSetSize = 3;
