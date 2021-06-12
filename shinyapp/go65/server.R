@@ -7,10 +7,10 @@
 # File: server.R
 # Purpose of file:main server logic of app
 # Start data: NA (mm-dd-yyyy)
-# Data last modified: 06-06-2021, 12:46 PM CST (mm-dd-yyyy,TIME) 
+# Data last modified: 06-11-2021, 16:12 CST (mm-dd-yyyy,TIME) 
 # to help with github merge 
 #######################################################
-source('gene_id_page_ser.R') #load server logic and functions for Gene ID tab
+source('gene_id_page_ser.R') #load server logic and functions for Gene ID popup
 shinyServer(
   function(input, output,session){
     options(warn=-1)
@@ -174,9 +174,10 @@ output$downloadGeneInfo <- downloadHandler(
   
 output$EnrichmentTable <-renderTable({
       if (input$goButton == 0  )    return(NULL)
-
+     tem <- input$input_text_b; # just to make it re-calculate if user changes background
+     
 	  myMessage = "Those genes seem interesting! Let me see what I can do.
-	   I am comparing your query genes to all 150+ types of IDs across 111 species.
+	   I am comparing your query genes to all 1000+ types of IDs across 5000 species.
 	  This can take up to 3 years. "
 	  if(is.null(significantOverlaps() )  ) return(NULL)
 	  # this solves an error when there is no signficant enrichment
@@ -193,7 +194,8 @@ output$EnrichmentTable <-renderTable({
 
 significantOverlaps2 <- reactive({
     if (input$goButton == 0  )    return()
-
+    tem <- input$input_text_b; # just to make it re-calculate if user changes background
+    
     tem <- significantOverlaps();
     if(dim(tem$x)[2] ==1 ) return(NULL)
 	  tem <- tem$x;
@@ -205,7 +207,8 @@ significantOverlaps2 <- reactive({
 # duplicate of the above, with the word wrapping. This is for use in the network plot
 significantOverlaps3 <- reactive({
     if (input$goButton == 0  )    return()
-
+    tem <- input$input_text_b; # just to make it re-calculate if user changes background
+    
     tem <- significantOverlaps();
     if(dim(tem$x)[2] ==1 ) return(NULL)
 	  tem <- tem$x;
@@ -220,10 +223,10 @@ significantOverlaps3 <- reactive({
 # duplicate of the above for word wrapping in static networkplot
 significantOverlaps4 <- reactive({
     if (input$goButton == 0  )    return()
-
+    tem <- input$input_text_b; # just to make it re-calculate if user changes background
     tem <- significantOverlaps();
     if(dim(tem$x)[2] ==1 ) return(NULL)
-	tem <- tem$x;
+	 tem <- tem$x;
     colnames(tem) = c("adj.Pval","nGenesList","nGenesCategor","Pathways","Genes")
     if(input$wrapTextNetworkStatic)
        tem$Pathways <- wrap_strings( tem$Pathways ) # wrap long pathway names using default width of 30 10/21/19
@@ -640,14 +643,19 @@ output$stringDB_network_link <- renderUI({
 output$selectGO1 <- renderUI({   # gene set for pathway analysis
 	  if(input$goButton == 0 ) return(NULL)
 	  
+    choices=gmtCategory(converted(), input$selectOrg)
+    if(length(choices) > 12) {   # more than 12 categories in human and mouse, we default to GOBP
+      selected = "GOBP" } else { # otherwise all gene sets
+        selected = "All"
+      }
+        
 	  selectInput("selectGO", label=NULL,
-		choices=gmtCategory(converted(), input$selectOrg),
-	    selected = "GOBP" )    	
-		
-
+		         choices = choices,
+	           selected = selected )    	
 		
 		
 	})	
+
 output$tableDetail <-renderTable({
       if (input$goButton == 0)    return()
 
@@ -681,7 +689,7 @@ output$downloadGrouping <- downloadHandler(
 	  isolate( {
        x = geneInfoLookup()
        converted1 = converted()
-
+       
    	   #chromosomes
 	   if((sum(!is.na( x$chromosome_name) ) >= minGenes && length(unique(x$chromosome_name) ) > 2 ) && length(which(x$Set == "List") ) > minGenes )
 	   {
@@ -742,8 +750,26 @@ output$genePlot <- renderPlot({
 	  tem=input$selectOrg; 
 	isolate( {
 	  withProgress(message="Ploting gene characteristics", {
-       x = geneInfoLookup()
+     x = geneInfoLookup()
 	   x2 = x[which(x$gene_biotype == "protein_coding"),]  # only coding for some analyses
+	   
+	   
+     # background genes	--------------------------------------------------------------   
+     xB = geneInfoLookup_background()
+     convertedB = converted_background()	   
+	   if(!is.null(xB) && 
+	      !is.null(convertedB) && 
+	      length( convertedB$IDs) < maxGenesBackground + 1) { # if more than 30k genes, ignore background genes.
+	     
+	     x <- x[ x$Set == "List", ] # remove background from selected genes
+	     xB <- xB[ xB$Set == "Genome", ] # remove Genome genes from background
+	     xB$Set <- "Background"
+	     x <- rbind(x, xB)
+	     x2 <- x[which(x$gene_biotype == "protein_coding"),]  # only coding for some analyses
+	   }
+     # end background genes
+	   
+	   
      if(dim(x)[1]>=minGenes) # only making plots if more than 20 genes
        { # only plot when there 10 genes or more   # some columns have too many missing values
 	   par(mfrow=c(4,1))
@@ -752,7 +778,7 @@ output$genePlot <- renderPlot({
 	   if( sum(!is.na( x$chromosome_name) ) >= minGenes && length(unique(x$chromosome_name) ) > 2 && length(which(x$Set == "List") ) > minGenes )
 	   {
 		   freq = table( x$chromosome_name,x$Set );
-		   #freq <- as.matrix(freq[which(nchar(row.names(freq))<3   ),])# remove unmapped chromosomes
+		   freq <- as.matrix(freq[which(nchar(row.names(freq))<10   ),])# remove unmapped chromosomes
 		   if(dim(freq)[2] >1 && dim(freq)[1]>1 ) { # some organisms do not have fully seuqence genome: chr. names: scaffold_99816
 				Pval = chisq.test(freq)$p.value
 				sig = paste("Distribution of query genes on chromosomes \nChi-squared test P=",formatC(Pval, digits=2, format="G") )
@@ -873,8 +899,25 @@ output$genePlot2 <- renderPlot({
 	  tem=input$selectOrg; 
 	isolate( {
 		withProgress(message="Ploting gene characteristics", {
-       x = geneInfoLookup()
+     x = geneInfoLookup()
 	   x2 = x[which(x$gene_biotype == "protein_coding"),]  # only coding for some analyses
+	   
+	   # background genes	--------------------------------------------------------------   
+	   xB = geneInfoLookup_background()
+	   convertedB = converted_background()	   
+	   if(!is.null(xB) && 
+	      !is.null(convertedB) && 
+	      length( convertedB$IDs) < maxGenesBackground + 1) { # if more than 30k genes, ignore background genes.
+	     
+	     x <- x[ x$Set == "List", ] # remove background from selected genes
+	     xB <- xB[ xB$Set == "Genome", ] # remove Genome genes from background
+	     xB$Set <- "Background"
+	     x <- rbind(x, xB)
+	     x2 <- x[which(x$gene_biotype == "protein_coding"),]  # only coding for some analyses
+	   }
+	   # end background genes
+	   
+	   
      if(dim(x)[1]>=minGenes) # only making plots if more than 20 genes
        { # only plot when there 10 genes or more   # some columns have too many missing values
 	  # par(mfrow=c(10,1))
