@@ -48,7 +48,7 @@ library(visNetwork)
 
 # relative path to data files
 datapath = "../../data/data103/"   # production server
-
+STRING_DB_VERSION <- "11.0" # what version of STRINGdb needs to be used 
 Min_overlap <- 1
 minSetSize = 3;
 mappingCoverage = 0.60 # 60% percent genes has to be mapped for confident mapping
