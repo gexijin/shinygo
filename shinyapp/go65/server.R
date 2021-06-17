@@ -377,7 +377,7 @@ server <- function(input, output, session){
   # STRING-db functionality
   # find Taxonomy ID from species official name 
   findTaxonomyID <- reactive({
-    if (input$goButton == 0  )    return(NULL)
+    #if (input$goButton == 0  )    return(NULL)
     
     if(!is.null(input$speciesName) ) { # if species name is entered
       ix = match(input$speciesName, STRING10_species$official_name)
@@ -399,7 +399,7 @@ server <- function(input, output, session){
   
   STRINGdb_geneList <- reactive({
     
-    if (input$goButton == 0  )    return(NULL)						   
+    #if (input$goButton == 0  )    return(NULL)						   
     library(STRINGdb,verbose=FALSE)
     tem=input$selectOrg; 
     
@@ -488,54 +488,45 @@ server <- function(input, output, session){
                                    score_threshold=0, input_directory="" )
         
         # using expression data
-        
         genes <- conversionTableData()
-        #rownames(genes)= genes[,3]
-        minGenesEnrichment=3
-        if(is.null(genes) ) return(NULL) 
-        
-        if(dim(genes)[1] <= minGenesEnrichment ) return(NoSig) # if has only few genes
-        
-        fc = rep(1, dim(genes)[1] )		
-        # GO
-        results1 <- NULL; result <- NULL
-        pp <- 0
-        for( i in c(1) ) {
-          #incProgress(1/2,detail = paste("Mapping gene ids")  )
-          ids = STRINGdb_geneList()[[i]]
-          if( length(ids) <= minGenesEnrichment) next; 			
-          incProgress(1/3  )
-          result <- string_db$get_enrichment( ids, category = input$STRINGdbGO, methodMT = "fdr", iea = TRUE )
-          if(nrow(result) == 0 ) next; 
-          if(nrow(result) > 30)  result <- result[1:30,]
-          
-          if( dim(result)[2] ==1) next;   # result could be NULL
-          #if(i == 1) result$direction = "Up regulated"  else result$direction = "Down regulated"
-          if (pp==0 ) { results1 <- result; pp = 1;} else  results1 = rbind(results1,result)
+        minGenesEnrichment <- 1
+        if(is.null(genes) ) {
+          return(NULL) 
         }
         
-        if ( pp == 0 ) return (NoSig)
+        if(dim(genes)[1] <= minGenesEnrichment ) {
+          return(NoSig) # if has only few genes
+        }
         
-        if ( is.null( results1) ) return (NoSig)
+        # GO
+        ids = STRINGdb_geneList()[[1]]
+        if( length(ids) <= minGenesEnrichment) {
+          return(NoSig)
+        }	
+        incProgress(1/3)
+        result <- string_db$get_enrichment(ids, category = input$STRINGdbGO, methodMT = "fdr", iea = TRUE)
+        if(nrow(result) == 0 || is.null(result)) {
+          return (NoSig)
+        } 
         
-        if( dim(results1)[2] == 1 ) return(NoSig)  # Returns a data frame: "No significant results found!"
+        result <- dplyr::select(result,
+                              c('fdr','p_value','number_of_genes','term',
+                                'description','preferredNames'))
         
-        results1= results1[,c(5,3, 6)]
-        colnames(results1)= c("FDR","nGenes","GO terms or pathways")
+        result$p_value <- sprintf("%-2.1e",as.numeric(result$p_value))
+        
+        colnames(result) <- c('FDR','p values','nGenes','GO terms or pathways',
+                             'Description','Preferred Names')
         minFDR = 0.01
         
-        if(min(results1$FDR) > minFDR ) results1 = as.data.frame("No signficant enrichment found.") else
-          results1 = results1[which(results1$FDR < minFDR),]
-        
+        if(min(result$FDR) > minFDR ) {
+          return (NoSig)
+        }  else {
+          result <- result[which(result$FDR < minFDR),]
+        }
         incProgress(1, detail = paste("Done")) 
         
-        if(dim(results1)[2] != 3) return(NoSig)
-        colnames(results1)= c("adj.Pval","nGenes","Pathways")
-        results1$adj.Pval <- sprintf("%-2.1e",as.numeric(results1$adj.Pval) )	
-        rownames(results1)=1:nrow(results1)
-        #results1[ duplicated (results1[,1] ),1 ] <- ""  
-        
-        return( results1 )
+        return(result[1:30,])
       })#progress
     }) #isolate						   
     
