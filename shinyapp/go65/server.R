@@ -492,43 +492,42 @@ server <- function(input, output, session){
         minGenesEnrichment <- 1
         if(is.null(genes) ) {
           return(NULL) 
-        }
-        
-        if(dim(genes)[1] <= minGenesEnrichment ) {
+        } else if(dim(genes)[1] <= minGenesEnrichment ) {
           return(NoSig) # if has only few genes
-        }
-        
-        # GO
-        ids = STRINGdb_geneList()[[1]]
-        if( length(ids) <= minGenesEnrichment) {
-          return(NoSig)
-        }	
-        incProgress(1/3)
-        result <- string_db$get_enrichment(ids, category = input$STRINGdbGO, methodMT = "fdr", iea = TRUE)
-        if(nrow(result) == 0 || is.null(result)) {
-          return (NoSig)
-        } 
-        
-        result <- dplyr::select(result,
-                              c('fdr','p_value','number_of_genes','term',
-                                'description','preferredNames'))
-        
-        result$p_value <- sprintf("%-2.1e",as.numeric(result$p_value))
-        
-        colnames(result) <- c('FDR','p values','nGenes','GO terms or pathways',
-                             'Description','Preferred Names')
-        minFDR = 0.01
-        
-        if(min(result$FDR) > minFDR ) {
-          return (NoSig)
-        }  else {
-          result <- result[which(result$FDR < minFDR),]
-        }
-        incProgress(1, detail = paste("Done")) 
-        
-        return(result[1:30,])
+        } else {
+          # GO
+          ids = STRINGdb_geneList()[[1]]
+          if( length(ids) <= minGenesEnrichment) {
+            return(NoSig)
+          }	
+          incProgress(1/3)
+          result <- string_db$get_enrichment(ids, category = input$STRINGdbGO, methodMT = "fdr", iea = TRUE)
+          if(nrow(result) == 0 || is.null(result)) {
+            return (NoSig)
+          } else {
+            result <- dplyr::select(result,
+                                    c('fdr','p_value','number_of_genes','term',
+                                      'description','preferredNames'))
+            
+            result$p_value <- sprintf("%-2.1e",as.numeric(result$p_value))
+            colnames(result) <- c('FDR','p values','nGenes','GO terms or pathways',
+                                  'Description','Preferred Names')
+            
+            minFDR = 0.01
+            if(min(result$FDR) > minFDR ) {
+              return (NoSig)
+            }  else {
+              result <- result[which(result$FDR < minFDR),]
+              incProgress(1, detail = paste("Done")) 
+              if(nrow(result) > 30) {
+                result <- result[1:30,] 
+              }
+              return(result)
+            }#end of check minFDR
+          }# check results 
+        }# end of check genes if 
       })#progress
-    }) #isolate						   
+    }) #isolate						   		   
     
   }) 
   
