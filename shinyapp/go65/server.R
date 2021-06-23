@@ -7,10 +7,8 @@
 # File: server.R
 # Purpose of file:main server logic of app
 # Start data: NA (mm-dd-yyyy)
-# Data last modified: 06-16-2021, 11:49 CST (mm-dd-yyyy,TIME) 
-# to help with github merge 
+# Data last modified: 06-22-2021
 #######################################################
-source('gene_id_page_ser.R') #load server logic and functions for Gene ID popup
 server <- function(input, output, session){
   options(warn=-1)
   
@@ -377,7 +375,7 @@ server <- function(input, output, session){
   # STRING-db functionality
   # find Taxonomy ID from species official name 
   findTaxonomyID <- reactive({
-    #if (input$goButton == 0  )    return(NULL)
+    if (input$goButton == 0  )    return(NULL)
     
     if(!is.null(input$speciesName) ) { # if species name is entered
       ix = match(input$speciesName, STRING10_species$official_name)
@@ -399,7 +397,7 @@ server <- function(input, output, session){
   
   STRINGdb_geneList <- reactive({
     
-    #if (input$goButton == 0  )    return(NULL)						   
+    if (input$goButton == 0  )    return(NULL)						   
     library(STRINGdb,verbose=FALSE)
     tem=input$selectOrg; 
     
@@ -468,21 +466,12 @@ server <- function(input, output, session){
   }) 
   
   stringDB_GO_enrichmentData <- reactive({
-    if (input$goButton == 0  )    return(NULL)
-    
+    if (input$goButton == 0  ) return(-1)
+    taxonomyID = findTaxonomyID()
+    if(is.null(taxonomyID)) return(NULL)
     library(STRINGdb,verbose=FALSE)
-    
-    tem = input$STRINGdbGO
-    taxonomyID = findTaxonomyID(  )
-    if(is.null( taxonomyID ) ) return(NULL)		
-    ####################################
-    
-    #if(input$selectOrg == "NEW" && is.null( input$gmtFile) ) return(NULL) # new but without gmtFile
-    NoSig = as.data.frame("No significant enrichment found.")
-    if(is.null(STRINGdb_geneList() ) ) return(NULL)
-    
-    isolate({
       withProgress(message=sample(quotes,1), detail ="Enrichment analysis", {
+        tem = input$STRINGdbGO
         #Intialization
         string_db <- STRINGdb$new( version=STRING_DB_VERSION, species=taxonomyID,
                                    score_threshold=0, input_directory="" )
@@ -491,61 +480,78 @@ server <- function(input, output, session){
         genes <- conversionTableData()
         minGenesEnrichment <- 1
         if(is.null(genes) ) {
-          return(NULL) 
+          return(-2) 
         } else if(dim(genes)[1] <= minGenesEnrichment ) {
-          return(NoSig) # if has only few genes
+          return(-2) # if has only few genes
         } else {
           # GO
-          ids = STRINGdb_geneList()[[1]]
-          if( length(ids) <= minGenesEnrichment) {
-            return(NoSig)
+          ids = STRINGdb_geneList()$up
+          if( length(ids) <= minGenesEnrichment || is.null(ids)) {
+            return(-2)
           }	
           incProgress(1/3)
           result <- string_db$get_enrichment(ids, category = input$STRINGdbGO, methodMT = "fdr", iea = TRUE)
           if(nrow(result) == 0 || is.null(result)) {
-            return (NoSig)
+            return (-2)
           } else {
-            result <- dplyr::select(result,
-                                    c('fdr','p_value','number_of_genes','term',
-                                      'description','preferredNames'))
-            
-            result$p_value <- sprintf("%-2.1e",as.numeric(result$p_value))
-            colnames(result) <- c('FDR','p values','nGenes','GO terms or pathways',
-                                  'Description','Preferred Names')
-            
-            minFDR = 0.01
-            if(min(result$FDR) > minFDR ) {
-              return (NoSig)
+            if(min(result$fdr) > input$minFDR) {
+              return (-2)
             }  else {
-              result <- result[which(result$FDR < minFDR),]
+              result <- result[which(result$fdr < input$minFDR),]
               incProgress(1, detail = paste("Done")) 
-              if(nrow(result) > 30) {
-                result <- result[1:30,] 
-              }
               return(result)
             }#end of check minFDR
           }# check results 
         }# end of check genes if 
       })#progress
-    }) #isolate						   		   
-    
-  }) 
+  })#end of stringDB_GO_enrichmentData
   
   output$stringDB_GO_enrichment <- renderTable({
-    if(is.null(stringDB_GO_enrichmentData() ) ) return(NULL)
-    
-    stringDB_GO_enrichmentData()	   
-    
-  }, digits = 0,spacing="s",include.rownames=F,striped=TRUE,bordered = TRUE, width = "auto",hover=T) 
+    result <- stringDB_GO_enrichmentData()
+    if (result == -1) {
+      return(NULL)
+    } else if(result == -2) {
+      return(as.data.frame("No significant enrichment found."))
+    } else {
+      result <- dplyr::select(result,
+                              c('fdr','number_of_genes','term',
+                                'description'))
+      colnames(result) <- c('FDR','nGenes','GO terms or pathways',
+                            'Description')
+      if(nrow(result) > 30) {
+        result <- result[1:30,] 
+      }
+      return(result)
+    } # end of if else 
+  },
+  digits = 4,
+  spacing="s",
+  include.rownames=F,
+  striped=TRUE,
+  bordered = TRUE,
+  width = "auto",
+  hover=T) #renderTable
   
   output$STRING_enrichmentDownload <- downloadHandler(
-    filename = function() {paste0("STRING_enrichment",input$STRINGdbGO,".csv")},
+    filename = function() {
+      paste0("STRING_enrichment",input$STRINGdbGO,".csv")
+    },
     content = function(file) {
       write.csv(stringDB_GO_enrichmentData(), file)
     }
-  ) 
+  ) #downloadHandler
   
-  
+  # observeEvent(input$STRING, {
+  #   taxonomyID = findTaxonomyID()
+  #   if(is.null(taxonomyID)) {
+  #     return(NULL)		
+  #   } else {
+  #     stringDB_GO_enrichmentData(input = input, 
+  #                                output = output,
+  #                                taxonomyID = taxonomyID) 
+  #   } #end of if else 
+  # })# end of observeEvent
+
   
   output$stringDB_network1 <- renderPlot({
     library(STRINGdb)
@@ -1646,7 +1652,10 @@ server <- function(input, output, session){
   #Purpose: this logic for second tab i.e. Gene ID Examples
   #File: gene_id_page_ser.R
   ############################################
-  geneIDPage(input = input, output = output,
-             session = session, orgInfo = orgInfo, path = datapath)
+  observeEvent(input$geneIdButton, {
+    source('gene_id_page_ser.R') #load server logic and functions for Gene ID popup
+    geneIDPage(input = input, output = output,
+               session = session, orgInfo = orgInfo, path = datapath)
+  })
   
 }

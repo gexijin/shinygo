@@ -2,7 +2,7 @@
 # Author: Eric Tulowetzke, eric.tulowetzke@jacks.sdstate.edu
 # Lab: Ge Lab
 # R version 4.0.5
-# Project: iDEP v93
+# Project: ShinyGO v65
 # File: gene_id_page_ser.R
 # Purpose of file:server logic for second tab i.e. Gene ID Examples
 #  Allow users view example of database
@@ -70,7 +70,7 @@ getExampleDfID <- function(userSpecie = NULL, path2Database = NULL,
 geneIDPage <- function(input, output, session, orgInfo, path) {
   if (firstTime == TRUE) {
     #load packages
-    libs <- c('RSQLite','shiny', 'feather', 'shinyjs', 'reactable') 
+    libs <- c('RSQLite','feather') 
     lapply(libs, library, character.only = TRUE)
     #set up input and paths at start up
     SPECIE_LIST <- unique(c("Human", sort(orgInfo$name2)))
