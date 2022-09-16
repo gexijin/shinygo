@@ -445,7 +445,10 @@ tags$head(
                   a("KEGG.", href="https://doi.org/10.1093/nar/gkaa970")              
 
                   ,br(),br()
-                  ,strong("Previous versions (still functional):")
+                  ,strong("Previous versions are still functional:")
+                  ,a("ShinyGO V0.76, "
+                     , href="http://bioinformatics.sdstate.edu/go76/")
+                  ,"based on Ensembl Release 104 with revision, archived on September 2, 2022"
                   ,br()
                   ,a("ShinyGO V0.75, "
                      , href="http://bioinformatics.sdstate.edu/go75/")
