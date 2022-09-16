@@ -446,6 +446,7 @@ tags$head(
 
                   ,br(),br()
                   ,strong("Previous versions are still functional:")
+                  ,br()
                   ,a("ShinyGO V0.76, "
                      , href="http://bioinformatics.sdstate.edu/go76/")
                   ,"based on Ensembl Release 104 with revision, archived on September 2, 2022"
