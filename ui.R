@@ -117,13 +117,18 @@ tags$head(
         tabPanel("Enrichment" 
                  ,value = 1
                  ,conditionalPanel("input.goButton == 0 "  # welcome screen
-                     ,br()                              
+                     ,br()
                      ,h3("Just in case of this server is down, please bookmark a ", a("mirror sever", href="http://149.165.154.220/go/"), " hosted by NSF funded JetStream2.")
                      ,br()
-                    ,p("Sept 28, 2022: In ShinyGOo 0.76.2, we reverted to 0.76 for gene counting, namely 
-                    all protein-coding genes are used the background. The new feature introduced in 0.76.1, which uses the pathway database
-                    to determine total number of genes, can be used as an option. This is based some users reports indicating that
-                     using smaller pathway databases such as KEGG the P values changes substantially. Please keep sending us feedbacks.")
+                    ,p("Sept 28, 2022: In ShinyGOo 0.76.2, KEGG is now the default pathway database. More importantly, 
+                    we reverted to 0.76 for default gene counting method, namely 
+                    all protein-coding genes are used as the background by default. 
+                    The new feature introduced in 0.76.1, which uses the pathway database
+                    to determine total number of genes in the background, can be turned on as an option 
+                    ('Use pathway database for gene counts'). 
+                    This is based some users reports indicating that
+                     using smaller pathway databases such as KEGG changes 
+                     the P values substantially. Please keep sending us feedbacks.")
                     ,p("Sept 3, 2022: ShinyGO 0.76.1. In this small improvement, we improved how we count the number of genes for 
                     calculating P value. A gene must match at least one pathway in the selected pathway database. Otherwise this gene 
                     is ignored in the calculation of P values based on hypergeometric distribution. This applies to both query and background genes. ")
@@ -183,13 +188,16 @@ tags$head(
                     As a measure of effect size, Fold Enrichment indicates how drastically genes of a certain pathway is overrepresented. 
                     This is a important metric, even though often ignored.")
 
-                  ,p("We highly recommend users upload a list of genes in the background. 
+                  ,p("We highly recommend users upload a list of genes as the background. 
                   These could be all the genes passed a low filter in RNA-seq. 
                   If background genes are not uploaded, the default is to use 
-                  all protein-coding genes. If you choose the 'Use pathway database 
-                  for gene counts' button, background genes is the total unique 
-                  nubmer of genes in pathway database that users choose. As some pathway database can be huge and have genes not properly 
-                  converted, we limit the total nubmer to between 5000 and 30,000.")
+                  all protein-coding genes. Alternatively, you can check the box next to 'Use pathway database 
+                  for gene counts', which will calculate background genes as the total unique 
+                  nubmer of genes in pathway database that users choose. 
+                  As some pathway database can be huge and have genes not properly 
+                  converted, we limit the total nubmer to between 5000 and 30,000. When this option is used, 
+                  any genes in user's original gene list but 
+                  not in the pathway database will also be ignored.")
 
                  ,p("Only pathways that are within the specified size limits are used for enrichment analysis.
                     After the analysis is done, pathways are first filtered based on a user specified FDR cutoff. 
