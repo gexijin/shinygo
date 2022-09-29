@@ -99,7 +99,7 @@ server <- function(input, output, session){
     if (input$goButton == 0 | is.null( input$selectGO) | nchar(input$input_text) < 20 ) return()
     tem = input$selectOrg
     tem = input$selectGO
-
+    tem = input$gene_count_pathwaydb
     tem = input$minSetSize
     tem = input$maxSetSize
 
@@ -111,7 +111,8 @@ server <- function(input, output, session){
         if(class(temb) == "data.frame")
           temb <- temb[which( temb$Set == "List"),]  	  
         enrichment <- FindOverlap( converted(), tem, input$selectGO, input$selectOrg,
-                     converted_background(), temb, minSetSize = input$minSetSize, maxSetSize = input$maxSetSize  )
+                     converted_background(), temb, minSetSize = input$minSetSize, maxSetSize = input$maxSetSize, 
+                     gene_count_pathwaydb = input$gene_count_pathwaydb  )
         return(enrichment)
 
       })
@@ -924,6 +925,10 @@ server <- function(input, output, session){
       selected = "GOBP" } else { # otherwise all gene sets
         selected = "All"
       }
+      if ("KEGG" %in% choices) {
+        selected <- "KEGG"
+      }      
+
     
     selectInput("selectGO", label = h5("Pathway database:"),
                 choices = choices,

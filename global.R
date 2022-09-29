@@ -476,7 +476,7 @@ hyperText <- function (textVector, urlVector){
 
 # Main function. Find a query set of genes enriched with functional category
 # For debug:  converted = converted(); gInfo = tem;  GO=input$selectGO; selectOrg=input$selectOrg;  minFDR=input$minFDR; input_maxTerms=input$maxTerms
-FindOverlap <- function (converted, gInfo, GO, selectOrg, convertedB=NULL, gInfoB=NULL, minSetSize = 2, maxSetSize = 4000) {
+FindOverlap <- function (converted, gInfo, GO, selectOrg, convertedB=NULL, gInfoB=NULL, minSetSize = 2, maxSetSize = 4000, gene_count_pathwaydb = FALSE) {
   minFDR <- 0.2  # internal cutoff; avoids passing a large number of pathways
   maxTerms <- 1000 # only keep 1000 pathways at the most
 
@@ -485,15 +485,16 @@ FindOverlap <- function (converted, gInfo, GO, selectOrg, convertedB=NULL, gInfo
   if(is.null(converted) ) return(idNotRecognized) # no ID
 
   querySet <- converted$IDs;
-  #start.time <- proc.time()[3]
-#  if(!is.null(gInfo) )
-#     if( class(gInfo) == "data.frame" )
-#       if(dim(gInfo)[1] > 1) {  # some species does not have geneInfo. STRING
-#	     # only coding
-#	     querySet <- intersect( querySet, 
-#                                gInfo[which( gInfo$gene_biotype == "protein_coding"), 1] )
-#	}
 
+  if(!gene_count_pathwaydb) {
+  if(!is.null(gInfo) )
+     if( class(gInfo) == "data.frame" )
+       if(dim(gInfo)[1] > 1) {  # some species does not have geneInfo. STRING
+	     # only coding
+	     querySet <- intersect( querySet, 
+                                gInfo[which( gInfo$gene_biotype == "protein_coding"), 1] )
+	}
+  }
   if(length(querySet) == 0) return(idNotRecognized )
 
   ix = grep(converted$species[1,1],gmtFiles)
@@ -567,6 +568,7 @@ FindOverlap <- function (converted, gInfo, GO, selectOrg, convertedB=NULL, gInfo
    
   x = merge(x0,pathwayInfo, by.x='pathwayID', by.y='id')
 
+  if(gene_count_pathwaydb) {
   # only keep the query genes that have one pathway match
   # this is for more accurate size of query in P value
   querySet <- unique(result$gene)
@@ -583,8 +585,16 @@ FindOverlap <- function (converted, gInfo, GO, selectOrg, convertedB=NULL, gInfo
     }
     totalGenes <- DBI::dbGetQuery(pathway, sql_query)
     totalGenes <- as.integer(totalGenes)
-  }
 
+    # totalGenes within the range of 5k to 30k.
+    if(totalGenes > 30000){
+      totalGenes <- 30000
+    }
+    if(totalGenes < 5000){
+      totalGenes <- 5000
+    }    
+  }
+  }
 
     # filtered pathways with enrichment ratio less than one
     #x <- x[ which( x$overlap/ length(querySet) / (as.numeric(x$n) / totalGenes ) > 1)  ,]
@@ -636,10 +646,10 @@ FindOverlap <- function (converted, gInfo, GO, selectOrg, convertedB=NULL, gInfo
         resultB <- dbGetQuery( pathway, sqlQueryB  )
         if( dim(resultB)[1] ==0) {return(list( x=as.data.frame("No matching species or gene ID file!" )) )}    
         xB = table(resultB$pathwayID)
-
+        if(gene_count_pathwaydb) {
         #update querySet, only keep genes with one pathway mapping
         querySetB <- unique(resultB$gene)
-
+        }
         rm(resultB)
         xB = as.data.frame( xB)
         colnames(xB)=c("pathwayID","overlapB")
@@ -656,9 +666,10 @@ FindOverlap <- function (converted, gInfo, GO, selectOrg, convertedB=NULL, gInfo
                   
         x$fold <- (x$overlap/length(querySet)) /                    # ratio in query
                   ( as.numeric(x2$overlapB) / length(querySetB) ) # ratio in background
+        if(gene_count_pathwaydb) {
         # number of genes in pathways in background genes  
-        #x$n <- as.numeric(x2$overlapB)     
-
+        x$n <- as.numeric(x2$overlapB)     
+        }
         #write.csv(x2, "pathway_table_bg_go.csv", row.names = F)
       }
 
