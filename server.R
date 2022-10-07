@@ -1,6 +1,5 @@
 ####################################################
 # Author: Steven Ge Xijin.Ge@sdstate.edu
-# co-author: Eric Tulowetzke, eric.tulowetzke@jacks.sdstate.edu
 # Lab: Ge Lab
 # R version 4.0.5
 # Project: ShinyGO v76
@@ -403,7 +402,10 @@ server <- function(input, output, session) {
 
             merged <- subset(merged, select = c(
               User_input, symbol, ensembl_gene_id, entrezgene_id,
-              gene_biotype, Species, chromosome_name, start_position, description
+              gene_biotype, Species, chromosome_name, start_position, 
+              description, percentage_gc_content, transcript_count,
+              genomeSpan, cds_length, transcript_length, FiveUTR,
+              ThreeUTR, nExons
             ))
 
             tem3 <- as.data.frame(tem$originalIDs)
@@ -417,11 +419,10 @@ server <- function(input, output, session) {
               merged$start_position
             ), ]
             merged$start_position <- merged$start_position / 1e6
-            colnames(merged) <- c(
+            colnames(merged)[1:9] <- c(
               "Pasted", "Symbol", "Ensembl Gene ID", "Entrez",
               "Type", "Species", "Chr", "Position (Mbp)", "Description"
             )
-            i <- 1:dim(merged)[1]
           }
         }
         incProgress(0.9)
@@ -437,7 +438,7 @@ server <- function(input, output, session) {
       } # still have problems when geneInfo is not found!!!!!
       tem <- input$showDetailedGeneInfo
       isolate({
-        df <- conversionTableData()
+        df <- conversionTableData()[, 1:9]
         # show detailed gene info for string species
         if (!input$showDetailedGeneInfo) {
           df$Description <- gsub(";.*|\\[.*", "", df$Description)
@@ -449,7 +450,8 @@ server <- function(input, output, session) {
         #      df$Type <- gsub(".*_", "", df$Type)
         df$Type <- gsub(".*pseudogene", "pseudo", df$Type)
         # coding is not shown
-        df$Type <- gsub("coding", "C", df$Type)
+        df$Type <- gsub("protein_coding", "coding", df$Type)
+        df$Type <- gsub("_gene", "", df$Type)
         df$Chr[nchar(df$Chr) > 5] <- ""
 
         # first see if it is Ensembl gene ID-----------------------
@@ -1351,7 +1353,6 @@ server <- function(input, output, session) {
                   row.names(freq) <- tem
                   par(mar = c(20, 6, 4.1, 2.1))
                   freq <- freq[, c(2, 1)] # reverse order
-                  head(freq)
 
                   barplot(t(freq),
                     beside = TRUE, las = 2, col = c("red", "lightgrey"), ylab = "Number of Genes",

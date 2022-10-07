@@ -126,19 +126,31 @@ ui <- fluidPage(
         tabPanel("Enrichment",
           value = 1,
           conditionalPanel(
-            "input.goButton == 0 " # welcome screen
-            , br(),
-            h3("Just in case of this server is down, please bookmark a ", a("mirror sever", href = "http://149.165.154.220/go/"), " hosted by NSF funded JetStream2."),
+            "input.goButton == 0 ", # welcome screen
             br(),
-            p("Sept 28, 2022: In ShinyGOo 0.76.2, KEGG is now the default pathway database. More importantly,
+            h3(
+              "If you find ShinyGO helpful, please ",
+              a(
+                "send us a brief email.",
+                href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO support letter"
+              )
+            ),
+            p(" If you state your general research area and how ShinyGO
+            makes you more productive, we can use it as a support letter when we
+              apply for funding, which will help sustain
+              and improve this service."),
+            p("If this server is down or busy, please use a ", a("mirror sever", href = "http://149.165.154.220/go/"), 
+            " hosted by NSF-funded JetStream2."),
+            br(),
+            p("Sept 28, 2022: In ShinyGO 0.76.2, KEGG is now the default pathway database. More importantly,
                     we reverted to 0.76 for default gene counting method, namely
                     all protein-coding genes are used as the background by default.
                     The new feature introduced in 0.76.1, which uses the pathway database
                     to determine total number of genes in the background, can be turned on as an option
                     ('Use pathway database for gene counts').
-                    This is based some users reports indicating that
-                     using smaller pathway databases such as KEGG changes
-                     the P values substantially. Please keep sending us feedbacks."),
+                    This is based on feedback from some users that
+                     when using smaller pathway databases, such as KEGG, the new method changes
+                     the P values substantially."),
             p("Sept 3, 2022: ShinyGO 0.76.1. In this small improvement, we improved how we count the number of genes for
                     calculating P value. A gene must match at least one pathway in the selected pathway database. Otherwise this gene
                     is ignored in the calculation of P values based on hypergeometric distribution. This applies to both query and background genes. "),
@@ -228,11 +240,11 @@ ui <- fluidPage(
 
                     ")
           )
-        ) # enrichment tab
+        ),  # enrichment tab
 
 
         #---Enrichment Chart-----------------------------------------------------------
-        , tabPanel("Chart",
+        tabPanel("Chart",
           value = 3,
           plotOutput("enrichChart", width = "100%", height = "100%"),
           fluidRow(
@@ -260,9 +272,9 @@ ui <- fluidPage(
               choices = columnSelection[1:3],
               selected = columnSelection[3]
             ))
-          ) # first row
+          ), # first row
 
-          , fluidRow(
+           fluidRow(
             column(3, numericInput(
               inputId = "SortPathwaysPlotFontSize",
               label = h5("Font Size"),
@@ -291,9 +303,9 @@ ui <- fluidPage(
               choices = c("red", "orange", "yellow", "green", "blue", "purple"),
               selected = "blue"
             ))
-          ) # 2nd row
+          ), # 2nd row
 
-          , fluidRow(
+           fluidRow(
             column(width = 3, selectInput(
               inputId = "enrichChartType",
               label = h5("Chart type"),
@@ -308,10 +320,10 @@ ui <- fluidPage(
             )),
             column(3, style = "margin-top: 25px;", mod_download_images_ui("download_barplot"))
           ) # 3rd row
-        )
+        ),
 
         #---Tree-----------------------------------------------------------
-        , tabPanel("Tree",
+         tabPanel("Tree",
           value = 4,
           h5("A hierarchical clustering tree summarizes the correlation among significant pathways
                       listed in the Enrichment tab. Pathways with many shared genes are clustered together.
@@ -327,10 +339,10 @@ ui <- fluidPage(
             column(3, style = "margin-top: 25px;", mod_download_images_ui("download_tree", label = "Download"))
           ),
           plotOutput("GOTermsTree")
-        )
+        ), 
 
         #---Enrichment network-------------------------------------------------------
-        , tabPanel("Network",
+        tabPanel("Network",
           value = 5,
           fluidRow(
             column(2, actionButton("layoutButton", "Change layout")),
@@ -350,10 +362,10 @@ ui <- fluidPage(
        Darker nodes are more significantly enriched gene sets.
        Bigger nodes represent larger gene sets.
        Thicker edges represent more overlapped genes.")
-        )
+        ), 
 
         #---KEGG-----------------------------------------------------------
-        , tabPanel("KEGG",
+        tabPanel("KEGG",
           value = 2,
           conditionalPanel(
             "input.selectGO != 'KEGG' ",
@@ -367,35 +379,35 @@ ui <- fluidPage(
             br(), br(), imageOutput("KeggImage", width = "100%", height = "100%"),
             h5("Your genes are highlighted in red. Downloading pathway diagram from KEGG can take 3 minutes. ")
           )
-        )
+        ), 
 
         #---Genes-----------------------------------------------------------
-        , tabPanel("Genes",
+        tabPanel("Genes",
           value = 6,
           fluidRow(
-            column(3, downloadButton("downloadGeneInfo", "Download")),
+            column(3, downloadButton("downloadGeneInfo", "More info")),
             column(4, checkboxInput("showDetailedGeneInfo", "Detailed Description", value = FALSE))
           ),
           tableOutput("conversionTable")
-        )
+        ), 
         #---Groups-----------------------------------------------------------
-        , tabPanel("Groups",
+        tabPanel("Groups",
           value = 7,
           downloadButton("downloadGrouping", "Download"),
           h5("Your genes are grouped by functional categories defined by high-level GO terms. "),
           tableOutput("grouping")
-        )
+        ), 
         #---Plots-----------------------------------------------------------
-        , tabPanel("Plots",
+        tabPanel("Plots",
           value = 8,
           h5("The characteristics of your genes are compared with the rest in the genome. Chi-squared and Student's
               t-tests are run to see if your genes have special characteristics when compared with all the other genes or, if uploaded, a customized background."),
           plotOutput("genePlot2", inline = TRUE, width = "auto", height = "auto"),
           plotOutput("genePlot", inline = TRUE, width = "auto", height = "auto")
-        )
+        ), 
 
         #---Genome-----------------------------------------------------------
-        , tabPanel("Genome",
+        tabPanel("Genome",
           value = 9,
           plotlyOutput("genomePlotly", height = "900px"),
           fluidRow(
@@ -431,10 +443,10 @@ ui <- fluidPage(
                         each window define a gene set/pathway, and we carried out enrichment analysis. The
                         chromosomes may be only partly shown as we use the last gene's location to draw the line.
                         Mouse over to see gene symbols. Zoom in regions of interest.")
-        )
+        ), 
 
         #---Genome-----------------------------------------------------------
-        , tabPanel("Promoter",
+        tabPanel("Promoter",
           value = 10,
           radioButtons("radio", label = NULL, choices = list(
             "Upstream 300bp as promoter" = 300,
@@ -446,9 +458,9 @@ ui <- fluidPage(
               other genes in the genome in terms of transcription factor (TF) binding motifs.
               \"*Query gene\" indicates a transcription factor coded by a gene included in
               your list.")
-        )
+        ), 
         #---STRING-----------------------------------------------------------
-        , tabPanel("STRING",
+        tabPanel("STRING",
           value = 11,
           h5(
             "Your genes are sent to STRING-db website for enrichment analysis
@@ -486,22 +498,41 @@ ui <- fluidPage(
           ),
           downloadButton("STRING_enrichmentDownload"),
           tableOutput("stringDB_GO_enrichment")
-        )
+        ),
 
         #---?-----------------------------------------------------------
-        , tabPanel("About",
-          value = 12,
-          " For feedbacks, please",
-          a("contact us, ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
-          "or visit our", a(" homepage.", href = "http://ge-lab.org/", target = "_blank"),
+        tabPanel("About",
+        value = 12,
+        p(
+        "ShinyGO is developed and maintained by a small team at ",
+        a(
+          "South Dakota State University (SDSU). ",
+          href = "https://www.sdstate.edu/"
+        ),
+        "Our team consists of ",
+        a(" Xijin Ge (PI), ", href = "https://www.sdstate.edu/directory/xijin-ge", target = "_blank"),
+        "Jianli Qi (research associate), and
+        two talented graduate students (Emma Spors and Ben Derenge).
+        None of us are trained as software engineers. But
+        we share the passion about  developing an
+        user-friendly tool for all biologists,
+        especially those who do not have access to bioinformaticians."
+        ),
+
+          " For feedbacks, ",
+          a("email us, ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
+          "or file bug report or feature request on our", 
+          a(" GitHub repository, ", href = "https://github.com/gexijin/shinygo", target = "_blank"),
+          " where you can also find the source code.",
+          
+          
           "For details, please see our", a("paper", href = "https://doi.org/10.1093/bioinformatics/btz931", target = "_blank"),
           "and a detailed", a("demo.", href = "https://www.biorxiv.org/content/biorxiv/suppl/2018/05/04/315150.DC1/315150-1.pdf", target = "_blank"),
-          "ShinyGO shares many functionalities and databases with ", a("iDEP.", href = "http://ge-lab.org/idep/", target = "_blank"),
-          " Source code at", a(" GitHub. ", href = "https://github.com/iDEP-SDSU/idep/tree/master/shinyapps/go", target = "_blank"),
+          "ShinyGO shares many functionalities and databases with ", a("iDEP.", href = "http://bioinformatics.sdstate.edu/idep/", target = "_blank"),
           br(), br(),
-          strong("Citation:"),
+          strong("Citation (Just including URL is not enough!):"),
           br(),
-          "Ge SX, Jung D & Yao R,", a(" Bioinformatics 2020.", href = "https://doi.org/10.1093/bioinformatics/btz931", target = "_blank"),
+          "Ge SX, Jung D & Yao R,", a(" Bioinformatics 36:2628–2629, 2020.", href = "https://doi.org/10.1093/bioinformatics/btz931", target = "_blank"),
           " If you use the KEGG diagram, please also cite the papers for ",
           a("pathview, ", href = "https://doi.org/10.1093/bioinformatics/btt285"), "and ",
           a("KEGG.", href = "https://doi.org/10.1093/nar/gkaa970"),
@@ -608,20 +639,20 @@ ui <- fluidPage(
           h5("4/27/2018: V0.41 Change to ggplot2, add grid and gridExtra packages"),
           h5("4/24/2018: V0.4 Add STRING API, KEGG diagram, tree display and network.")
         )
-      ) # tabsetPanel
-      , bsModal("ModalExamplePPI", "Protein-protein interaction(PPIs) networks ", "ModalPPI",
+      ),  # tabsetPanel
+      bsModal("ModalExamplePPI", "Protein-protein interaction(PPIs) networks ", "ModalPPI",
         size = "large",
         h5("By sending your genes to the STRING website,
 			shinyGO is retrieving a sub-network, calculating PPI enrichment,
 		  and generating custom URLs to the STRING website containing your genes. This can take 5 minutes. Patience will pay off! "),
-        sliderInput("nGenesPPI", label = h5("Genes to include:"), min = 0, max = 400, value = 50, step = 10)
+        sliderInput("nGenesPPI", label = h5("Genes to include:"), min = 0, max = 400, value = 50, step = 10), 
         # ,htmlOutput("stringDB_network_link")
         # ,tags$head(tags$style("#stringDB_network_link{color: blue; font-size: 15px;}"))
 
-        , plotOutput("stringDB_network1")
-      ) # bsModal 1
+        plotOutput("stringDB_network1")
+      ),  # bsModal 1
 
-      , bsModal("InteractiveNetwork", "Interactive enrichment networks ", "GONetwork",
+      bsModal("InteractiveNetwork", "Interactive enrichment networks ", "GONetwork",
         size = "large",
         fluidRow(
           column(2, actionButton("layoutButtonStatic", "Change layout")),
@@ -629,9 +660,9 @@ ui <- fluidPage(
           column(2, checkboxInput("wrapTextNetworkStatic", "Wrap text", value = FALSE))
         ),
         plotOutput("enrichmentNetworkPlot")
-      ) # bsModal 2
+      ),  # bsModal 2
 
-      , bsModal("BackgroundGenes", "Customized background genes (Highly recommended)", "backgroundGenes",
+      bsModal("BackgroundGenes", "Customized background genes (Highly recommended)", "backgroundGenes",
         size = "large",
         tags$textarea(
           id = "input_text_b",
@@ -644,18 +675,18 @@ ui <- fluidPage(
                      many  use the subset of genes with detectable expression, typically the genes passed a minimum filter.
                       We can also customize background genes to overcome bias in selection. Currently only less than 30,000 genes are accepted.
 		              ")
-      ) # bsModal 3
+      ),  # bsModal 3
 
-      , bsModal("geneIDexamples", "What the gene IDs in our database look like?", "MGeneIDexamples",
+      bsModal("geneIDexamples", "What the gene IDs in our database look like?", "MGeneIDexamples",
         size = "large",
         selectizeInput(
           inputId = "userSpecieIDexample",
           label = "Select or search for species", choices = NULL
         ),
         tableOutput("showGeneIDs4Species")
-      ) # bsModal 4
+      ),  # bsModal 4
 
-      , bsModal("orgInfoButton",
+      bsModal("orgInfoButton",
         "Supported species",
         "MorgInfo",
         size = "large",
@@ -663,16 +694,16 @@ ui <- fluidPage(
               If a species is annotated in both Ensembl and STRINGdb, please select Ensembl,
               which provides more details. Species annotated in STRINGdb are marked as 'Homo Sapiens STRINGdb'."),
         DT::dataTableOutput("orgInfoTable")
-      ) # bsModal 5
-      , bsModal("genomePlotStaticButton", "Static genome plot", "gPlotstatic",
+      ),  # bsModal 5
+      bsModal("genomePlotStaticButton", "Static genome plot", "gPlotstatic",
         size = "large",
         h5("Your genes are marked in each of the chromosomes.
                 Note that the scale for each chromosomes are different."),
         plotOutput("genomePlot", width = "100%")
       ) # bsModal 6
     ) # mainPanel
-  ) # sidebarLayout
-  , tags$head(includeScript("google_analytics.js")) # tracking usage
-  , tags$head(includeHTML(("google_analytics_GA4.html")))
+  ),  # sidebarLayout
+  tags$head(includeScript("google_analytics.js")),  # tracking usage
+  tags$head(includeHTML(("google_analytics_GA4.html")))
   #  ,tags$head(includeHTML(("../google_analytics_golem.html")))
 ) # fluidPage
