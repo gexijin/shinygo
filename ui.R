@@ -141,6 +141,12 @@ ui <- fluidPage(
               and improve this service."),
             p("If this server is down or busy, please use a ", a("mirror sever", href = "http://149.165.154.220/go/"), 
             " hosted by NSF-funded JetStream2."),
+            p(
+              a("Email Jenny ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
+              "for questions, suggestions or data contributions.",
+              "Follow ", a("Dr Ge on Twitter", href = "https://twitter.com/StevenXGe"),
+              " for updates. "
+            ),
             br(),
             p("Sept 28, 2022: In ShinyGO 0.76.2, KEGG is now the default pathway database. More importantly,
                     we reverted to 0.76 for default gene counting method, namely
@@ -162,10 +168,7 @@ ui <- fluidPage(
               a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76"),
               style = "color:red"
             ),
-            p(
-              a("Email Jenny ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
-              "for questions, suggestions or data contributions."
-            ),
+
             h3("A graphical tool for gene enrichment analysis"),
             p("Just paste your gene list to get enriched GO terms and othe pathways for over 420 plant and animal species,
 				    based on annotation from Ensembl, Ensembl plants and Ensembl Metazoa. An additional 5000 genomes
