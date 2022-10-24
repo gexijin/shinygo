@@ -129,9 +129,9 @@ ui <- fluidPage(
             "input.goButton == 0 ", # welcome screen
             br(),
             h3(
-              "If you find ShinyGO helpful, please ",
+              "Please ",
               a(
-                "send us a brief email.",
+                "send us a brief email to show your support.",
                 href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO support letter"
               )
             ),
@@ -208,11 +208,11 @@ ui <- fluidPage(
           conditionalPanel(
             "input.goButton != 0",
             downloadButton("downloadEnrichment", "Top Pathways shown above"),
-            downloadButton("downloadEnrichmentAll", "All Significant Pathways"),
+            downloadButton("downloadEnrichmentAll", "Results on all Pathways"),
             br(), br(),
             p("All query genes are first converted to ENSEMBL gene IDs or STRING-db protein IDs. Our gene ID mapping and pathway
                      data are mostly derived from these two sources. For the 20 most studied species, we also manually collected a
-                     large number of pathwaysfrom various public databases."),
+                     large number of pathways from various public databases."),
             p("FDR is calculated based on nominal P-value from the hypergeometric test. Fold Enrichment is defined as the percentage
                     of genes in your list belonging to a pathway, divided by the corresponding percentage in the
                     background. FDR tells us how likely the enrichment is by chance. Due to increased statistical power,
