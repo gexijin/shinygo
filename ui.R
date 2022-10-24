@@ -131,9 +131,10 @@ ui <- fluidPage(
             h3(
               "Please ",
               a(
-                "send us a brief email to show your support.",
+                "send us a brief email",
                 href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO support letter"
-              )
+              ),
+              " to show your support."
             ),
             p(" If you state your general research area and how ShinyGO
             makes you more productive, we can use it as a support letter when we
