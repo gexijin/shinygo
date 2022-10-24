@@ -1013,7 +1013,7 @@ enrichmentPlot <- function(enrichedTerms, rightMargin = 33) {
     set("leaves_pch", 19) %>% # type of marker
     set("leaves_cex", leafSize) %>% # Size
     set("leaves_col", leafColors[leafType]) %>% # up or down genes
-    plot(horiz = TRUE)
+    plot(horiz = TRUE, axes = FALSE)
 
   return(recordPlot())
 
