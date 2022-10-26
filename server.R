@@ -170,6 +170,9 @@ server <- function(input, output, session) {
           }
           if (input$SortPathways == "Sort by Fold Enrichment") {
             enrichment$x <- enrichment$x[order(enrichment$x[, 4], decreasing = TRUE), ]
+            # when sorting by fold, sometimes tiny pathways on top. Here we require at
+            # least 10 genes
+            enrichment$x <- enrichment$x[which(enrichment$x[, 3] > min_gene_fold), ]
           }
           if (input$SortPathways == "Sort by Genes") {
             enrichment$x <- enrichment$x[order(enrichment$x[, 2], decreasing = TRUE), ]
