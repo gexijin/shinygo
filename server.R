@@ -1456,7 +1456,8 @@ server <- function(input, output, session) {
       if (input$goButton == 0) {
         return()
       }
-      tem <- input$selectOrg
+      req(input$ggplot2_theme)
+      req(input$selectOrg)
       isolate({
         withProgress(message = "Ploting gene characteristics", {
           x <- geneInfoLookup()
@@ -1503,7 +1504,7 @@ server <- function(input, output, session) {
 
                 p1 <- ggplot(x2, aes(cds_length, fill = Set, colour = Set)) +
                   geom_density(alpha = 0.1) +
-                  scale_x_log10() +
+                  scale_x_log10() + 
                   labs(x = "Coding sequence length (bp)", y = "Density") +
                   annotate("text", x = min(x2$cds_length) + 50, y = .5, label = sig, size = 8) +
                   # annotate("text",x= max(x2$cds_length), y = densMode(x2$cds_length)$y, label=sig, size=8, hjust=1) +
@@ -1514,18 +1515,7 @@ server <- function(input, output, session) {
                   ) +
                   theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
               } else {
-                p1 <- ggplot() +
-                  geom_point() +
-                  xlim(-10, 10) +
-                  ylim(-10, 10) +
-                  annotate("text", x = 0, y = 0, label = "Coding Sequence length plot not available.") +
-                  theme(
-                    legend.position = "none",
-                    panel.grid = element_blank(),
-                    axis.title = element_blank(),
-                    axis.text = element_blank(),
-                    axis.ticks = element_blank()
-                  )
+                p1 <- fake_plot("Coding Sequence length plot not available.")
               }
 
               incProgress(1 / 8)
@@ -1557,20 +1547,9 @@ server <- function(input, output, session) {
                   ) +
                   theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
               } else {
-                p2 <- ggplot() +
-                  geom_point() +
-                  xlim(-10, 10) +
-                  ylim(-10, 10) +
-                  annotate("text", x = 0, y = 0, label = "Transcript length plot not available.") +
-                  theme(
-                    legend.position = "none",
-                    panel.grid = element_blank(),
-                    axis.title = element_blank(),
-                    axis.text = element_blank(),
-                    axis.ticks = element_blank()
-                  )
+                p2 <- fake_plot("Transcript length plot not available.")
               }
-              incProgress(1 / 8)
+              incProgress(2 / 8)
 
               # Genome span ------------
 
@@ -1597,21 +1576,10 @@ server <- function(input, output, session) {
                   ) +
                   theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
               } else {
-                p3 <- ggplot() +
-                  geom_point() +
-                  xlim(-10, 10) +
-                  ylim(-10, 10) +
-                  annotate("text", x = 0, y = 0, label = "Genome span plot not available.") +
-                  theme(
-                    legend.position = "none",
-                    panel.grid = element_blank(),
-                    axis.title = element_blank(),
-                    axis.text = element_blank(),
-                    axis.ticks = element_blank()
-                  )
+                p3 <- fake_plot("Genome span plot not available.")
               }
 
-              incProgress(1 / 8)
+              incProgress(3 / 8)
 
               # 5' UTR ------------
 
@@ -1642,21 +1610,10 @@ server <- function(input, output, session) {
                   ) +
                   theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
               } else {
-                p4 <- ggplot() +
-                  geom_point() +
-                  xlim(-10, 10) +
-                  ylim(-10, 10) +
-                  annotate("text", x = 0, y = 0, label = "5' UTR plot not available.") +
-                  theme(
-                    legend.position = "none",
-                    panel.grid = element_blank(),
-                    axis.title = element_blank(),
-                    axis.text = element_blank(),
-                    axis.ticks = element_blank()
-                  )
+                p4 <- fake_plot("5' UTR plot not available.")
               }
 
-              incProgress(1 / 8)
+              incProgress(4 / 8)
 
               # 3' UTR ------------
               if (sum(!is.na(x2$ThreeUTR)) >= minGenes && length(unique(x2$ThreeUTR)) > 2 && length(which(x2$Set == "List")) > minGenes) {
@@ -1683,20 +1640,9 @@ server <- function(input, output, session) {
                   ) +
                   theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
               } else {
-                p5 <- ggplot() +
-                  geom_point() +
-                  xlim(-10, 10) +
-                  ylim(-10, 10) +
-                  annotate("text", x = 0, y = 0, label = "3' UTR plot not available.") +
-                  theme(
-                    legend.position = "none",
-                    panel.grid = element_blank(),
-                    axis.title = element_blank(),
-                    axis.text = element_blank(),
-                    axis.ticks = element_blank()
-                  )
+                p5 <- fake_plot("3' UTR plot not available.")
               }
-              incProgress(1 / 8)
+              incProgress(5 / 8)
 
               # GC content ------------
               if (sum(!is.na(x2$percentage_gc_content)) >= minGenes &&
@@ -1726,24 +1672,44 @@ server <- function(input, output, session) {
                   ) +
                   theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
               } else {
-                p6 <- ggplot() +
-                  geom_point() +
-                  xlim(-10, 10) +
-                  ylim(-10, 10) +
-                  annotate("text", x = 0, y = 0, label = "GC content plot not available.") +
-                  theme(
-                    legend.position = "none",
-                    panel.grid = element_blank(),
-                    axis.title = element_blank(),
-                    axis.text = element_blank(),
-                    axis.ticks = element_blank()
-                  )
+                p6 <- fake_plot("GC content plot not available.")
               }
 
-              incProgress(1 / 8)
+              incProgress(6 / 8)
+              p1 <- refine_ggplot2(
+                  p = p1,
+                  gridline = FALSE,
+                  ggplot2_theme = input$ggplot2_theme
+                )  
+              p2 <- refine_ggplot2(
+                p = p2,
+                gridline = FALSE,
+                ggplot2_theme = input$ggplot2_theme
+              )   
+              p3 <- refine_ggplot2(
+                p = p3,
+                gridline = FALSE,
+                ggplot2_theme = input$ggplot2_theme
+              )   
+              p4 <- refine_ggplot2(
+                p = p4,
+                gridline = FALSE,
+                ggplot2_theme = input$ggplot2_theme
+              )   
+              p5 <- refine_ggplot2(
+                p = p5,
+                gridline = FALSE,
+                ggplot2_theme = input$ggplot2_theme
+              )
+              p6 <- refine_ggplot2(
+                p = p6,
+                gridline = FALSE,
+                ggplot2_theme = input$ggplot2_theme
+              )                                                
               grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 1)
             }
-          incProgress(1 / 8, detail = paste("Done"))
+
+          incProgress(7 / 8, detail = paste("Done"))
         })
       }) # isolate
     },
@@ -1779,6 +1745,7 @@ server <- function(input, output, session) {
     tem <- input$enrichChartAspectRatio
     tem <- input$maxTerms
     tem <- input$abbreviatePathway
+    req(input$ggplot2_theme)
 
     isolate({
       goTable <- significantOverlaps()$x[, 1:5]
@@ -1820,8 +1787,15 @@ server <- function(input, output, session) {
           high = input$SortPathwaysPlotHighColor,
           name = names(columns)[columns == colorBy],
           guide = guide_colorbar(reverse = TRUE)
-        ) +
-        scale_size(range = c(1, markerSize)) +
+        ) 
+
+        p <- refine_ggplot2(
+          p = p,
+          gridline = FALSE,
+          ggplot2_theme = input$ggplot2_theme
+        )
+
+        p <- p + scale_size(range = c(1, markerSize)) +
         xlab(names(columns)[columns == x]) +
         ylab(NULL) +
         guides(
@@ -1856,12 +1830,17 @@ server <- function(input, output, session) {
             high = input$SortPathwaysPlotHighColor,
             name = names(columns)[columns == colorBy],
             guide = guide_colorbar(reverse = TRUE)
-          ) +
-          xlab(names(columns)[columns == x]) +
-          ylab(NULL) +
-          theme(axis.text = element_text(size = fontSize))
+          ) 
+          p <- refine_ggplot2(
+            p = p,
+            gridline = FALSE,
+            ggplot2_theme = input$ggplot2_theme
+          )          
+          p <- p + 
+            xlab(names(columns)[columns == x]) +
+            ylab(NULL) +
+            theme(axis.text = element_text(size = fontSize))
       }
-
       return(p)
     }) # isolate
   })

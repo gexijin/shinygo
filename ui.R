@@ -405,6 +405,31 @@ ui <- fluidPage(
               choices = .1 * (5:30),
               selected = 2
             )),
+            column(
+              width = 3,
+              selectInput(
+                inputId = "ggplot2_theme",
+                label = h5("Plot theme:"),
+                choices = c(
+                  "default", # no change
+                  "gray",
+                  "bw",
+                  "light",
+                  "dark",
+                  "classic",
+                  "minimal",
+                  "linedraw",
+                  "Add grid"
+                ),
+                selected = "default",
+                selectize = FALSE
+              ),
+              tippy::tippy_this(
+                "ggplot2_theme",
+                "Changes the ggplot2 theme for all plots, including those in the Plots tab.",
+                theme = "light-border"
+              )
+            ),
             column(3, style = "margin-top: 25px;", mod_download_images_ui("download_barplot"))
           ) # 3rd row
         ),
