@@ -68,7 +68,16 @@ ui <- fluidPage(
             inputId = "minFDR",
             label = h5("FDR cutoff"),
             value = 0.05, step = 0.01
-          )
+          ),
+          tippy::tippy_this(
+          "minFDR",
+          "Minimum  P-value, ajusted using the FDR (false discovery rate) 
+          method. P-value is derived from hypergeometric distribution.
+           Really significant FDR are between 1E-5 to 1E-20. Don't be excited 
+           if you get an FDR of 1E-2 or 1E-3. We test tens of thousands of 
+           gene sets.",
+          theme = "light-border"
+        )
         ),
         column(
           6,
@@ -85,7 +94,18 @@ ui <- fluidPage(
               "200" = 200,
               "500" = 500
             ),
-            selected = "20"
+            selected = "20",
+            selectize = FALSE
+          ),
+          tippy::tippy_this(
+            "maxTerms",
+            "How many top pathways to show after sorting.
+            You can download nearly all significant ones. 
+            We typically recommend focusing on the top 10 to 20 pathways. 
+            If you go down the list,
+            you can always find the one that help you tell the story you 
+            want to tell.",
+            theme = "light-border"
           )
         )
       ),
@@ -94,29 +114,88 @@ ui <- fluidPage(
 
 
       fluidRow(
-        column(6, numericInput("minSetSize",
-          label = h5("Pathway size: Min."),
-          min   = 2,
-          max   = 30,
-          value = 2,
-          step  = 1
-        )),
-        column(6, numericInput("maxSetSize",
-          label = h5("Max."),
-          min   = 1000,
-          max   = 5000,
-          value = 2000,
-          step  = 100
-        ))
+        column(
+          width = 6, 
+          numericInput("minSetSize",
+            label = h5("Pathway size: Min."),
+            min   = 2,
+            max   = 30,
+            value = 2,
+            step  = 1
+          ),
+          tippy::tippy_this(
+            "minSetSize",
+            "Smaller pathways can introduce noise. Generally safe to incrase to 10 or 15.
+            It is automatically raised to 10 when \"Sort by Fold Enrichment \" is selected.",
+            theme = "light-border"
+          )
+        ),
+        column(
+          width = 6,
+          numericInput("maxSetSize",
+            label = h5("Max."),
+            min   = 1000,
+            max   = 5000,
+            value = 2000,
+            step  = 100
+          ),
+          tippy::tippy_this(
+            "maxSetSize",
+            "Big gene sets, such as those associated with top-level GO term
+            \"Cellular Process\", are less informative, but 
+            tend to have small P values due to increased power.",
+            theme = "light-border"
+          )
+        )
       ), # fluidRow
       # tags$style(type='text/css', "#minSetSize { width:100%;   margin-top:-12px}"),
       # tags$style(type='text/css', "#maxSetSize { width:100%;   margin-top:-12px}"),
       fluidRow(
-        column(6, checkboxInput("removeRedudantSets", "Remove redundancy", value = TRUE)),
-        column(6, checkboxInput("abbreviatePathway", "Abbreviate pathways", value = TRUE))
+        column(
+          width = 6,
+          checkboxInput(
+            "removeRedudantSets", 
+            "Remove redundancy", 
+            value = TRUE
+          ),
+          tippy::tippy_this(
+            "removeRedudantSets",
+            "Similar pathways sharing 95% of genes are represented by the most significant pathway.",
+            theme = "light-border"
+          )
+        ),
+        column(
+          width = 6, 
+          checkboxInput(
+            "abbreviatePathway", 
+            "Abbreviate pathways", 
+            value = TRUE
+          ),
+          tippy::tippy_this(
+            "abbreviatePathway",
+            "Positive regulation --> Pos. reg.",
+            theme = "light-border"
+          )
+        )
       ), # fluidRow
-      checkboxInput("gene_count_pathwaydb", "Use pathway database for gene counts", value = FALSE),
+      checkboxInput(
+        "gene_count_pathwaydb", 
+        "Use pathway database for gene counts", 
+        value = FALSE
+      ),
+      tippy::tippy_this(
+        "gene_count_pathwaydb",
+        "If turned on, a gene must match at least one pathway in the selected pathway database.
+        Otherwise, this gene is ignored when calculating enrichment. Be cautious
+        when the selected pathway database is small, such as KEGG. ",
+        theme = "light-border"
+      ),
       actionButton("MGeneIDexamples", "Gene IDs examples"),
+      tippy::tippy_this(
+        "MGeneIDexamples",
+        "Show some example gene IDs in our database for a specific species.",
+        theme = "light-border"
+      ),
       h5("Try ", a(" iDEP", href = "https://bioinformatics.sdstate.edu/idep/", target = "_blank"), "for RNA-Seq data analysis"),
       tableOutput("species")
     ), # sidebarPanel
@@ -152,6 +231,8 @@ ui <- fluidPage(
               " for updates. "
             ),
             br(),
+            p("Oct 26, 2022: Add hover text. When users select \"Sort by Fold Enrichment\", the minimum pathway size is raised to 10 to 
+             filter out noise from tiny gene sets."),
             p("Sept 28, 2022: In ShinyGO 0.76.2, KEGG is now the default pathway database. More importantly,
                     we reverted to 0.76 for default gene counting method, namely
                     all protein-coding genes are used as the background by default.
@@ -244,7 +325,6 @@ ui <- fluidPage(
                     When 'Remove redundancy' is selected, similar pathways sharing 95% of genes are represented by the most significant pathway.
                     Redundant pathways also needs to share 50% of the words in their names. When 'Remove redundancy' is selected longer pathway names
                     are also represented by the first 80 characters.
-
                     ")
           )
         ),  # enrichment tab
@@ -669,19 +749,27 @@ ui <- fluidPage(
         plotOutput("enrichmentNetworkPlot")
       ),  # bsModal 2
 
-      bsModal("BackgroundGenes", "Customized background genes (Highly recommended)", "backgroundGenes",
+      bsModal("BackgroundGenes", "Customized background genes (recommended)", "backgroundGenes",
         size = "large",
         tags$textarea(
           id = "input_text_b",
-          placeholder = "Paste all genes from which the gene list is derived. These are all genes whose expression or other activity that you measured. This could be all the genes on a special DNA microarray or all the genes detected by a proteomics experiment.
-                    ", rows = 15, ""
-        ),
-        h4("By default, we compare your gene list with a background of all protein-coding genes in the genome.
-     		         When your genes are not selected from genome-wide data, customized background genes might yield more accurate
-		             results for enrichment analysis. For gene lists derived from a typical RNA-seq dataset,
-                     many  use the subset of genes with detectable expression, typically the genes passed a minimum filter.
-                      We can also customize background genes to overcome bias in selection. Currently only less than 30,000 genes are accepted.
-		              ")
+          placeholder = "
+Paste all genes from which the gene list is derived. These are all 
+genes whose expression or other activity that you measured. 
+This could be all the genes on a DNA microarray or all the genes 
+detected by a proteomics experiment. 
+
+By default, we compare your gene list with a background of all 
+protein-coding genes in the genome. When your genes are not selected 
+from genome-wide data, customized background genes might yield more 
+accurate results for enrichment analysis. For gene lists derived from
+a typical RNA-seq dataset, many  use the subset of genes with detectable 
+expression, typically the genes passed a minimum filter.
+We can also customize background genes to overcome bias in selection. 
+Currently only less than 30,000 genes are accepted.",
+            rows = 20,
+            ""
+        )
       ),  # bsModal 3
 
       bsModal("geneIDexamples", "What the gene IDs in our database look like?", "MGeneIDexamples",
