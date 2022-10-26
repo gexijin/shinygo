@@ -73,9 +73,9 @@ ui <- fluidPage(
           "minFDR",
           "Minimum  P-value, ajusted using the FDR (false discovery rate) 
           method. P-value is derived from hypergeometric distribution.
-           Really significant FDR are between 1E-5 to 1E-20. Don't be excited 
-           if you get an FDR of 1E-2 or 1E-3. We test tens of thousands of 
-           gene sets.",
+           Really significant FDR are between 1E-5 to 1E-20. Be cautious
+           when you get an FDR of 1E-2 or 1E-3, as thousands of 
+           gene sets are tested.",
           theme = "light-border"
         )
         ),
@@ -99,7 +99,7 @@ ui <- fluidPage(
           ),
           tippy::tippy_this(
             "maxTerms",
-            "How many top pathways to show after sorting.
+            "How many top pathways to show.
             You can download nearly all significant ones. 
             We typically recommend focusing on the top 10 to 20 pathways. 
             If you go down the list,
