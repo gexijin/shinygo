@@ -1306,12 +1306,12 @@ server <- function(input, output, session) {
                   sig <- paste("Distribution of query genes on chromosomes \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
 
                   if (Pval < PvalGeneInfo2) {
-                    sig <- paste(sig, " ***")
+                    sig <- paste(sig, "***")
                   } else
                   if (Pval < PvalGeneInfo1) {
-                    sig <- paste(sig, " **")
+                    sig <- paste(sig, "**")
                   } else
-                  if (Pval < PvalGeneInfo) sig <- paste(sig, " *")
+                  if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
 
                   freq <- freq[order(as.numeric(row.names(freq))), ]
                   freq[, 1] <- freq[, 1] * colSums(freq)[2] / colSums(freq)[1] # expected
@@ -1342,12 +1342,12 @@ server <- function(input, output, session) {
                   Pval <- chisq.test(freq)$p.value
                   sig <- paste("Distribution by gene type \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
                   if (Pval < PvalGeneInfo2) {
-                    sig <- paste(sig, " ***")
+                    sig <- paste(sig, "***")
                   } else
                   if (Pval < PvalGeneInfo1) {
-                    sig <- paste(sig, " **")
+                    sig <- paste(sig, "**")
                   } else
-                  if (Pval < PvalGeneInfo) sig <- paste(sig, " *")
+                  if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
                   freq <- freq[order(freq[, 1], decreasing = T), ]
                   freq[, 1] <- freq[, 1] * colSums(freq)[2] / colSums(freq)[1]
                   tem <- gsub("protein_coding", "Coding", rownames(freq))
@@ -1384,12 +1384,12 @@ server <- function(input, output, session) {
                   Pval <- chisq.test(freq)$p.value
                   sig <- paste("Number of exons (coding genes only) \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
                   if (Pval < PvalGeneInfo2) {
-                    sig <- paste(sig, " ***")
+                    sig <- paste(sig, "***")
                   } else
                   if (Pval < PvalGeneInfo1) {
-                    sig <- paste(sig, " **")
+                    sig <- paste(sig, "**")
                   } else
-                  if (Pval < PvalGeneInfo) sig <- paste(sig, " *")
+                  if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
                   # freq <- freq[order(    freq[,1], decreasing=T), ]
                   freq[, 1] <- freq[, 1] * colSums(freq)[2] / colSums(freq)[1]
                   freq <- freq[, c(2, 1)] # reverse order
@@ -1417,12 +1417,12 @@ server <- function(input, output, session) {
                   Pval <- chisq.test(freq)$p.value
                   sig <- paste("Number of transcript isoforms per coding gene \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
                   if (Pval < PvalGeneInfo2) {
-                    sig <- paste(sig, " ***")
+                    sig <- paste(sig, "***")
                   } else
                   if (Pval < PvalGeneInfo1) {
-                    sig <- paste(sig, " **")
+                    sig <- paste(sig, "**")
                   } else
-                  if (Pval < PvalGeneInfo) sig <- paste(sig, " *")
+                  if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
                   freq <- freq[order(freq[, 1], decreasing = T), ]
                   freq[, 1] <- freq[, 1] * colSums(freq)[2] / colSums(freq)[1]
                   freq <- freq[, c(2, 1)] # reverse order
@@ -1491,22 +1491,14 @@ server <- function(input, output, session) {
               if (sum(!is.na(x2$cds_length)) >= minGenes && length(unique(x2$cds_length)) > 2 &&
                 length(which(x2$Set == "List")) > minGenes) {
                 Pval <- t.test(log(cds_length) ~ Set, data = x2)$p.value
-                sig <- paste("P = ", formatC(Pval, digits = 2, format = "G"), sep = "")
-                if (Pval < PvalGeneInfo2) {
-                  sig <- paste(sig, " ***")
-                } else
-                if (Pval < PvalGeneInfo1) {
-                  sig <- paste(sig, " **")
-                } else
-                if (Pval < PvalGeneInfo) sig <- paste(sig, " *")
-
+                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
 
 
                 p1 <- ggplot(x2, aes(cds_length, fill = Set, colour = Set)) +
                   geom_density(alpha = 0.1) +
                   scale_x_log10() + 
                   labs(x = "Coding sequence length (bp)", y = "Density") +
-                  annotate("text", x = min(x2$cds_length) + 50, y = .5, label = sig, size = 8) +
+                  annotate("text", x = min(x2$cds_length) + 50, y = .5, label = sig, size = 6) +
                   # annotate("text",x= max(x2$cds_length), y = densMode(x2$cds_length)$y, label=sig, size=8, hjust=1) +
                   guides(color = guide_legend(nrow = 2)) +
                   theme(
@@ -1525,19 +1517,12 @@ server <- function(input, output, session) {
                 length(unique(x2$transcript_length)) > 2 &&
                 length(which(x2$Set == "List")) > minGenes) {
                 Pval <- t.test(log(transcript_length) ~ Set, data = x2[which(!is.na(x2$transcript_length)), ])$p.value
-                sig <- paste("P = ", formatC(Pval, digits = 2, format = "G"), sep = "")
-                if (Pval < PvalGeneInfo2) {
-                  sig <- paste(sig, " ***")
-                } else
-                if (Pval < PvalGeneInfo1) {
-                  sig <- paste(sig, " **")
-                } else
-                if (Pval < PvalGeneInfo) sig <- paste(sig, " *")
+                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
 
                 p2 <- ggplot(x2, aes(transcript_length, fill = Set, colour = Set)) +
                   geom_density(alpha = 0.1) +
                   scale_x_log10() +
-                  annotate("text", x = min(x2$transcript_length) + 100, y = .5, label = sig, size = 8) +
+                  annotate("text", x = min(x2$transcript_length) + 100, y = .5, label = sig, size = 6) +
                   # annotate("text",x= max(x2$transcript_length), y = densMode(x2$transcript_length)$y, label=sig, size=8, hjust=1) +
                   labs(x = "Transcript length (bp)", y = "Density") +
                   guides(color = guide_legend(nrow = 2)) +
@@ -1555,18 +1540,11 @@ server <- function(input, output, session) {
 
               if (sum(!is.na(x2$genomeSpan)) >= minGenes && length(unique(x2$genomeSpan)) > 2 && length(which(x2$Set == "List")) > minGenes) {
                 Pval <- t.test(log(genomeSpan) ~ Set, data = x2[which(!is.na(x2$genomeSpan)), ])$p.value
-                sig <- paste("P = ", formatC(Pval, digits = 2, format = "G"), sep = "")
-                if (Pval < PvalGeneInfo2) {
-                  sig <- paste(sig, " ***")
-                } else
-                if (Pval < PvalGeneInfo1) {
-                  sig <- paste(sig, " **")
-                } else
-                if (Pval < PvalGeneInfo) sig <- paste(sig, " *")
+                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
                 p3 <- ggplot(x2, aes(genomeSpan, fill = Set, colour = Set)) +
                   geom_density(alpha = 0.1) +
                   scale_x_log10() +
-                  annotate("text", x = min(x2$genomeSpan) + 200, y = .5, label = sig, size = 8) +
+                  annotate("text", x = min(x2$genomeSpan) + 200, y = .5, label = sig, size = 6) +
                   # annotate("text",x= max(x2$genomeSpan), y = densMode(x2$genomeSpan)$y, label=sig, size=8, hjust=1) +
                   labs(x = "Genome span (bp)", y = "Density") +
                   guides(color = guide_legend(nrow = 2)) +
@@ -1585,21 +1563,14 @@ server <- function(input, output, session) {
 
               if (sum(!is.na(x2$FiveUTR)) >= minGenes && length(unique(x2$FiveUTR)) > 2 && length(which(x2$Set == "List")) > minGenes) {
                 Pval <- t.test(log(FiveUTR) ~ Set, data = x2[which(!is.na(x2$FiveUTR) & x2$FiveUTR > 0), ])$p.value
-                sig <- paste("P = ", formatC(Pval, digits = 2, format = "G"), sep = "")
-                if (Pval < PvalGeneInfo2) {
-                  sig <- paste(sig, " ***")
-                } else
-                if (Pval < PvalGeneInfo1) {
-                  sig <- paste(sig, " **")
-                } else
-                if (Pval < PvalGeneInfo) sig <- paste(sig, " *")
+                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
 
                 p4 <- ggplot(x2, aes(FiveUTR, fill = Set, colour = Set)) +
                   geom_density(alpha = 0.1) +
                   scale_x_log10() +
                   annotate("text",
                     x = min(x2[which(!is.na(x2$FiveUTR) & x2$FiveUTR > 0), "FiveUTR"]) + 5,
-                    y = .5, label = sig, size = 8
+                    y = .5, label = sig, size = 6
                   ) +
                   # annotate("text",x= max(x2$FiveUTR), y = densMode(x2$FiveUTR)$y, label=sig, size=8, hjust=1) +
                   labs(x = "5' UTR length (bp)", y = "Density") +
@@ -1618,19 +1589,12 @@ server <- function(input, output, session) {
               # 3' UTR ------------
               if (sum(!is.na(x2$ThreeUTR)) >= minGenes && length(unique(x2$ThreeUTR)) > 2 && length(which(x2$Set == "List")) > minGenes) {
                 Pval <- t.test(log(ThreeUTR) ~ Set, data = x2[which(!is.na(x2$ThreeUTR) & x2$ThreeUTR > 0), ])$p.value
-                sig <- paste("P = ", formatC(Pval, digits = 2, format = "G"), sep = "")
-                if (Pval < PvalGeneInfo2) {
-                  sig <- paste(sig, " ***")
-                } else
-                if (Pval < PvalGeneInfo1) {
-                  sig <- paste(sig, " **")
-                } else
-                if (Pval < PvalGeneInfo) sig <- paste(sig, " *")
+                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
 
                 p5 <- ggplot(x2, aes(ThreeUTR, fill = Set, colour = Set)) +
                   geom_density(alpha = 0.1) +
                   scale_x_log10() +
-                  annotate("text", x = min(x2[which(!is.na(x2$ThreeUTR) & x2$ThreeUTR > 0), "ThreeUTR"]) + 5, y = .5, label = sig, size = 8) +
+                  annotate("text", x = min(x2[which(!is.na(x2$ThreeUTR) & x2$ThreeUTR > 0), "ThreeUTR"]) + 5, y = .5, label = sig, size = 6) +
                   # annotate("text",x= max(x2$ThreeUTR), y = densMode(x2$ThreeUTR)$y, label=sig, size=8, hjust=1) +
                   labs(x = "3' UTR length (bp)", y = "Density") +
                   guides(color = guide_legend(nrow = 2)) +
@@ -1651,19 +1615,12 @@ server <- function(input, output, session) {
                 Pval <- t.test(percentage_gc_content ~ Set,
                   data = x2[which(!is.na(x2$percentage_gc_content) & x2$percentage_gc_content > 0), ]
                 )$p.value
-                sig <- paste("P = ", formatC(Pval, digits = 2, format = "G"), sep = "")
-                if (Pval < PvalGeneInfo2) {
-                  sig <- paste(sig, " ***")
-                } else
-                if (Pval < PvalGeneInfo1) {
-                  sig <- paste(sig, " **")
-                } else
-                if (Pval < PvalGeneInfo) sig <- paste(sig, " *")
+                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
 
                 p6 <- ggplot(x2, aes(percentage_gc_content, fill = Set, colour = Set)) +
                   geom_density(alpha = 0.1) +
                   # annotate("text",x= min(x2$percentage_gc_content)+5, y = .02, label=sig, size=8)+
-                  annotate("text", x = max(x2$percentage_gc_content), y = densMode(x2$percentage_gc_content)$y, label = sig, size = 8, hjust = 1) +
+                  annotate("text", x = max(x2$percentage_gc_content), y = densMode(x2$percentage_gc_content)$y, label = sig, size = 6, hjust = 1) +
                   labs(x = "GC content (%)", y = "Density") +
                   guides(color = guide_legend(nrow = 2)) +
                   theme(
@@ -1713,8 +1670,8 @@ server <- function(input, output, session) {
         })
       }) # isolate
     },
-    width = 700,
-    height = 3000
+    width = 600,
+    height = 2400
   )
 
 

@@ -1546,3 +1546,17 @@ fake_plot <- function(some_text) {
     )
   return(p)
 }
+
+# 0.000234   <- 2.3E-4 *
+mark_significance <- function(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo) {
+  sig <- paste("P=", formatC(Pval, digits = 2, format = "G"), sep = "")
+  if (Pval < PvalGeneInfo2) {
+    sig <- paste(sig, "***")
+  } else
+  if (Pval < PvalGeneInfo1) {
+    sig <- paste(sig, "**")
+  } else
+  if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
+  return(sig)
+}
+
