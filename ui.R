@@ -140,8 +140,11 @@ ui <- fluidPage(
             makes you more productive, we can use it as a support letter when we
               apply for funding, which will help sustain
               and improve this service."),
-            p("If this server is down or busy, please use a ", a("mirror sever", href = "http://149.165.154.220/go/"), 
-            " hosted by NSF-funded JetStream2."),
+            p(
+              "If this server is busy, please use a mirror sever ",
+              a("http://ge-lab.org/go/", href = "http://149.165.154.220/idepg/"),
+              ", hosted by NSF-funded JetStream2."
+            ),
             p(
               a("Email Jenny ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
               "for questions, suggestions or data contributions.",
