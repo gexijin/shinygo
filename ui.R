@@ -142,7 +142,7 @@ ui <- fluidPage(
               and improve this service."),
             p(
               "If this server is busy, please use a mirror sever ",
-              a("http://ge-lab.org/go/", href = "http://149.165.154.220/idepg/"),
+              a("http://ge-lab.org/go/", href = "http://149.165.154.220/go/"),
               ", hosted by NSF-funded JetStream2."
             ),
             p(
