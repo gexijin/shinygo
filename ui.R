@@ -30,7 +30,7 @@ ui <- fluidPage(
   ),
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.76.3"),
+      titlePanel("ShinyGO 0.76.2"),
       h5("Select or search your species."),
       fluidRow(
         column(9, selectizeInput("selectOrg",
@@ -231,7 +231,7 @@ ui <- fluidPage(
               " for updates. "
             ),
             br(),
-            p("Oct 26, 2022: Add hover text. When users select \"Sort by Fold Enrichment\", the minimum pathway size is raised to 10 to 
+            p("Oct 26, 2022: Add hover text. Change plot styles. When users select \"Sort by Fold Enrichment\", the minimum pathway size is raised to 10 to 
              filter out noise from tiny gene sets."),
             p("Sept 28, 2022: In ShinyGO 0.76.2, KEGG is now the default pathway database. More importantly,
                     we reverted to 0.76 for default gene counting method, namely
