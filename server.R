@@ -1270,8 +1270,8 @@ server <- function(input, output, session) {
     figure = reactive({
       gene_barplot_object() 
     }),
-    width = 6,
-    height = 15
+    width = 8,
+    height = 20
   )
 
   output$gene_barplot <- renderPlot({
