@@ -1264,8 +1264,24 @@ server <- function(input, output, session) {
     width = 1000
   )
 
+  download_gene_barplot <- mod_download_images_server(
+    "download_gene_barplot",
+    filename = "gene_characteristics_barplot",
+    figure = reactive({
+      gene_barplot_object() 
+    }),
+    width = 6,
+    height = 15
+  )
+
+  output$gene_barplot <- renderPlot({
+    gene_barplot_object()
+    },
+    width = 600,
+    height = 1500
+  )
   # barplots using R base graphics
-  output$genePlot <- renderPlot(
+  gene_barplot_object<- reactive(
     {
       if (input$goButton == 0) {
         return()
@@ -1443,15 +1459,38 @@ server <- function(input, output, session) {
               incProgress(1 / 8)
             } # if minGenes
           incProgress(1 / 8, detail = paste("Done"))
+          return(recordPlot())
         })
       }) # isolate
-    },
-    width = 600,
-    height = 1500
+    }
   )
 
   # density plots using ggplot2
   output$genePlot2 <- renderPlot(
+    {
+      req(input$ggplot2_theme)
+      req(input$selectOrg)
+      req(gene_density_plot())
+      
+      gene_density_plot()
+
+    },
+    width = 600,
+    height = 2400
+  )
+
+  download_gene_plot_dist <- mod_download_images_server(
+    "download_gene_plot_dist",
+    filename = "gene_plot_dist",
+    figure = reactive({
+      ggpubr::as_ggplot(gene_density_plot())  
+    }),
+    width = 6,
+    height = 24
+  )
+
+  # density plots using ggplot2
+  gene_density_plot <- reactive(
     {
       if (input$goButton == 0) {
         return()
@@ -1662,16 +1701,13 @@ server <- function(input, output, session) {
                 p = p6,
                 gridline = FALSE,
                 ggplot2_theme = input$ggplot2_theme
-              )                                                
-              grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 1)
+              )
+              incProgress(7 / 8, detail = paste("Done"))  
+              gridExtra::grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 1)                                                          
             }
-
-          incProgress(7 / 8, detail = paste("Done"))
         })
       }) # isolate
-    },
-    width = 600,
-    height = 2400
+    }
   )
 
 
