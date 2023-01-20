@@ -30,7 +30,7 @@ ui <- fluidPage(
   ),
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.76.3"),
+      titlePanel("ShinyGO 0.77"),
       h5("Select or search your species:"),
       fluidRow(
         column(9, selectizeInput("selectOrg",
@@ -207,6 +207,16 @@ ui <- fluidPage(
           conditionalPanel(
             "input.goButton == 0 ", # welcome screen
             br(),
+            p(
+              "Jan. 19, 2023: Thanks to a user's feedback, we found a serious bug 
+              in ShinyGO 0.75 and 0.76. 
+              As some genes are represented by multiple gene IDs in Ensebml, they are counted more 
+              than once in calculating enrichment. We believe this is fixed. If you
+              pasted Ensembl gene IDs to ShinyGO between Feb 2, 2022 and Jan 19, 2023, 
+              please rerun your analysis. ShinyGO has not been throughly tested.
+              Please always double check your results with other tools
+              such as G:profiler, Enrichr, STRING-db, and DAVID.", style = "color:red"
+            ),
             h3(
               "Please ",
               a(

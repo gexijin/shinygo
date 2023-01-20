@@ -475,6 +475,14 @@ geneInfo <- function(converted, selectOrg) {
       {
         x <- read.csv(as.character(geneInfoFiles[ix]))
         x[, 1] <- toupper(x[, 1])
+
+        # most genes are chromosomes are 1, 2, 3
+        # some patch genes CHR_HSCHR6_MHC_MCF_CTG1
+        # these genes causes problems as one genes appear many times  FCAR in human
+        nchars_chr_name <- nchar(x$chromosome_name)
+        medean_nchars <- median(nchars_chr_name)
+        x <- x[which(nchars_chr_name < 3 * medean_nchars + 1), ]
+
       } else # read in the chosen file
     {
       return(as.data.frame("Multiple geneInfo file found!"))
