@@ -19,10 +19,47 @@ library(visNetwork)
 library(DT, verbose = FALSE) # for renderDataTable
 
 
+# define where database is located
+db_ver <<- "data107"
+db_url <<- "http://bioinformatics.sdstate.edu/data/"
+
 # if environmental variable is not set, use relative path
-datapath <- Sys.getenv("IDEP_DATABASE")[1]
+datapath <<- Sys.getenv("IDEP_DATABASE")[1]
+# if not defined in the environment, use too levels above
 if (nchar(datapath) == 0) {
-  datapath <- "../../data/data104b/"
+  datapath <<- paste0("../../data/")
+}
+#Add version
+datapath <<- paste0(datapath, "/", db_ver, "/")
+org_info_file <<- paste0(datapath, "demo/orgInfo.db")
+if(!file.exists(org_info_file)) {
+  datapath <<- paste0("./", db_ver, "/")
+  org_info_file <<- paste0(datapath, "demo/orgInfo.db")
+}
+
+connect_convert_db <- function(datapath = datapath) {
+  if (!file.exists(org_info_file)) {
+    # download org_info and demo files to current folder
+    withProgress(message = "Download demo data and species database", {
+      incProgress(0.2)
+      file_name <- paste0(db_ver, ".tar.gz")
+      options(timeout = 300)
+      download.file(
+        url = paste0(db_url, db_ver, "/", file_name),
+        destfile = file_name,
+        mode = "wb",
+        quiet = FALSE
+      )
+      untar(file_name) # untar and unzip the files
+      file.remove(file_name) # delete the tar file to save storage
+    })
+  }
+
+  return(DBI::dbConnect(
+    drv = RSQLite::dbDriver("SQLite"),
+    dbname = org_info_file,
+    flags = RSQLite::SQLITE_RO
+  ))
 }
 
 STRING_DB_VERSION <- "11.5" # what version of STRINGdb needs to be used
@@ -193,17 +230,9 @@ readGMT <- function(fileName) {
 }
 
 sqlite <- dbDriver("SQLite")
-convert <- dbConnect(sqlite, paste0(datapath, "convertIDs.db"), flags = SQLITE_RO) # read only mode
-# keggSpeciesID = read.csv(paste0(datapath,"data_go/KEGG_Species_ID.csv"))
-# List of GMT files in /gmt sub folder
-gmtFiles <- list.files(path = paste0(datapath, "pathwayDB"), pattern = ".*\\.db")
-gmtFiles <- paste(datapath, "pathwayDB/", gmtFiles, sep = "")
-geneInfoFiles <- list.files(path = paste0(datapath, "geneInfo"), pattern = ".*GeneInfo\\.csv")
-geneInfoFiles <- paste(datapath, "geneInfo/", geneInfoFiles, sep = "")
-motifFiles <- list.files(path = paste0(datapath, "motif"), pattern = ".*\\.db")
-motifFiles <- paste(datapath, "motif/", motifFiles, sep = "")
+convert <- connect_convert_db()
 
-STRING10_species <- read.csv(paste0(datapath, "data_go/STRING11_species.csv"))
+
 
 # Create a list for Select Input options
 orgInfo <- dbGetQuery(convert, paste("select distinct * from orgInfo "))
@@ -255,7 +284,7 @@ GO_levels <- dbGetQuery(convert, "select distinct id,level from GO
                                  WHERE GO = 'biological_process'")
 level2Terms <- GO_levels[which(GO_levels$level %in% c(2, 3)), 1] # level 2 and 3
 
-idIndex <- dbGetQuery(convert, paste("select distinct * from idIndex "))
+#idIndex <- dbGetQuery(convert, paste("select distinct * from idIndex "))
 
 quotes <- dbGetQuery(convert, " select * from quotes")
 quotes <- paste0("\"", quotes$quotes, "\"", " -- ", quotes$author, ".       ")
@@ -266,6 +295,18 @@ columnSelection <- list(
   "N. of Genes" = "nGenes",
   "Category Name" = "Pathway"
 )
+
+# keggSpeciesID = read.csv(paste0(datapath,"data_go/KEGG_Species_ID.csv"))
+# List of GMT files in /gmt sub folder
+gmtFiles <- orgInfo$file
+gmtFiles <- paste(datapath, "/db/", gmtFiles, sep = "")
+#geneInfoFiles <- list.files(path = paste0(datapath, "geneInfo"), pattern = ".*GeneInfo\\.csv")
+#geneInfoFiles <- paste(datapath, "geneInfo/", geneInfoFiles, sep = "")
+#motifFiles <- list.files(path = paste0(datapath, "motif"), pattern = ".*\\.db")
+#motifFiles <- paste(datapath, "motif/", motifFiles, sep = "")
+
+STRING10_species <- orgInfo[, c("id", "name")]
+
 
 # This function convert gene set names
 # x="GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA"
@@ -1160,7 +1201,8 @@ enrichmentNetwork <- function(enrichedTerms, layoutButton = 0, edge.cutoff = 5) 
   )
 }
 
-keggSpeciesID <- read.csv(paste0(datapath, "data_go/KEGG_Species_ID.csv"))
+keggSpeciesID <- orgInfo[, c("ensembl_dataset", "name", "KEGG")]
+colnames(keggSpeciesID)[3] <- "kegg"
 
 
 
