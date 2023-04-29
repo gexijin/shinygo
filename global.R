@@ -522,7 +522,7 @@ convertID <- function(query, selectOrg) {
   return(list(
     originalIDs = querySet,
     IDs = unique(result[, 2]),
-    species = findSpeciesById(result$species[1]),
+    species = findSpeciesById(selectOrg),
     # idType = findIDtypeById(result$idType[1] ),
     speciesMatched = speciesMatched,
     conversionTable = conversionTable
@@ -538,39 +538,25 @@ geneInfo <- function(converted, selectOrg) {
   if (length(querySet) == 0) {
     return(as.data.frame("ID not recognized!"))
   }
-  ix <- grep(converted$species[1, 1], geneInfoFiles)
- browser()
-  if (length(ix) == 0) {
-    return(as.data.frame("No matching gene info file found"))
-  } else {
-    # If selected species is not the default "bestMatch", use that species directly
-    if (selectOrg != speciesChoice[[1]]) {
-      ix <- grep(findSpeciesById(selectOrg)[1, 1], geneInfoFiles)
-    }
-    # browser()
-    if (length(ix) == 1) # if only one file           #WBGene0000001 some ensembl gene ids in lower case
-      {
-        x <- read.csv(as.character(geneInfoFiles[ix]))
-        x[, 1] <- toupper(x[, 1])
 
-        # most genes are chromosomes are 1, 2, 3
-        # some patch genes CHR_HSCHR6_MHC_MCF_CTG1
-        # these genes causes problems as one genes appear many times  FCAR in human
-        nchars_chr_name <- nchar(x$chromosome_name)
-        medean_nchars <- median(nchars_chr_name)
-        x <- x[which(nchars_chr_name < 3 * medean_nchars + 1), ]
+    querySTMT <- paste0(
+      "select * from geneInfo;"
+    )
 
-      } else # read in the chosen file
-    {
-      return(as.data.frame("Multiple geneInfo file found!"))
-    }
+    #convert_species <<- connect_convert_db_org(datapath, selectOrg)
+    x <- dbGetQuery(convert_species, querySTMT)
+
+    nchars_chr_name <- nchar(x$chromosome_name)
+    medean_nchars <- median(nchars_chr_name)
+    x <- x[which(nchars_chr_name < 3 * medean_nchars + 1), ]
+
 
     Set <- match(x$ensembl_gene_id, querySet)
     Set[which(is.na(Set))] <- "Genome"
     Set[which(Set != "Genome")] <- "List"
     # x = cbind(x,Set) } # just for debuging
     return(cbind(x, Set))
-  }
+
 }
 
 hyperText <- function(textVector, urlVector) {
