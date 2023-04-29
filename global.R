@@ -62,6 +62,12 @@ connect_convert_db <- function(datapath = datapath) {
   ))
 }
 
+
+
+
+
+
+
 STRING_DB_VERSION <- "11.5" # what version of STRINGdb needs to be used
 Min_overlap <- 1
 minSetSize <- 3
@@ -296,6 +302,33 @@ columnSelection <- list(
   "Category Name" = "Pathway"
 )
 
+
+
+#' Connect to the convertIDs database for the species and return the
+#' objects.
+#'
+#' Create a database connection with the DBI package.
+#'
+#' @param datapath Folder path to the data file
+#' @param select_org The slected species
+#' @param idep_data  Data object that includes org_info
+#'
+#' @export
+#' @return Database connection.
+connect_convert_db_org <- function(datapath = datapath, select_org) {
+  ix <- which(orgInfo$id == select_org)
+  db_file <- orgInfo[ix, "file"]
+  return(try(
+    DBI::dbConnect(
+    drv = RSQLite::dbDriver("SQLite"),
+    dbname = paste0(datapath, "db/", db_file),
+    flags = RSQLite::SQLITE_RO
+  )))
+}
+
+
+
+
 # keggSpeciesID = read.csv(paste0(datapath,"data_go/KEGG_Species_ID.csv"))
 # List of GMT files in /gmt sub folder
 gmtFiles <- orgInfo$file
@@ -390,6 +423,8 @@ convertID <- function(query, selectOrg) {
       testQueriesString,
       ")  GROUP BY species,idType"
     )
+
+
     species_ranked <- dbGetQuery(convert, query_species)
 
     if (dim(species_ranked)[1] == 0) {
@@ -454,10 +489,11 @@ convertID <- function(query, selectOrg) {
   } else { # if species is selected
 
     querySTMT <- paste0(
-      "select distinct id,ens,species,idType from mapping where species = '", selectOrg,
-      "' AND id IN ", querSetString
+      "select distinct id,ens,idType from mapping where id IN ", querSetString
     )
-    result <- dbGetQuery(convert, querySTMT)
+
+    convert_species <<- connect_convert_db_org(datapath, selectOrg)
+    result <- dbGetQuery(convert_species, querySTMT)
 
     if (dim(result)[1] == 0) {
       return(NULL)
@@ -503,7 +539,7 @@ geneInfo <- function(converted, selectOrg) {
     return(as.data.frame("ID not recognized!"))
   }
   ix <- grep(converted$species[1, 1], geneInfoFiles)
-  # browser()
+ browser()
   if (length(ix) == 0) {
     return(as.data.frame("No matching gene info file found"))
   } else {
@@ -1610,3 +1646,32 @@ mark_significance <- function(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo) 
   return(sig)
 }
 
+#' Find a species by ID
+#'
+#' Find a species in the iDEP database with an
+#' ID.
+#'
+#' @param species_id Species ID to search the database with
+#' @param org_info iDEP data org_info file
+#'
+#' @export
+#' @return Only return the species name with this function.
+find_species_by_id_name <- function(species_id, org_info) {
+  # find species name use id
+  return(org_info[which(org_info$id == species_id), 3])
+}
+
+#' Find a species id by ensembl dataset name
+#'
+#' Find a species in the iDEP database with an
+#' ID.
+#'
+#' @param species_id Species ID to search the database with
+#' @param org_info iDEP data org_info file
+#'
+#' @export
+#' @return Only return the species name with this function.
+find_species_id_by_ensembl <- function(ensembl_dataset, org_info) {
+  # find species name use id
+  return(org_info[which(org_info$ensembl_dataset == ensembl_dataset), "id"])
+}

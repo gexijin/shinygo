@@ -30,21 +30,42 @@ ui <- fluidPage(
   ),
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.77"),
-      h5("Select or search your species:"),
-      fluidRow(
-        column(9, selectizeInput("selectOrg",
+      titlePanel("ShinyGO 0.8"),
+      h5("Required: Select or search your species:"),
+
+        selectInput(
+          inputId = "selectOrg",
           label = NULL,
-          choices = " ",
-          multiple = TRUE,
-          options = list(
-            maxItems = 1,
-            placeholder = "Best matching species",
-            onInitialize = I('function() { this.setValue(""); }')
+          choices = setNames(99, "Human"), # Human is selected by default
+          multiple = FALSE,
+          selectize = TRUE,
+          selected = setNames(99, "Human")
+        ),
+
+        fluidRow(
+          column(
+            width = 6,
+            align = "center",
+            # Species list and genome assemblies ----------
+            actionButton(
+              inputId = "genome_assembl_button",
+              label = "Search & select"
+            )
+          ),
+
+          column(
+            width = 6,
+            textOutput("selected_species")
           )
-        )),
-        column(3, actionButton("MorgInfo", "Info"))
-      ),
+        ),
+    tags$head(tags$style("#load_data-selected_species{color: red;
+                                 font-size: 15px;
+                                 font-style: italic;
+                                 }"
+                         )
+              ),
+
+
       fluidRow(
         column(8, actionButton("useDemo1", "Demo genes"), ),
         # column(4,   actionButton("useDemo2", "Demo 2"),	  	  ),
@@ -829,15 +850,6 @@ Currently only less than 30,000 genes are accepted.",
         tableOutput("showGeneIDs4Species")
       ),  # bsModal 4
 
-      bsModal("orgInfoButton",
-        "Supported species",
-        "MorgInfo",
-        size = "large",
-        p("Search by common and scientific names, or NCBI taxonomy IDs.
-              If a species is annotated in both Ensembl and STRINGdb, please select Ensembl,
-              which provides more details. Species annotated in STRINGdb are marked as 'Homo Sapiens STRINGdb'."),
-        DT::dataTableOutput("orgInfoTable")
-      ),  # bsModal 5
       bsModal("genomePlotStaticButton", "Static genome plot", "gPlotstatic",
         size = "large",
         h5("Your genes are marked in each of the chromosomes.

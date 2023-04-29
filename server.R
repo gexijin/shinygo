@@ -12,25 +12,27 @@ server <- function(input, output, session) {
   options(warn = -1)
 
   observe({
-    updateSelectizeInput(session, "selectOrg", choices = speciesChoice, selected = speciesChoice[1])
-  })
+  #  updateSelectizeInput(session, "selectOrg", choices = speciesChoice, selected = speciesChoice[1])
+
 
   # for gene ID example
-  observe({
+
     updateSelectizeInput(session, "userSpecieIDexample", choices = speciesChoice, selected = speciesChoice[1])
-  })
+
   # load demo data when clicked
-  observe({
+
     if (input$useDemo1) {
       updateTextInput(session, "input_text", value = ExampleGeneList1)
     }
-  })
+  
 
   # update species for STRING-db related API access
   # tried to solve the double reflashing problems
   # https://stackoverflow.com/questions/30991900/avoid-double-refresh-of-plot-in-shiny
-  observe({
+
     updateSelectizeInput(session, "speciesName", choices = sort(STRING10_species$official_name))
+
+    shinyjs::hideElement(id = "selectOrg")
   })
   # click_saved <- reactiveValues(GO = NULL)
   # observeEvent(eventExpr = input$selectGO, handlerExpr = { click_saved$GO <- input$selectGO })
@@ -72,6 +74,84 @@ server <- function(input, output, session) {
 
     convertID(input$input_text, input$selectOrg)
   })
+
+
+
+    # Pop-up modal for gene assembl information ----
+    observeEvent(input$genome_assembl_button, {
+      shiny::showModal(
+        shiny::modalDialog(
+          size = "l",
+          p("Search annotated species by common or scientific names,
+          or NCBI taxonomy id. Click on a row to select. 
+          Use annotation in STRING-db as a last resort.  
+           If your species cannot be found here,
+          you can still use iDEP without pathway analysis."),
+          easyClose = TRUE,
+          DT::renderDataTable({
+            df <- orgInfo[, 
+              c("ensembl_dataset", "name", "academicName", "taxon_id", "group")
+            ]
+            colnames(df) <- c(
+              "Ensembl/STRING-db ID",
+              "Name (Assembly)",
+              "Academic Name",
+              "Taxonomy ID",
+              "Source"
+            )
+            row.names(df) <- NULL
+            DT::datatable(
+              df,
+              selection = "single",
+              options = list(
+                lengthChange = FALSE,
+                pageLength = 10,
+                scrollY = "400px"
+              ),
+              callback = DT::JS(
+                paste0(
+                 "table.on('click', 'tr', function() {
+                    var data = table.row(this).data();
+                    if (data) {
+                      Shiny.setInputValue('clicked_row', data[0]);
+                    }
+                  });"
+                )
+              ),
+              rownames = FALSE
+            )
+          })
+        )
+      )
+    })
+
+    observeEvent(input$clicked_row, {
+      # find species ID from ensembl_dataset
+      selected <- find_species_id_by_ensembl(
+        input$clicked_row, 
+        orgInfo
+      )
+      # assign name
+      selected <- setNames(
+        selected,
+        find_species_by_id_name(selected, orgInfo)
+      )
+
+      updateSelectizeInput(
+        session = session,
+        inputId = "selectOrg",
+        choices = selected,
+        selected = selected,
+        server = TRUE
+      )
+      output$selected_species <- renderText({
+        paste0(
+          #"Selected: ",
+          find_species_by_id_name(selected, orgInfo)
+        )
+      })
+
+    })
 
 
   geneInfoLookup <- reactive({
