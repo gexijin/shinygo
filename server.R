@@ -77,6 +77,8 @@ server <- function(input, output, session) {
       convert_species, 
       "select * from idIndex;"
     )
+    dbDisconnect(convert_species)
+
   })
 
   # this defines an reactive object that can be accessed from other rendering functions
@@ -2588,7 +2590,12 @@ server <- function(input, output, session) {
 
           # kegg pathway id
           incProgress(1 / 2, "Download pathway graph from KEGG.")
-          pathID <- keggPathwayID(input$sigPathways, Species, "KEGG", input$selectOrg)
+
+          # find pathway id
+          # "Path:hsa04110 Cell cycle" --> "hsa04110"
+          pathID <- gsub(" .*", "", input$sigPathways)
+          pathID <- gsub("Path:", "", pathID)
+          #pathID <- keggPathwayID(input$sigPathways, Species, "KEGG", input$selectOrg)
           # cat("\nhere5  ",keggSpecies, " ",Species," ",input$sigPathways, "pathID:",pathID,"End", fold[1:5],names(fold)[1:5],"\n")
           # cat("\npathway:",is.na(input$sigPathways))
           # cat("\n",fold[1:5],"\n",keggSpecies,"\n",pathID)

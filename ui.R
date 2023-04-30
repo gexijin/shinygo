@@ -217,7 +217,7 @@ ui <- fluidPage(
           )
         ),
         column(
-          width = 6, 
+          width = 6,
           checkboxInput(
             inputId = "show_pathway_id",
             label = "Show pathway IDs",

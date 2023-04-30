@@ -492,9 +492,10 @@ convertID <- function(query, selectOrg) {
       "select distinct id,ens,idType from mapping where id IN ", querSetString
     )
 
-
+    # connect to the database, this becomes a global variable
+    convert_species <- connect_convert_db_org(datapath, selectOrg)
     result <- dbGetQuery(convert_species, querySTMT)
-
+    dbDisconnect(convert_species)
 
     if (dim(result)[1] == 0) {
       return(NULL)
@@ -544,8 +545,10 @@ geneInfo <- function(converted, selectOrg) {
       "select * from geneInfo;"
     )
 
-    #convert_species <<- connect_convert_db_org(datapath, selectOrg)
+    # connect to the database, this becomes a global variable
+    convert_species <- connect_convert_db_org(datapath, selectOrg)
     x <- dbGetQuery(convert_species, querySTMT)
+    dbDisconnect(convert_species)
 
     nchars_chr_name <- nchar(x$chromosome_name)
     medean_nchars <- median(nchars_chr_name)
@@ -1230,6 +1233,9 @@ colnames(keggSpeciesID)[3] <- "kegg"
 
 
 convertEnsembl2Entrez <- function(query, Species) {
+ speciesID <- orgInfo$id[which(orgInfo$ensembl_dataset == Species)] # note uses species Identifying
+  # connect to the database, this becomes a global variable
+  convert_species <- connect_convert_db_org(datapath, speciesID)
   # finds id index corresponding to entrez gene and KEGG for id conversion
   idType_Entrez <- dbGetQuery(convert_species, paste("select distinct * from idIndex where idType = 'entrezgene_id'"))
   if (dim(idType_Entrez)[1] != 1) {
@@ -1239,7 +1245,6 @@ convertEnsembl2Entrez <- function(query, Species) {
 
   # given a set of ensembl ids, return a mapping table to Entrez gene ID
   querySet <- cleanGeneSet(unlist(strsplit(toupper(query), "\t| |\n|\\,")))
-  speciesID <- orgInfo$id[which(orgInfo$ensembl_dataset == Species)] # note uses species Identifying
 
   result <- dbGetQuery(
     convert_species,
@@ -1248,6 +1253,7 @@ convertEnsembl2Entrez <- function(query, Species) {
       " AND ens IN ('", paste(querySet, collapse = "', '"), "')"
     )
   )
+    dbDisconnect(convert_species)
 
   if (dim(result)[1] == 0) {
     return(NULL)
