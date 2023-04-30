@@ -32,40 +32,33 @@ ui <- fluidPage(
     sidebarPanel(
       titlePanel("ShinyGO 0.8"),
       h5("Required: Select or search your species:"),
-
-        selectInput(
-          inputId = "selectOrg",
-          label = NULL,
-          choices = setNames(99, "Human"), # Human is selected by default
-          multiple = FALSE,
-          selectize = TRUE,
-          selected = setNames(99, "Human")
-        ),
-
-        fluidRow(
-          column(
-            width = 6,
-            align = "center",
-            # Species list and genome assemblies ----------
-            actionButton(
-              inputId = "genome_assembl_button",
-              label = "Search & select"
-            )
-          ),
-
-          column(
-            width = 6,
-            textOutput("selected_species")
+      selectInput(
+        inputId = "selectOrg",
+        label = NULL,
+        choices = setNames(99, "Human"), # Human is selected by default
+        multiple = FALSE,
+        selectize = TRUE,
+        selected = setNames(99, "Human")
+      ),
+      fluidRow(
+        column(
+          width = 6,
+          align = "center",
+          # Species list and genome assemblies ----------
+          actionButton(
+            inputId = "genome_assembl_button",
+            label = "Search & select"
           )
         ),
-    tags$head(tags$style("#load_data-selected_species{color: red;
+        column(
+          width = 6,
+          textOutput("selected_species")
+        )
+      ),
+      tags$head(tags$style("#load_data-selected_species{color: red;
                                  font-size: 15px;
                                  font-style: italic;
-                                 }"
-                         )
-              ),
-
-
+                                 }")),
       fluidRow(
         column(8, actionButton("useDemo1", "Demo genes"), ),
         # column(4,   actionButton("useDemo2", "Demo 2"),	  	  ),
@@ -91,14 +84,14 @@ ui <- fluidPage(
             value = 0.05, step = 0.01
           ),
           tippy::tippy_this(
-          "minFDR",
-          "Minimum  P-value, ajusted using the FDR (false discovery rate) 
+            "minFDR",
+            "Minimum  P-value, ajusted using the FDR (false discovery rate)
           method. P-value is derived from hypergeometric distribution.
            Really significant FDR are between 1E-5 to 1E-20. Be cautious
-           when you get an FDR of 1E-2 or 1E-3, as thousands of 
+           when you get an FDR of 1E-2 or 1E-3, as thousands of
            gene sets are tested.",
-          theme = "light-border"
-        )
+            theme = "light-border"
+          )
         ),
         column(
           6,
@@ -121,10 +114,10 @@ ui <- fluidPage(
           tippy::tippy_this(
             "maxTerms",
             "How many top pathways to show.
-            You can download nearly all significant ones. 
-            We typically recommend focusing on the top 10 to 20 pathways. 
+            You can download nearly all significant ones.
+            We typically recommend focusing on the top 10 to 20 pathways.
             If you go down the list,
-            you can always find the one that help you tell the story you 
+            you can always find the one that help you tell the story you
             want to tell.",
             theme = "light-border"
           )
@@ -136,7 +129,7 @@ ui <- fluidPage(
 
       fluidRow(
         column(
-          width = 6, 
+          width = 6,
           numericInput("minSetSize",
             label = h5("Pathway size: Min."),
             min   = 2,
@@ -163,7 +156,7 @@ ui <- fluidPage(
           tippy::tippy_this(
             "maxSetSize",
             "Big gene sets, such as those associated with top-level GO term
-            \"Cellular Process\", are less informative, but 
+            \"Cellular Process\", are less informative, but
             tend to have small P values due to increased power.",
             theme = "light-border"
           )
@@ -175,8 +168,8 @@ ui <- fluidPage(
         column(
           width = 6,
           checkboxInput(
-            "removeRedudantSets", 
-            "Remove redundancy", 
+            "removeRedudantSets",
+            "Remove redundancy",
             value = TRUE
           ),
           tippy::tippy_this(
@@ -186,10 +179,10 @@ ui <- fluidPage(
           )
         ),
         column(
-          width = 6, 
+          width = 6,
           checkboxInput(
-            "abbreviatePathway", 
-            "Abbreviate pathways", 
+            "abbreviatePathway",
+            "Abbreviate pathways",
             value = TRUE
           ),
           tippy::tippy_this(
@@ -249,14 +242,15 @@ ui <- fluidPage(
             "input.goButton == 0 ", # welcome screen
             br(),
             p(
-              "Jan. 19, 2023: Thanks to a user's feedback, we found a serious bug 
-              in ShinyGO 0.76. 
-              As some genes are represented by multiple gene IDs in Ensebml, they are counted more 
+              "Jan. 19, 2023: Thanks to a user's feedback, we found a serious bug
+              in ShinyGO 0.76.
+              As some genes are represented by multiple gene IDs in Ensebml, they are counted more
               than once in calculating enrichment. We believe this is fixed. If you
-              pasted Ensembl gene IDs to ShinyGO 0.76 between April 4, 2022 and Jan. 19, 2023, 
+              pasted Ensembl gene IDs to ShinyGO 0.76 between April 4, 2022 and Jan. 19, 2023,
               please rerun your analysis. ShinyGO has not been throughly tested.
               Please always double check your results with other tools
-              such as G:profiler, Enrichr, STRING-db, and DAVID.", style = "color:red"
+              such as G:profiler, Enrichr, STRING-db, and DAVID.",
+              style = "color:red"
             ),
             h3(
               "Please ",
@@ -283,8 +277,8 @@ ui <- fluidPage(
             ),
             br(),
             p("Oct 26, 2022: V. 0.76.3 Add hover text. Change plot styles.
-             When users select \"Sort by Fold Enrichment\", 
-             the minimum pathway size is raised to 10 to 
+             When users select \"Sort by Fold Enrichment\",
+             the minimum pathway size is raised to 10 to
              filter out noise from tiny gene sets."),
             p("Sept 28, 2022: In ShinyGO 0.76.2, KEGG is now the default pathway database. More importantly,
                     we reverted to 0.76 for default gene counting method, namely
@@ -306,7 +300,6 @@ ui <- fluidPage(
               a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76"),
               style = "color:red"
             ),
-
             h3("A graphical tool for gene enrichment analysis"),
             p("Just paste your gene list to get enriched GO terms and othe pathways for over 420 plant and animal species,
 				    based on annotation from Ensembl, Ensembl plants and Ensembl Metazoa. An additional 5000 genomes
@@ -380,7 +373,7 @@ ui <- fluidPage(
                     are also represented by the first 80 characters.
                     ")
           )
-        ),  # enrichment tab
+        ), # enrichment tab
 
 
         #---Enrichment Chart-----------------------------------------------------------
@@ -414,7 +407,7 @@ ui <- fluidPage(
             ))
           ), # first row
 
-           fluidRow(
+          fluidRow(
             column(3, numericInput(
               inputId = "SortPathwaysPlotFontSize",
               label = h5("Font Size"),
@@ -445,7 +438,7 @@ ui <- fluidPage(
             ))
           ), # 2nd row
 
-           fluidRow(
+          fluidRow(
             column(width = 3, selectInput(
               inputId = "enrichChartType",
               label = h5("Chart type"),
@@ -488,7 +481,7 @@ ui <- fluidPage(
         ),
 
         #---Tree-----------------------------------------------------------
-         tabPanel("Tree",
+        tabPanel("Tree",
           value = 4,
           h5("A hierarchical clustering tree summarizes the correlation among significant pathways
                       listed in the Enrichment tab. Pathways with many shared genes are clustered together.
@@ -504,7 +497,7 @@ ui <- fluidPage(
             column(3, style = "margin-top: 25px;", mod_download_images_ui("download_tree", label = "Download"))
           ),
           plotOutput("GOTermsTree")
-        ), 
+        ),
 
         #---Enrichment network-------------------------------------------------------
         tabPanel("Network",
@@ -527,7 +520,7 @@ ui <- fluidPage(
        Darker nodes are more significantly enriched gene sets.
        Bigger nodes represent larger gene sets.
        Thicker edges represent more overlapped genes.")
-        ), 
+        ),
 
         #---KEGG-----------------------------------------------------------
         tabPanel("KEGG",
@@ -544,7 +537,7 @@ ui <- fluidPage(
             br(), br(), imageOutput("KeggImage", width = "100%", height = "100%"),
             h5("Your genes are highlighted in red. Downloading pathway diagram from KEGG can take 3 minutes. ")
           )
-        ), 
+        ),
 
         #---Genes-----------------------------------------------------------
         tabPanel("Genes",
@@ -554,14 +547,14 @@ ui <- fluidPage(
             column(4, checkboxInput("showDetailedGeneInfo", "Detailed Description", value = FALSE))
           ),
           tableOutput("conversionTable")
-        ), 
+        ),
         #---Groups-----------------------------------------------------------
         tabPanel("Groups",
           value = 7,
           downloadButton("downloadGrouping", "Download"),
           h5("Your genes are grouped by functional categories defined by high-level GO terms. "),
           tableOutput("grouping")
-        ), 
+        ),
         #---Plots-----------------------------------------------------------
         tabPanel("Plots",
           value = 8,
@@ -580,7 +573,7 @@ ui <- fluidPage(
           br(),
           plotOutput("genePlot2", inline = TRUE, width = "auto", height = "auto"),
           plotOutput("gene_barplot", inline = TRUE, width = "auto", height = "auto")
-        ), 
+        ),
 
         #---Genome-----------------------------------------------------------
         tabPanel("Genome",
@@ -619,7 +612,7 @@ ui <- fluidPage(
                         each window define a gene set/pathway, and we carried out enrichment analysis. The
                         chromosomes may be only partly shown as we use the last gene's location to draw the line.
                         Mouse over to see gene symbols. Zoom in regions of interest.")
-        ), 
+        ),
 
         #---Genome-----------------------------------------------------------
         tabPanel("Promoter",
@@ -634,7 +627,7 @@ ui <- fluidPage(
               other genes in the genome in terms of transcription factor (TF) binding motifs.
               \"*Query gene\" indicates a transcription factor coded by a gene included in
               your list.")
-        ), 
+        ),
         #---STRING-----------------------------------------------------------
         tabPanel("STRING",
           value = 11,
@@ -678,30 +671,27 @@ ui <- fluidPage(
 
         #---?-----------------------------------------------------------
         tabPanel("About",
-        value = 12,
-        p(
-        "ShinyGO is developed and maintained by a small team at ",
-        a(
-          "South Dakota State University (SDSU). ",
-          href = "https://www.sdstate.edu/"
-        ),
-        "Our team consists of ",
-        a(" Xijin Ge (PI), ", href = "https://www.sdstate.edu/directory/xijin-ge", target = "_blank"),
-        "Jianli Qi (research associate), and
+          value = 12,
+          p(
+            "ShinyGO is developed and maintained by a small team at ",
+            a(
+              "South Dakota State University (SDSU). ",
+              href = "https://www.sdstate.edu/"
+            ),
+            "Our team consists of ",
+            a(" Xijin Ge (PI), ", href = "https://www.sdstate.edu/directory/xijin-ge", target = "_blank"),
+            "Jianli Qi (research associate), and
         two talented graduate students (Emma Spors and Ben Derenge).
         None of us are trained as software engineers. But
         we share the passion about  developing an
         user-friendly tool for all biologists,
         especially those who do not have access to bioinformaticians."
-        ),
-
+          ),
           " For feedbacks, ",
           a("email us, ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
-          "or file bug report or feature request on our", 
+          "or file bug report or feature request on our",
           a(" GitHub repository, ", href = "https://github.com/gexijin/shinygo", target = "_blank"),
           " where you can also find the source code.",
-          
-          
           "For details, please see our", a("paper", href = "https://doi.org/10.1093/bioinformatics/btz931", target = "_blank"),
           "and a detailed", a("demo.", href = "https://www.biorxiv.org/content/biorxiv/suppl/2018/05/04/315150.DC1/315150-1.pdf", target = "_blank"),
           "ShinyGO shares many functionalities and databases with ", a("iDEP.", href = "http://bioinformatics.sdstate.edu/idep/", target = "_blank"),
@@ -815,18 +805,18 @@ ui <- fluidPage(
           h5("4/27/2018: V0.41 Change to ggplot2, add grid and gridExtra packages"),
           h5("4/24/2018: V0.4 Add STRING API, KEGG diagram, tree display and network.")
         )
-      ),  # tabsetPanel
+      ), # tabsetPanel
       bsModal("ModalExamplePPI", "Protein-protein interaction(PPIs) networks ", "ModalPPI",
         size = "large",
         h5("By sending your genes to the STRING website,
 			shinyGO is retrieving a sub-network, calculating PPI enrichment,
 		  and generating custom URLs to the STRING website containing your genes. This can take 5 minutes. Patience will pay off! "),
-        sliderInput("nGenesPPI", label = h5("Genes to include:"), min = 0, max = 400, value = 50, step = 10), 
+        sliderInput("nGenesPPI", label = h5("Genes to include:"), min = 0, max = 400, value = 50, step = 10),
         # ,htmlOutput("stringDB_network_link")
         # ,tags$head(tags$style("#stringDB_network_link{color: blue; font-size: 15px;}"))
 
         plotOutput("stringDB_network1")
-      ),  # bsModal 1
+      ), # bsModal 1
 
       bsModal("InteractiveNetwork", "Interactive enrichment networks ", "GONetwork",
         size = "large",
@@ -836,30 +826,30 @@ ui <- fluidPage(
           column(2, checkboxInput("wrapTextNetworkStatic", "Wrap text", value = FALSE))
         ),
         plotOutput("enrichmentNetworkPlot")
-      ),  # bsModal 2
+      ), # bsModal 2
 
       bsModal("BackgroundGenes", "Customized background genes (recommended)", "backgroundGenes",
         size = "large",
         tags$textarea(
           id = "input_text_b",
           placeholder = "
-Paste all genes from which the gene list is derived. These are all 
-genes whose expression or other activity that you measured. 
-This could be all the genes on a DNA microarray or all the genes 
-detected by a proteomics experiment. 
+Paste all genes from which the gene list is derived. These are all
+genes whose expression or other activity that you measured.
+This could be all the genes on a DNA microarray or all the genes
+detected by a proteomics experiment.
 
-By default, we compare your gene list with a background of all 
-protein-coding genes in the genome. When your genes are not selected 
-from genome-wide data, customized background genes might yield more 
+By default, we compare your gene list with a background of all
+protein-coding genes in the genome. When your genes are not selected
+from genome-wide data, customized background genes might yield more
 accurate results for enrichment analysis. For gene lists derived from
-a typical RNA-seq dataset, many  use the subset of genes with detectable 
+a typical RNA-seq dataset, many  use the subset of genes with detectable
 expression, typically the genes passed a minimum filter.
-We can also customize background genes to overcome bias in selection. 
+We can also customize background genes to overcome bias in selection.
 Currently only less than 30,000 genes are accepted.",
-            rows = 20,
-            ""
+          rows = 20,
+          ""
         )
-      ),  # bsModal 3
+      ), # bsModal 3
 
       bsModal("geneIDexamples", "What the gene IDs in our database look like?", "MGeneIDexamples",
         size = "large",
@@ -868,7 +858,7 @@ Currently only less than 30,000 genes are accepted.",
           label = "Select or search for species", choices = NULL
         ),
         tableOutput("showGeneIDs4Species")
-      ),  # bsModal 4
+      ), # bsModal 4
 
       bsModal("genomePlotStaticButton", "Static genome plot", "gPlotstatic",
         size = "large",
@@ -877,8 +867,8 @@ Currently only less than 30,000 genes are accepted.",
         plotOutput("genomePlot", width = "100%")
       ) # bsModal 6
     ) # mainPanel
-  ),  # sidebarLayout
-  tags$head(includeScript("google_analytics.js")),  # tracking usage
+  ), # sidebarLayout
+  tags$head(includeScript("google_analytics.js")), # tracking usage
   tags$head(includeHTML(("google_analytics_GA4.html")))
   #  ,tags$head(includeHTML(("../google_analytics_golem.html")))
 ) # fluidPage

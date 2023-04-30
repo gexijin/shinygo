@@ -29,10 +29,10 @@ datapath <<- Sys.getenv("IDEP_DATABASE")[1]
 if (nchar(datapath) == 0) {
   datapath <<- paste0("../../data/")
 }
-#Add version
+# Add version
 datapath <<- paste0(datapath, "/", db_ver, "/")
 org_info_file <<- paste0(datapath, "demo/orgInfo.db")
-if(!file.exists(org_info_file)) {
+if (!file.exists(org_info_file)) {
   datapath <<- paste0("./", db_ver, "/")
   org_info_file <<- paste0(datapath, "demo/orgInfo.db")
 }
@@ -290,7 +290,7 @@ GO_levels <- dbGetQuery(convert, "select distinct id,level from GO
                                  WHERE GO = 'biological_process'")
 level2Terms <- GO_levels[which(GO_levels$level %in% c(2, 3)), 1] # level 2 and 3
 
-#idIndex <- dbGetQuery(convert, paste("select distinct * from idIndex "))
+# idIndex <- dbGetQuery(convert, paste("select distinct * from idIndex "))
 
 quotes <- dbGetQuery(convert, " select * from quotes")
 quotes <- paste0("\"", quotes$quotes, "\"", " -- ", quotes$author, ".       ")
@@ -320,10 +320,11 @@ connect_convert_db_org <- function(datapath = datapath, select_org) {
   db_file <- orgInfo[ix, "file"]
   return(try(
     DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = paste0(datapath, "db/", db_file),
-    flags = RSQLite::SQLITE_RO
-  )))
+      drv = RSQLite::dbDriver("SQLite"),
+      dbname = paste0(datapath, "db/", db_file),
+      flags = RSQLite::SQLITE_RO
+    )
+  ))
 }
 
 
@@ -333,10 +334,10 @@ connect_convert_db_org <- function(datapath = datapath, select_org) {
 # List of GMT files in /gmt sub folder
 gmtFiles <- orgInfo$file
 gmtFiles <- paste(datapath, "/db/", gmtFiles, sep = "")
-#geneInfoFiles <- list.files(path = paste0(datapath, "geneInfo"), pattern = ".*GeneInfo\\.csv")
-#geneInfoFiles <- paste(datapath, "geneInfo/", geneInfoFiles, sep = "")
-#motifFiles <- list.files(path = paste0(datapath, "motif"), pattern = ".*\\.db")
-#motifFiles <- paste(datapath, "motif/", motifFiles, sep = "")
+# geneInfoFiles <- list.files(path = paste0(datapath, "geneInfo"), pattern = ".*GeneInfo\\.csv")
+# geneInfoFiles <- paste(datapath, "geneInfo/", geneInfoFiles, sep = "")
+# motifFiles <- list.files(path = paste0(datapath, "motif"), pattern = ".*\\.db")
+# motifFiles <- paste(datapath, "motif/", motifFiles, sep = "")
 
 STRING10_species <- orgInfo[, c("id", "name")]
 
@@ -541,26 +542,25 @@ geneInfo <- function(converted, selectOrg) {
     return(as.data.frame("ID not recognized!"))
   }
 
-    querySTMT <- paste0(
-      "select * from geneInfo;"
-    )
+  querySTMT <- paste0(
+    "select * from geneInfo;"
+  )
 
-    # connect to the database, this becomes a global variable
-    convert_species <- connect_convert_db_org(datapath, selectOrg)
-    x <- dbGetQuery(convert_species, querySTMT)
-    dbDisconnect(convert_species)
+  # connect to the database, this becomes a global variable
+  convert_species <- connect_convert_db_org(datapath, selectOrg)
+  x <- dbGetQuery(convert_species, querySTMT)
+  dbDisconnect(convert_species)
 
-    nchars_chr_name <- nchar(x$chromosome_name)
-    medean_nchars <- median(nchars_chr_name)
-    x <- x[which(nchars_chr_name < 3 * medean_nchars + 1), ]
+  nchars_chr_name <- nchar(x$chromosome_name)
+  medean_nchars <- median(nchars_chr_name)
+  x <- x[which(nchars_chr_name < 3 * medean_nchars + 1), ]
 
 
-    Set <- match(x$ensembl_gene_id, querySet)
-    Set[which(is.na(Set))] <- "Genome"
-    Set[which(Set != "Genome")] <- "List"
-    # x = cbind(x,Set) } # just for debuging
-    return(cbind(x, Set))
-
+  Set <- match(x$ensembl_gene_id, querySet)
+  Set[which(is.na(Set))] <- "Genome"
+  Set[which(Set != "Genome")] <- "List"
+  # x = cbind(x,Set) } # just for debuging
+  return(cbind(x, Set))
 }
 
 hyperText <- function(textVector, urlVector) {
@@ -1233,7 +1233,7 @@ colnames(keggSpeciesID)[3] <- "kegg"
 
 
 convertEnsembl2Entrez <- function(query, Species) {
- speciesID <- orgInfo$id[which(orgInfo$ensembl_dataset == Species)] # note uses species Identifying
+  speciesID <- orgInfo$id[which(orgInfo$ensembl_dataset == Species)] # note uses species Identifying
   # connect to the database, this becomes a global variable
   convert_species <- connect_convert_db_org(datapath, speciesID)
   # finds id index corresponding to entrez gene and KEGG for id conversion
@@ -1253,7 +1253,7 @@ convertEnsembl2Entrez <- function(query, Species) {
       " AND ens IN ('", paste(querySet, collapse = "', '"), "')"
     )
   )
-    dbDisconnect(convert_species)
+  dbDisconnect(convert_species)
 
   if (dim(result)[1] == 0) {
     return(NULL)
@@ -1669,10 +1669,10 @@ find_species_id_by_ensembl <- function(ensembl_dataset, org_info) {
 }
 
 
-#' Remove Pathway ID from pathway name 
+#' Remove Pathway ID from pathway name
 #' Only for GO and KEGG pathways
 #'
-#' Path:hsa00270 Cysteine and methionine metabolism 
+#' Path:hsa00270 Cysteine and methionine metabolism
 #'           --> Cysteine and methionine metabolism
 #'
 #' @param strings a vector of strings
@@ -1683,17 +1683,17 @@ find_species_id_by_ensembl <- function(ensembl_dataset, org_info) {
 #'
 #' @family pathway functions
 remove_pathway_id <- function(strings, select_go) {
-    if (is.null(strings)) {
-      return(NULL)
-    } else {
-      if (select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG")) {
-        strings <- sub(
-          "^\\S+\\s",
-          "",
-          strings
-        )
-        strings <- proper(strings)
-      }
-      return(strings)
+  if (is.null(strings)) {
+    return(NULL)
+  } else {
+    if (select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG")) {
+      strings <- sub(
+        "^\\S+\\s",
+        "",
+        strings
+      )
+      strings <- proper(strings)
     }
+    return(strings)
+  }
 }

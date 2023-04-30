@@ -12,23 +12,23 @@ server <- function(input, output, session) {
   options(warn = -1)
 
   observe({
-  #  updateSelectizeInput(session, "selectOrg", choices = speciesChoice, selected = speciesChoice[1])
+    #  updateSelectizeInput(session, "selectOrg", choices = speciesChoice, selected = speciesChoice[1])
 
 
-  # for gene ID example
+    # for gene ID example
 
     updateSelectizeInput(session, "userSpecieIDexample", choices = speciesChoice, selected = speciesChoice[1])
 
-  # load demo data when clicked
+    # load demo data when clicked
 
     if (input$useDemo1) {
       updateTextInput(session, "input_text", value = ExampleGeneList1)
     }
-  
 
-  # update species for STRING-db related API access
-  # tried to solve the double reflashing problems
-  # https://stackoverflow.com/questions/30991900/avoid-double-refresh-of-plot-in-shiny
+
+    # update species for STRING-db related API access
+    # tried to solve the double reflashing problems
+    # https://stackoverflow.com/questions/30991900/avoid-double-refresh-of-plot-in-shiny
 
     updateSelectizeInput(session, "speciesName", choices = sort(STRING10_species$official_name))
 
@@ -69,16 +69,15 @@ server <- function(input, output, session) {
   # connect to species specific database
   observeEvent(input$selectOrg, {
 
-     # connect to the database, this becomes a global variable
-     convert_species <- connect_convert_db_org(datapath, input$selectOrg)
+    # connect to the database, this becomes a global variable
+    convert_species <- connect_convert_db_org(datapath, input$selectOrg)
 
-     # idIndex
-     idIndex <- dbGetQuery(
-      convert_species, 
+    # idIndex
+    idIndex <- dbGetQuery(
+      convert_species,
       "select * from idIndex;"
     )
     dbDisconnect(convert_species)
-
   })
 
   # this defines an reactive object that can be accessed from other rendering functions
@@ -92,81 +91,81 @@ server <- function(input, output, session) {
 
 
 
-    # Pop-up modal for gene assembl information ----
-    observeEvent(input$genome_assembl_button, {
-      shiny::showModal(
-        shiny::modalDialog(
-          size = "l",
-          p("Search annotated species by common or scientific names,
-          or NCBI taxonomy id. Click on a row to select. 
-          Use annotation in STRING-db as a last resort.  
+  # Pop-up modal for gene assembl information ----
+  observeEvent(input$genome_assembl_button, {
+    shiny::showModal(
+      shiny::modalDialog(
+        size = "l",
+        p("Search annotated species by common or scientific names,
+          or NCBI taxonomy id. Click on a row to select.
+          Use annotation in STRING-db as a last resort.
            If your species cannot be found here,
           you can still use iDEP without pathway analysis."),
-          easyClose = TRUE,
-          DT::renderDataTable({
-            df <- orgInfo[, 
-              c("ensembl_dataset", "name", "academicName", "taxon_id", "group")
-            ]
-            colnames(df) <- c(
-              "Ensembl/STRING-db ID",
-              "Name (Assembly)",
-              "Academic Name",
-              "Taxonomy ID",
-              "Source"
-            )
-            row.names(df) <- NULL
-            DT::datatable(
-              df,
-              selection = "single",
-              options = list(
-                lengthChange = FALSE,
-                pageLength = 10,
-                scrollY = "400px"
-              ),
-              callback = DT::JS(
-                paste0(
-                 "table.on('click', 'tr', function() {
+        easyClose = TRUE,
+        DT::renderDataTable({
+          df <- orgInfo[
+            ,
+            c("ensembl_dataset", "name", "academicName", "taxon_id", "group")
+          ]
+          colnames(df) <- c(
+            "Ensembl/STRING-db ID",
+            "Name (Assembly)",
+            "Academic Name",
+            "Taxonomy ID",
+            "Source"
+          )
+          row.names(df) <- NULL
+          DT::datatable(
+            df,
+            selection = "single",
+            options = list(
+              lengthChange = FALSE,
+              pageLength = 10,
+              scrollY = "400px"
+            ),
+            callback = DT::JS(
+              paste0(
+                "table.on('click', 'tr', function() {
                     var data = table.row(this).data();
                     if (data) {
                       Shiny.setInputValue('clicked_row', data[0]);
                     }
                   });"
-                )
-              ),
-              rownames = FALSE
-            )
-          })
-        )
+              )
+            ),
+            rownames = FALSE
+          )
+        })
       )
-    })
+    )
+  })
 
-    observeEvent(input$clicked_row, {
-      # find species ID from ensembl_dataset
-      selected <- find_species_id_by_ensembl(
-        input$clicked_row, 
-        orgInfo
-      )
-      # assign name
-      selected <- setNames(
-        selected,
+  observeEvent(input$clicked_row, {
+    # find species ID from ensembl_dataset
+    selected <- find_species_id_by_ensembl(
+      input$clicked_row,
+      orgInfo
+    )
+    # assign name
+    selected <- setNames(
+      selected,
+      find_species_by_id_name(selected, orgInfo)
+    )
+
+    updateSelectizeInput(
+      session = session,
+      inputId = "selectOrg",
+      choices = selected,
+      selected = selected,
+      server = TRUE
+    )
+    output$selected_species <- renderText({
+      paste0(
+        # "Selected: ",
         find_species_by_id_name(selected, orgInfo)
       )
-
-      updateSelectizeInput(
-        session = session,
-        inputId = "selectOrg",
-        choices = selected,
-        selected = selected,
-        server = TRUE
-      )
-      output$selected_species <- renderText({
-        paste0(
-          #"Selected: ",
-          find_species_by_id_name(selected, orgInfo)
-        )
-      })
-
     })
+  })
 
 
   geneInfoLookup <- reactive({
@@ -500,7 +499,7 @@ server <- function(input, output, session) {
 
             merged <- subset(merged, select = c(
               User_input, symbol, ensembl_gene_id, entrezgene_id,
-              gene_biotype, Species, chromosome_name, start_position, 
+              gene_biotype, Species, chromosome_name, start_position,
               description, percentage_gc_content, transcript_count,
               genomeSpan, cds_length, transcript_length, FiveUTR,
               ThreeUTR, nExons
@@ -622,7 +621,7 @@ server <- function(input, output, session) {
         pathways <- significantOverlaps()$x
         # remove pathway ID  only in Ensembl species
         if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-          pathways$Pathway <- remove_pathway_id(pathways$Pathway , input$selectGO)
+          pathways$Pathway <- remove_pathway_id(pathways$Pathway, input$selectGO)
         }
         pathways$Pathway <- hyperText(pathways$Pathway, pathways$URL)
 
@@ -670,7 +669,7 @@ server <- function(input, output, session) {
     tem$Direction <- "Diff"
     # remove pathway ID  only in Ensembl species
     if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-      tem$Pathways <- remove_pathway_id(tem$Pathways , input$selectGO)
+      tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
     }
     tem
   })
@@ -692,7 +691,7 @@ server <- function(input, output, session) {
 
     # remove pathway ID  only in Ensembl species
     if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-      tem$Pathways <- remove_pathway_id(tem$Pathways , input$selectGO)
+      tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
     }
 
     if (input$wrapTextNetwork) {
@@ -719,7 +718,7 @@ server <- function(input, output, session) {
 
     # remove pathway ID  only in Ensembl species
     if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-      tem$Pathways <- remove_pathway_id(tem$Pathways , input$selectGO)
+      tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
     }
     if (input$wrapTextNetworkStatic) {
       tem$Pathways <- wrap_strings(tem$Pathways)
@@ -1381,202 +1380,201 @@ server <- function(input, output, session) {
     "download_gene_barplot",
     filename = "gene_characteristics_barplot",
     figure = reactive({
-      gene_barplot_object() 
+      gene_barplot_object()
     }),
     width = 8,
     height = 20
   )
 
-  output$gene_barplot <- renderPlot({
-    gene_barplot_object()
+  output$gene_barplot <- renderPlot(
+    {
+      gene_barplot_object()
     },
     width = 600,
     height = 1500
   )
   # barplots using R base graphics
-  gene_barplot_object<- reactive(
-    {
-      if (input$goButton == 0) {
-        return()
-      }
-      tem <- input$selectOrg
-      isolate({
-        withProgress(message = "Ploting gene characteristics", {
-          x <- geneInfoLookup()
-          x2 <- x[which(x$gene_biotype == "protein_coding"), ] # only coding for some analyses
-
-
-          # background genes	--------------------------------------------------------------
-          xB <- geneInfoLookup_background()
-          convertedB <- converted_background()
-          if (!is.null(xB) &&
-            !is.null(convertedB) &&
-            length(convertedB$IDs) < maxGenesBackground + 1) { # if more than 30k genes, ignore background genes.
-
-            x <- x[x$Set == "List", ] # remove background from selected genes
-            xB <- xB[xB$Set == "List", ] # remove Genome genes from background
-            xB$Set <- "Background"
-            x <- rbind(x, xB)
-            x2 <- x[which(x$gene_biotype == "protein_coding"), ] # only coding for some analyses
-          }
-          # end background genes
-
-
-          if (dim(x)[1] >= minGenes) # only making plots if more than 20 genes
-            { # only plot when there 10 genes or more   # some columns have too many missing values
-              par(mfrow = c(4, 1))
-              par(mar = c(8, 6, 8, 2))
-              # chromosomes
-              if (sum(!is.na(x$chromosome_name)) >= minGenes && length(unique(x$chromosome_name)) > 2 && length(which(x$Set == "List")) > minGenes) {
-                freq <- table(x$chromosome_name, x$Set)
-                freq <- as.matrix(freq[which(nchar(row.names(freq)) < 10), ]) # remove unmapped chromosomes
-                if (dim(freq)[2] > 1 && dim(freq)[1] > 1) { # some organisms do not have fully seuqence genome: chr. names: scaffold_99816
-                  Pval <- chisq.test(freq)$p.value
-                  sig <- paste("Distribution of query genes on chromosomes \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
-
-                  if (Pval < PvalGeneInfo2) {
-                    sig <- paste(sig, "***")
-                  } else
-                  if (Pval < PvalGeneInfo1) {
-                    sig <- paste(sig, "**")
-                  } else
-                  if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
-
-                  freq <- freq[order(as.numeric(row.names(freq))), ]
-                  freq[, 1] <- freq[, 1] * colSums(freq)[2] / colSums(freq)[1] # expected
-                  freq <- freq[, c(2, 1)] # reverse order
-                  barplot(t(freq),
-                    beside = TRUE, las = 3, col = c("red", "lightgrey"), ylab = "Number of Genes", main = sig,
-                    cex.lab = 1.5, cex.axis = 2, cex.names = 2, cex.main = 1.5
-                  )
-
-                  legend("topright", c("List", "Expected"), pch = 15, col = c("red", "lightgrey"), bty = "n", cex = 2)
-                }
-              } else { # Create empty plot
-                plot(x = 0:1, y = 0:1, ann = F, bty = "n", type = "n", xaxt = "n", yaxt = "n")
-                text(
-                  x = 0.5, y = 0.5, # Add text to empty plot
-                  "Chromosome plot not available.",
-                  cex = 1.8
-                )
-              }
-              incProgress(1 / 8)
-
-
-              # gene type
-              if (sum(!is.na(x$gene_biotype)) >= minGenes && length(unique(x$gene_biotype)) > 2 && length(which(x$Set == "List")) > minGenes) {
-                freq <- table(x$gene_biotype, x$Set)
-                freq <- as.matrix(freq[which(freq[, 1] / colSums(freq)[1] > .01), ])
-                if (dim(freq)[2] > 1 && dim(freq)[1] > 1) {
-                  Pval <- chisq.test(freq)$p.value
-                  sig <- paste("Distribution by gene type \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
-                  if (Pval < PvalGeneInfo2) {
-                    sig <- paste(sig, "***")
-                  } else
-                  if (Pval < PvalGeneInfo1) {
-                    sig <- paste(sig, "**")
-                  } else
-                  if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
-                  freq <- freq[order(freq[, 1], decreasing = T), ]
-                  freq[, 1] <- freq[, 1] * colSums(freq)[2] / colSums(freq)[1]
-                  tem <- gsub("protein_coding", "Coding", rownames(freq))
-                  tem <- gsub("pseudogene", "pseudo", tem)
-                  tem <- gsub("processed", "proc", tem)
-                  row.names(freq) <- tem
-                  par(mar = c(20, 6, 4.1, 2.1))
-                  freq <- freq[, c(2, 1)] # reverse order
-
-                  barplot(t(freq),
-                    beside = TRUE, las = 2, col = c("red", "lightgrey"), ylab = "Number of Genes",
-                    main = sig, cex.lab = 1.2, cex.axis = 1.2, cex.names = 1.2, cex.main = 1.2
-                  )
-                  legend("topright", c("List", "Expected"), pch = 15, col = c("red", "lightgrey"), bty = "n", cex = 2)
-                }
-              } else { # Create empty plot
-                plot(x = 0:1, y = 0:1, ann = F, bty = "n", type = "n", xaxt = "n", yaxt = "n")
-                text(
-                  x = 0.5, y = 0.5, # Add text to empty plot
-                  "Gene type plot not available.",
-                  cex = 1.8
-                )
-              }
-
-
-              incProgress(1 / 8)
-              par(mar = c(12, 6, 4.1, 2.1))
-              # N. exons
-
-              if (sum(!is.na(x2$nExons)) >= minGenes && length(unique(x2$nExons)) > 2 && length(which(x2$Set == "List")) > minGenes) {
-                freq <- table(x2$nExons, x2$Set)
-                freq <- as.matrix(freq[which(freq[, 1] / colSums(freq)[1] > .02), ])
-                if (dim(freq)[2] > 1 && dim(freq)[1] > 1) {
-                  Pval <- chisq.test(freq)$p.value
-                  sig <- paste("Number of exons (coding genes only) \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
-                  if (Pval < PvalGeneInfo2) {
-                    sig <- paste(sig, "***")
-                  } else
-                  if (Pval < PvalGeneInfo1) {
-                    sig <- paste(sig, "**")
-                  } else
-                  if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
-                  # freq <- freq[order(    freq[,1], decreasing=T), ]
-                  freq[, 1] <- freq[, 1] * colSums(freq)[2] / colSums(freq)[1]
-                  freq <- freq[, c(2, 1)] # reverse order
-                  barplot(t(freq),
-                    beside = TRUE, las = 2, col = c("red", "lightgrey"), ylab = "Number of Genes",
-                    main = sig, xlab = c("Number of exons"), cex.lab = 1.5, cex.axis = 2, cex.names = 1.5, cex.main = 1.5
-                  )
-                  legend("topright", c("List", "Expected"), pch = 15, col = c("red", "lightgrey"), bty = "n", cex = 2)
-                }
-              } else { # Create empty plot
-                plot(x = 0:1, y = 0:1, ann = F, bty = "n", type = "n", xaxt = "n", yaxt = "n")
-                text(
-                  x = 0.5, y = 0.5, # Add text to empty plot
-                  "Exon plot not available.",
-                  cex = 1.8
-                )
-              }
-              incProgress(1 / 8)
-
-              # Transcript count
-              if (sum(!is.na(x2$transcript_count)) >= minGenes && length(unique(x2$transcript_count)) > 2 && length(which(x2$Set == "List")) > minGenes) {
-                freq <- table(x2$transcript_count, x2$Set)
-                freq <- as.matrix(freq[which(freq[, 1] / colSums(freq)[1] > .02), ])
-                if (dim(freq)[2] > 1 && dim(freq)[1] > 1) {
-                  Pval <- chisq.test(freq)$p.value
-                  sig <- paste("Number of transcript isoforms per coding gene \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
-                  if (Pval < PvalGeneInfo2) {
-                    sig <- paste(sig, "***")
-                  } else
-                  if (Pval < PvalGeneInfo1) {
-                    sig <- paste(sig, "**")
-                  } else
-                  if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
-                  freq <- freq[order(freq[, 1], decreasing = T), ]
-                  freq[, 1] <- freq[, 1] * colSums(freq)[2] / colSums(freq)[1]
-                  freq <- freq[, c(2, 1)] # reverse order
-                  barplot(t(freq),
-                    beside = TRUE, las = 2, col = c("red", "lightgrey"), ylab = "Number of Genes",
-                    main = sig, xlab = c("Number of transcripts per gene"), cex.lab = 1.5, cex.axis = 2, cex.names = 1.5, cex.main = 1.5
-                  )
-                  legend("topright", c("List", "Expected"), pch = 15, col = c("red", "lightgrey"), bty = "n", cex = 2)
-                }
-              } else { # Create empty plot
-                plot(x = 0:1, y = 0:1, ann = F, bty = "n", type = "n", xaxt = "n", yaxt = "n")
-                text(
-                  x = 0.5, y = 0.5, # Add text to empty plot
-                  "Transcript plot not available.",
-                  cex = 1.8
-                )
-              }
-              incProgress(1 / 8)
-            } # if minGenes
-          incProgress(1 / 8, detail = paste("Done"))
-          return(recordPlot())
-        })
-      }) # isolate
+  gene_barplot_object <- reactive({
+    if (input$goButton == 0) {
+      return()
     }
-  )
+    tem <- input$selectOrg
+    isolate({
+      withProgress(message = "Ploting gene characteristics", {
+        x <- geneInfoLookup()
+        x2 <- x[which(x$gene_biotype == "protein_coding"), ] # only coding for some analyses
+
+
+        # background genes	--------------------------------------------------------------
+        xB <- geneInfoLookup_background()
+        convertedB <- converted_background()
+        if (!is.null(xB) &&
+          !is.null(convertedB) &&
+          length(convertedB$IDs) < maxGenesBackground + 1) { # if more than 30k genes, ignore background genes.
+
+          x <- x[x$Set == "List", ] # remove background from selected genes
+          xB <- xB[xB$Set == "List", ] # remove Genome genes from background
+          xB$Set <- "Background"
+          x <- rbind(x, xB)
+          x2 <- x[which(x$gene_biotype == "protein_coding"), ] # only coding for some analyses
+        }
+        # end background genes
+
+
+        if (dim(x)[1] >= minGenes) # only making plots if more than 20 genes
+          { # only plot when there 10 genes or more   # some columns have too many missing values
+            par(mfrow = c(4, 1))
+            par(mar = c(8, 6, 8, 2))
+            # chromosomes
+            if (sum(!is.na(x$chromosome_name)) >= minGenes && length(unique(x$chromosome_name)) > 2 && length(which(x$Set == "List")) > minGenes) {
+              freq <- table(x$chromosome_name, x$Set)
+              freq <- as.matrix(freq[which(nchar(row.names(freq)) < 10), ]) # remove unmapped chromosomes
+              if (dim(freq)[2] > 1 && dim(freq)[1] > 1) { # some organisms do not have fully seuqence genome: chr. names: scaffold_99816
+                Pval <- chisq.test(freq)$p.value
+                sig <- paste("Distribution of query genes on chromosomes \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
+
+                if (Pval < PvalGeneInfo2) {
+                  sig <- paste(sig, "***")
+                } else
+                if (Pval < PvalGeneInfo1) {
+                  sig <- paste(sig, "**")
+                } else
+                if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
+
+                freq <- freq[order(as.numeric(row.names(freq))), ]
+                freq[, 1] <- freq[, 1] * colSums(freq)[2] / colSums(freq)[1] # expected
+                freq <- freq[, c(2, 1)] # reverse order
+                barplot(t(freq),
+                  beside = TRUE, las = 3, col = c("red", "lightgrey"), ylab = "Number of Genes", main = sig,
+                  cex.lab = 1.5, cex.axis = 2, cex.names = 2, cex.main = 1.5
+                )
+
+                legend("topright", c("List", "Expected"), pch = 15, col = c("red", "lightgrey"), bty = "n", cex = 2)
+              }
+            } else { # Create empty plot
+              plot(x = 0:1, y = 0:1, ann = F, bty = "n", type = "n", xaxt = "n", yaxt = "n")
+              text(
+                x = 0.5, y = 0.5, # Add text to empty plot
+                "Chromosome plot not available.",
+                cex = 1.8
+              )
+            }
+            incProgress(1 / 8)
+
+
+            # gene type
+            if (sum(!is.na(x$gene_biotype)) >= minGenes && length(unique(x$gene_biotype)) > 2 && length(which(x$Set == "List")) > minGenes) {
+              freq <- table(x$gene_biotype, x$Set)
+              freq <- as.matrix(freq[which(freq[, 1] / colSums(freq)[1] > .01), ])
+              if (dim(freq)[2] > 1 && dim(freq)[1] > 1) {
+                Pval <- chisq.test(freq)$p.value
+                sig <- paste("Distribution by gene type \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
+                if (Pval < PvalGeneInfo2) {
+                  sig <- paste(sig, "***")
+                } else
+                if (Pval < PvalGeneInfo1) {
+                  sig <- paste(sig, "**")
+                } else
+                if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
+                freq <- freq[order(freq[, 1], decreasing = T), ]
+                freq[, 1] <- freq[, 1] * colSums(freq)[2] / colSums(freq)[1]
+                tem <- gsub("protein_coding", "Coding", rownames(freq))
+                tem <- gsub("pseudogene", "pseudo", tem)
+                tem <- gsub("processed", "proc", tem)
+                row.names(freq) <- tem
+                par(mar = c(20, 6, 4.1, 2.1))
+                freq <- freq[, c(2, 1)] # reverse order
+
+                barplot(t(freq),
+                  beside = TRUE, las = 2, col = c("red", "lightgrey"), ylab = "Number of Genes",
+                  main = sig, cex.lab = 1.2, cex.axis = 1.2, cex.names = 1.2, cex.main = 1.2
+                )
+                legend("topright", c("List", "Expected"), pch = 15, col = c("red", "lightgrey"), bty = "n", cex = 2)
+              }
+            } else { # Create empty plot
+              plot(x = 0:1, y = 0:1, ann = F, bty = "n", type = "n", xaxt = "n", yaxt = "n")
+              text(
+                x = 0.5, y = 0.5, # Add text to empty plot
+                "Gene type plot not available.",
+                cex = 1.8
+              )
+            }
+
+
+            incProgress(1 / 8)
+            par(mar = c(12, 6, 4.1, 2.1))
+            # N. exons
+
+            if (sum(!is.na(x2$nExons)) >= minGenes && length(unique(x2$nExons)) > 2 && length(which(x2$Set == "List")) > minGenes) {
+              freq <- table(x2$nExons, x2$Set)
+              freq <- as.matrix(freq[which(freq[, 1] / colSums(freq)[1] > .02), ])
+              if (dim(freq)[2] > 1 && dim(freq)[1] > 1) {
+                Pval <- chisq.test(freq)$p.value
+                sig <- paste("Number of exons (coding genes only) \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
+                if (Pval < PvalGeneInfo2) {
+                  sig <- paste(sig, "***")
+                } else
+                if (Pval < PvalGeneInfo1) {
+                  sig <- paste(sig, "**")
+                } else
+                if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
+                # freq <- freq[order(    freq[,1], decreasing=T), ]
+                freq[, 1] <- freq[, 1] * colSums(freq)[2] / colSums(freq)[1]
+                freq <- freq[, c(2, 1)] # reverse order
+                barplot(t(freq),
+                  beside = TRUE, las = 2, col = c("red", "lightgrey"), ylab = "Number of Genes",
+                  main = sig, xlab = c("Number of exons"), cex.lab = 1.5, cex.axis = 2, cex.names = 1.5, cex.main = 1.5
+                )
+                legend("topright", c("List", "Expected"), pch = 15, col = c("red", "lightgrey"), bty = "n", cex = 2)
+              }
+            } else { # Create empty plot
+              plot(x = 0:1, y = 0:1, ann = F, bty = "n", type = "n", xaxt = "n", yaxt = "n")
+              text(
+                x = 0.5, y = 0.5, # Add text to empty plot
+                "Exon plot not available.",
+                cex = 1.8
+              )
+            }
+            incProgress(1 / 8)
+
+            # Transcript count
+            if (sum(!is.na(x2$transcript_count)) >= minGenes && length(unique(x2$transcript_count)) > 2 && length(which(x2$Set == "List")) > minGenes) {
+              freq <- table(x2$transcript_count, x2$Set)
+              freq <- as.matrix(freq[which(freq[, 1] / colSums(freq)[1] > .02), ])
+              if (dim(freq)[2] > 1 && dim(freq)[1] > 1) {
+                Pval <- chisq.test(freq)$p.value
+                sig <- paste("Number of transcript isoforms per coding gene \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
+                if (Pval < PvalGeneInfo2) {
+                  sig <- paste(sig, "***")
+                } else
+                if (Pval < PvalGeneInfo1) {
+                  sig <- paste(sig, "**")
+                } else
+                if (Pval < PvalGeneInfo) sig <- paste(sig, "*")
+                freq <- freq[order(freq[, 1], decreasing = T), ]
+                freq[, 1] <- freq[, 1] * colSums(freq)[2] / colSums(freq)[1]
+                freq <- freq[, c(2, 1)] # reverse order
+                barplot(t(freq),
+                  beside = TRUE, las = 2, col = c("red", "lightgrey"), ylab = "Number of Genes",
+                  main = sig, xlab = c("Number of transcripts per gene"), cex.lab = 1.5, cex.axis = 2, cex.names = 1.5, cex.main = 1.5
+                )
+                legend("topright", c("List", "Expected"), pch = 15, col = c("red", "lightgrey"), bty = "n", cex = 2)
+              }
+            } else { # Create empty plot
+              plot(x = 0:1, y = 0:1, ann = F, bty = "n", type = "n", xaxt = "n", yaxt = "n")
+              text(
+                x = 0.5, y = 0.5, # Add text to empty plot
+                "Transcript plot not available.",
+                cex = 1.8
+              )
+            }
+            incProgress(1 / 8)
+          } # if minGenes
+        incProgress(1 / 8, detail = paste("Done"))
+        return(recordPlot())
+      })
+    }) # isolate
+  })
 
   # density plots using ggplot2
   output$genePlot2 <- renderPlot(
@@ -1584,9 +1582,8 @@ server <- function(input, output, session) {
       req(input$ggplot2_theme)
       req(input$selectOrg)
       req(gene_density_plot())
-      
-      gene_density_plot()
 
+      gene_density_plot()
     },
     width = 600,
     height = 2400
@@ -1596,232 +1593,230 @@ server <- function(input, output, session) {
     "download_gene_plot_dist",
     filename = "gene_plot_dist",
     figure = reactive({
-      ggpubr::as_ggplot(gene_density_plot())  
+      ggpubr::as_ggplot(gene_density_plot())
     }),
     width = 6,
     height = 24
   )
 
   # density plots using ggplot2
-  gene_density_plot <- reactive(
-    {
-      if (input$goButton == 0) {
-        return()
-      }
-      req(input$ggplot2_theme)
-      req(input$selectOrg)
-      isolate({
-        withProgress(message = "Ploting gene characteristics", {
-          x <- geneInfoLookup()
-          x2 <- x[which(x$gene_biotype == "protein_coding"), ] # only coding for some analyses
-
-          # background genes	--------------------------------------------------------------
-          xB <- geneInfoLookup_background()
-          convertedB <- converted_background()
-          if (!is.null(xB) &&
-            !is.null(convertedB) &&
-            length(convertedB$IDs) < maxGenesBackground + 1) { # if more than 30k genes, ignore background genes.
-
-            x <- x[x$Set == "List", ] # remove background from selected genes
-            xB <- xB[xB$Set == "List", ] # remove Genome genes from background
-            xB$Set <- "Background"
-            x <- rbind(x, xB)
-            x2 <- x[which(x$gene_biotype == "protein_coding"), ] # only coding for some analyses
-          }
-          # end background genes
-
-
-          if (dim(x)[1] >= minGenes) # only making plots if more than 20 genes
-            { # only plot when there 10 genes or more   # some columns have too many missing values
-              # par(mfrow=c(10,1))
-              # par(mar=c(8,6,8,2))
-
-              # increase fonts
-              theme_set(theme_gray(base_size = 20))
-
-              # Coding Sequence length
-              if (sum(!is.na(x2$cds_length)) >= minGenes && length(unique(x2$cds_length)) > 2 &&
-                length(which(x2$Set == "List")) > minGenes) {
-                Pval <- t.test(log(cds_length) ~ Set, data = x2)$p.value
-                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
-
-
-                p1 <- ggplot(x2, aes(cds_length, fill = Set, colour = Set)) +
-                  geom_density(alpha = 0.1) +
-                  scale_x_log10() + 
-                  labs(x = "Coding sequence length (bp)", y = "Density") +
-                  annotate("text", x = min(x2$cds_length) + 50, y = .5, label = sig, size = 6) +
-                  # annotate("text",x= max(x2$cds_length), y = densMode(x2$cds_length)$y, label=sig, size=8, hjust=1) +
-                  guides(color = guide_legend(nrow = 2)) +
-                  theme(
-                    legend.key = element_rect(color = NA, fill = NA),
-                    legend.key.size = unit(1.2, "line")
-                  ) +
-                  theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
-              } else {
-                p1 <- fake_plot("Coding Sequence length plot not available.")
-              }
-
-              incProgress(1 / 8)
-
-              # Transcript length------------
-              if (sum(!is.na(x2$transcript_length)) >= minGenes &&
-                length(unique(x2$transcript_length)) > 2 &&
-                length(which(x2$Set == "List")) > minGenes) {
-                Pval <- t.test(log(transcript_length) ~ Set, data = x2[which(!is.na(x2$transcript_length)), ])$p.value
-                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
-
-                p2 <- ggplot(x2, aes(transcript_length, fill = Set, colour = Set)) +
-                  geom_density(alpha = 0.1) +
-                  scale_x_log10() +
-                  annotate("text", x = min(x2$transcript_length) + 100, y = .5, label = sig, size = 6) +
-                  # annotate("text",x= max(x2$transcript_length), y = densMode(x2$transcript_length)$y, label=sig, size=8, hjust=1) +
-                  labs(x = "Transcript length (bp)", y = "Density") +
-                  guides(color = guide_legend(nrow = 2)) +
-                  theme(
-                    legend.key = element_rect(color = NA, fill = NA),
-                    legend.key.size = unit(1.2, "line")
-                  ) +
-                  theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
-              } else {
-                p2 <- fake_plot("Transcript length plot not available.")
-              }
-              incProgress(2 / 8)
-
-              # Genome span ------------
-
-              if (sum(!is.na(x2$genomeSpan)) >= minGenes && length(unique(x2$genomeSpan)) > 2 && length(which(x2$Set == "List")) > minGenes) {
-                Pval <- t.test(log(genomeSpan) ~ Set, data = x2[which(!is.na(x2$genomeSpan)), ])$p.value
-                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
-                p3 <- ggplot(x2, aes(genomeSpan, fill = Set, colour = Set)) +
-                  geom_density(alpha = 0.1) +
-                  scale_x_log10() +
-                  annotate("text", x = min(x2$genomeSpan) + 200, y = .5, label = sig, size = 6) +
-                  # annotate("text",x= max(x2$genomeSpan), y = densMode(x2$genomeSpan)$y, label=sig, size=8, hjust=1) +
-                  labs(x = "Genome span (bp)", y = "Density") +
-                  guides(color = guide_legend(nrow = 2)) +
-                  theme(
-                    legend.key = element_rect(color = NA, fill = NA),
-                    legend.key.size = unit(1.2, "line")
-                  ) +
-                  theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
-              } else {
-                p3 <- fake_plot("Genome span plot not available.")
-              }
-
-              incProgress(3 / 8)
-
-              # 5' UTR ------------
-
-              if (sum(!is.na(x2$FiveUTR)) >= minGenes && length(unique(x2$FiveUTR)) > 2 && length(which(x2$Set == "List")) > minGenes) {
-                Pval <- t.test(log(FiveUTR) ~ Set, data = x2[which(!is.na(x2$FiveUTR) & x2$FiveUTR > 0), ])$p.value
-                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
-
-                p4 <- ggplot(x2, aes(FiveUTR, fill = Set, colour = Set)) +
-                  geom_density(alpha = 0.1) +
-                  scale_x_log10() +
-                  annotate("text",
-                    x = min(x2[which(!is.na(x2$FiveUTR) & x2$FiveUTR > 0), "FiveUTR"]) + 5,
-                    y = .5, label = sig, size = 6
-                  ) +
-                  # annotate("text",x= max(x2$FiveUTR), y = densMode(x2$FiveUTR)$y, label=sig, size=8, hjust=1) +
-                  labs(x = "5' UTR length (bp)", y = "Density") +
-                  guides(color = guide_legend(nrow = 2)) +
-                  theme(
-                    legend.key = element_rect(color = NA, fill = NA),
-                    legend.key.size = unit(1.2, "line")
-                  ) +
-                  theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
-              } else {
-                p4 <- fake_plot("5' UTR plot not available.")
-              }
-
-              incProgress(4 / 8)
-
-              # 3' UTR ------------
-              if (sum(!is.na(x2$ThreeUTR)) >= minGenes && length(unique(x2$ThreeUTR)) > 2 && length(which(x2$Set == "List")) > minGenes) {
-                Pval <- t.test(log(ThreeUTR) ~ Set, data = x2[which(!is.na(x2$ThreeUTR) & x2$ThreeUTR > 0), ])$p.value
-                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
-
-                p5 <- ggplot(x2, aes(ThreeUTR, fill = Set, colour = Set)) +
-                  geom_density(alpha = 0.1) +
-                  scale_x_log10() +
-                  annotate("text", x = min(x2[which(!is.na(x2$ThreeUTR) & x2$ThreeUTR > 0), "ThreeUTR"]) + 5, y = .5, label = sig, size = 6) +
-                  # annotate("text",x= max(x2$ThreeUTR), y = densMode(x2$ThreeUTR)$y, label=sig, size=8, hjust=1) +
-                  labs(x = "3' UTR length (bp)", y = "Density") +
-                  guides(color = guide_legend(nrow = 2)) +
-                  theme(
-                    legend.key = element_rect(color = NA, fill = NA),
-                    legend.key.size = unit(1.2, "line")
-                  ) +
-                  theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
-              } else {
-                p5 <- fake_plot("3' UTR plot not available.")
-              }
-              incProgress(5 / 8)
-
-              # GC content ------------
-              if (sum(!is.na(x2$percentage_gc_content)) >= minGenes &&
-                length(unique(x2$percentage_gc_content)) > 2 &&
-                length(which(x2$Set == "List")) > minGenes) {
-                Pval <- t.test(percentage_gc_content ~ Set,
-                  data = x2[which(!is.na(x2$percentage_gc_content) & x2$percentage_gc_content > 0), ]
-                )$p.value
-                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
-
-                p6 <- ggplot(x2, aes(percentage_gc_content, fill = Set, colour = Set)) +
-                  geom_density(alpha = 0.1) +
-                  # annotate("text",x= min(x2$percentage_gc_content)+5, y = .02, label=sig, size=8)+
-                  annotate("text", x = max(x2$percentage_gc_content), y = densMode(x2$percentage_gc_content)$y, label = sig, size = 6, hjust = 1) +
-                  labs(x = "GC content (%)", y = "Density") +
-                  guides(color = guide_legend(nrow = 2)) +
-                  theme(
-                    legend.key = element_rect(color = NA, fill = NA),
-                    legend.key.size = unit(1.2, "line")
-                  ) +
-                  theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
-              } else {
-                p6 <- fake_plot("GC content plot not available.")
-              }
-
-              incProgress(6 / 8)
-              p1 <- refine_ggplot2(
-                  p = p1,
-                  gridline = FALSE,
-                  ggplot2_theme = input$ggplot2_theme
-                )  
-              p2 <- refine_ggplot2(
-                p = p2,
-                gridline = FALSE,
-                ggplot2_theme = input$ggplot2_theme
-              )   
-              p3 <- refine_ggplot2(
-                p = p3,
-                gridline = FALSE,
-                ggplot2_theme = input$ggplot2_theme
-              )   
-              p4 <- refine_ggplot2(
-                p = p4,
-                gridline = FALSE,
-                ggplot2_theme = input$ggplot2_theme
-              )   
-              p5 <- refine_ggplot2(
-                p = p5,
-                gridline = FALSE,
-                ggplot2_theme = input$ggplot2_theme
-              )
-              p6 <- refine_ggplot2(
-                p = p6,
-                gridline = FALSE,
-                ggplot2_theme = input$ggplot2_theme
-              )
-              incProgress(7 / 8, detail = paste("Done"))  
-              gridExtra::grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 1)                                                          
-            }
-        })
-      }) # isolate
+  gene_density_plot <- reactive({
+    if (input$goButton == 0) {
+      return()
     }
-  )
+    req(input$ggplot2_theme)
+    req(input$selectOrg)
+    isolate({
+      withProgress(message = "Ploting gene characteristics", {
+        x <- geneInfoLookup()
+        x2 <- x[which(x$gene_biotype == "protein_coding"), ] # only coding for some analyses
+
+        # background genes	--------------------------------------------------------------
+        xB <- geneInfoLookup_background()
+        convertedB <- converted_background()
+        if (!is.null(xB) &&
+          !is.null(convertedB) &&
+          length(convertedB$IDs) < maxGenesBackground + 1) { # if more than 30k genes, ignore background genes.
+
+          x <- x[x$Set == "List", ] # remove background from selected genes
+          xB <- xB[xB$Set == "List", ] # remove Genome genes from background
+          xB$Set <- "Background"
+          x <- rbind(x, xB)
+          x2 <- x[which(x$gene_biotype == "protein_coding"), ] # only coding for some analyses
+        }
+        # end background genes
+
+
+        if (dim(x)[1] >= minGenes) # only making plots if more than 20 genes
+          { # only plot when there 10 genes or more   # some columns have too many missing values
+            # par(mfrow=c(10,1))
+            # par(mar=c(8,6,8,2))
+
+            # increase fonts
+            theme_set(theme_gray(base_size = 20))
+
+            # Coding Sequence length
+            if (sum(!is.na(x2$cds_length)) >= minGenes && length(unique(x2$cds_length)) > 2 &&
+              length(which(x2$Set == "List")) > minGenes) {
+              Pval <- t.test(log(cds_length) ~ Set, data = x2)$p.value
+              sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
+
+
+              p1 <- ggplot(x2, aes(cds_length, fill = Set, colour = Set)) +
+                geom_density(alpha = 0.1) +
+                scale_x_log10() +
+                labs(x = "Coding sequence length (bp)", y = "Density") +
+                annotate("text", x = min(x2$cds_length) + 50, y = .5, label = sig, size = 6) +
+                # annotate("text",x= max(x2$cds_length), y = densMode(x2$cds_length)$y, label=sig, size=8, hjust=1) +
+                guides(color = guide_legend(nrow = 2)) +
+                theme(
+                  legend.key = element_rect(color = NA, fill = NA),
+                  legend.key.size = unit(1.2, "line")
+                ) +
+                theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
+            } else {
+              p1 <- fake_plot("Coding Sequence length plot not available.")
+            }
+
+            incProgress(1 / 8)
+
+            # Transcript length------------
+            if (sum(!is.na(x2$transcript_length)) >= minGenes &&
+              length(unique(x2$transcript_length)) > 2 &&
+              length(which(x2$Set == "List")) > minGenes) {
+              Pval <- t.test(log(transcript_length) ~ Set, data = x2[which(!is.na(x2$transcript_length)), ])$p.value
+              sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
+
+              p2 <- ggplot(x2, aes(transcript_length, fill = Set, colour = Set)) +
+                geom_density(alpha = 0.1) +
+                scale_x_log10() +
+                annotate("text", x = min(x2$transcript_length) + 100, y = .5, label = sig, size = 6) +
+                # annotate("text",x= max(x2$transcript_length), y = densMode(x2$transcript_length)$y, label=sig, size=8, hjust=1) +
+                labs(x = "Transcript length (bp)", y = "Density") +
+                guides(color = guide_legend(nrow = 2)) +
+                theme(
+                  legend.key = element_rect(color = NA, fill = NA),
+                  legend.key.size = unit(1.2, "line")
+                ) +
+                theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
+            } else {
+              p2 <- fake_plot("Transcript length plot not available.")
+            }
+            incProgress(2 / 8)
+
+            # Genome span ------------
+
+            if (sum(!is.na(x2$genomeSpan)) >= minGenes && length(unique(x2$genomeSpan)) > 2 && length(which(x2$Set == "List")) > minGenes) {
+              Pval <- t.test(log(genomeSpan) ~ Set, data = x2[which(!is.na(x2$genomeSpan)), ])$p.value
+              sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
+              p3 <- ggplot(x2, aes(genomeSpan, fill = Set, colour = Set)) +
+                geom_density(alpha = 0.1) +
+                scale_x_log10() +
+                annotate("text", x = min(x2$genomeSpan) + 200, y = .5, label = sig, size = 6) +
+                # annotate("text",x= max(x2$genomeSpan), y = densMode(x2$genomeSpan)$y, label=sig, size=8, hjust=1) +
+                labs(x = "Genome span (bp)", y = "Density") +
+                guides(color = guide_legend(nrow = 2)) +
+                theme(
+                  legend.key = element_rect(color = NA, fill = NA),
+                  legend.key.size = unit(1.2, "line")
+                ) +
+                theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
+            } else {
+              p3 <- fake_plot("Genome span plot not available.")
+            }
+
+            incProgress(3 / 8)
+
+            # 5' UTR ------------
+
+            if (sum(!is.na(x2$FiveUTR)) >= minGenes && length(unique(x2$FiveUTR)) > 2 && length(which(x2$Set == "List")) > minGenes) {
+              Pval <- t.test(log(FiveUTR) ~ Set, data = x2[which(!is.na(x2$FiveUTR) & x2$FiveUTR > 0), ])$p.value
+              sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
+
+              p4 <- ggplot(x2, aes(FiveUTR, fill = Set, colour = Set)) +
+                geom_density(alpha = 0.1) +
+                scale_x_log10() +
+                annotate("text",
+                  x = min(x2[which(!is.na(x2$FiveUTR) & x2$FiveUTR > 0), "FiveUTR"]) + 5,
+                  y = .5, label = sig, size = 6
+                ) +
+                # annotate("text",x= max(x2$FiveUTR), y = densMode(x2$FiveUTR)$y, label=sig, size=8, hjust=1) +
+                labs(x = "5' UTR length (bp)", y = "Density") +
+                guides(color = guide_legend(nrow = 2)) +
+                theme(
+                  legend.key = element_rect(color = NA, fill = NA),
+                  legend.key.size = unit(1.2, "line")
+                ) +
+                theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
+            } else {
+              p4 <- fake_plot("5' UTR plot not available.")
+            }
+
+            incProgress(4 / 8)
+
+            # 3' UTR ------------
+            if (sum(!is.na(x2$ThreeUTR)) >= minGenes && length(unique(x2$ThreeUTR)) > 2 && length(which(x2$Set == "List")) > minGenes) {
+              Pval <- t.test(log(ThreeUTR) ~ Set, data = x2[which(!is.na(x2$ThreeUTR) & x2$ThreeUTR > 0), ])$p.value
+              sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
+
+              p5 <- ggplot(x2, aes(ThreeUTR, fill = Set, colour = Set)) +
+                geom_density(alpha = 0.1) +
+                scale_x_log10() +
+                annotate("text", x = min(x2[which(!is.na(x2$ThreeUTR) & x2$ThreeUTR > 0), "ThreeUTR"]) + 5, y = .5, label = sig, size = 6) +
+                # annotate("text",x= max(x2$ThreeUTR), y = densMode(x2$ThreeUTR)$y, label=sig, size=8, hjust=1) +
+                labs(x = "3' UTR length (bp)", y = "Density") +
+                guides(color = guide_legend(nrow = 2)) +
+                theme(
+                  legend.key = element_rect(color = NA, fill = NA),
+                  legend.key.size = unit(1.2, "line")
+                ) +
+                theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
+            } else {
+              p5 <- fake_plot("3' UTR plot not available.")
+            }
+            incProgress(5 / 8)
+
+            # GC content ------------
+            if (sum(!is.na(x2$percentage_gc_content)) >= minGenes &&
+              length(unique(x2$percentage_gc_content)) > 2 &&
+              length(which(x2$Set == "List")) > minGenes) {
+              Pval <- t.test(percentage_gc_content ~ Set,
+                data = x2[which(!is.na(x2$percentage_gc_content) & x2$percentage_gc_content > 0), ]
+              )$p.value
+              sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
+
+              p6 <- ggplot(x2, aes(percentage_gc_content, fill = Set, colour = Set)) +
+                geom_density(alpha = 0.1) +
+                # annotate("text",x= min(x2$percentage_gc_content)+5, y = .02, label=sig, size=8)+
+                annotate("text", x = max(x2$percentage_gc_content), y = densMode(x2$percentage_gc_content)$y, label = sig, size = 6, hjust = 1) +
+                labs(x = "GC content (%)", y = "Density") +
+                guides(color = guide_legend(nrow = 2)) +
+                theme(
+                  legend.key = element_rect(color = NA, fill = NA),
+                  legend.key.size = unit(1.2, "line")
+                ) +
+                theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
+            } else {
+              p6 <- fake_plot("GC content plot not available.")
+            }
+
+            incProgress(6 / 8)
+            p1 <- refine_ggplot2(
+              p = p1,
+              gridline = FALSE,
+              ggplot2_theme = input$ggplot2_theme
+            )
+            p2 <- refine_ggplot2(
+              p = p2,
+              gridline = FALSE,
+              ggplot2_theme = input$ggplot2_theme
+            )
+            p3 <- refine_ggplot2(
+              p = p3,
+              gridline = FALSE,
+              ggplot2_theme = input$ggplot2_theme
+            )
+            p4 <- refine_ggplot2(
+              p = p4,
+              gridline = FALSE,
+              ggplot2_theme = input$ggplot2_theme
+            )
+            p5 <- refine_ggplot2(
+              p = p5,
+              gridline = FALSE,
+              ggplot2_theme = input$ggplot2_theme
+            )
+            p6 <- refine_ggplot2(
+              p = p6,
+              gridline = FALSE,
+              ggplot2_theme = input$ggplot2_theme
+            )
+            incProgress(7 / 8, detail = paste("Done"))
+            gridExtra::grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 1)
+          }
+      })
+    }) # isolate
+  })
 
 
 
@@ -1887,7 +1882,7 @@ server <- function(input, output, session) {
 
       # remove pathway ID  only in Ensembl species
       if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-        goTable$Pathway <- remove_pathway_id(goTable$Pathway , input$selectGO)
+        goTable$Pathway <- remove_pathway_id(goTable$Pathway, input$selectGO)
       }
 
       # convert to factor so that the levels are not reordered by ggplot2
@@ -1900,15 +1895,15 @@ server <- function(input, output, session) {
           high = input$SortPathwaysPlotHighColor,
           name = names(columns)[columns == colorBy],
           guide = guide_colorbar(reverse = TRUE)
-        ) 
-
-        p <- refine_ggplot2(
-          p = p,
-          gridline = FALSE,
-          ggplot2_theme = input$ggplot2_theme
         )
 
-        p <- p + scale_size(range = c(1, markerSize)) +
+      p <- refine_ggplot2(
+        p = p,
+        gridline = FALSE,
+        ggplot2_theme = input$ggplot2_theme
+      )
+
+      p <- p + scale_size(range = c(1, markerSize)) +
         xlab(names(columns)[columns == x]) +
         ylab(NULL) +
         guides(
@@ -1943,16 +1938,16 @@ server <- function(input, output, session) {
             high = input$SortPathwaysPlotHighColor,
             name = names(columns)[columns == colorBy],
             guide = guide_colorbar(reverse = TRUE)
-          ) 
-          p <- refine_ggplot2(
-            p = p,
-            gridline = FALSE,
-            ggplot2_theme = input$ggplot2_theme
-          )          
-          p <- p + 
-            xlab(names(columns)[columns == x]) +
-            ylab(NULL) +
-            theme(axis.text = element_text(size = fontSize))
+          )
+        p <- refine_ggplot2(
+          p = p,
+          gridline = FALSE,
+          ggplot2_theme = input$ggplot2_theme
+        )
+        p <- p +
+          xlab(names(columns)[columns == x]) +
+          ylab(NULL) +
+          theme(axis.text = element_text(size = fontSize))
       }
       return(p)
     }) # isolate
@@ -2595,14 +2590,14 @@ server <- function(input, output, session) {
           # "Path:hsa04110 Cell cycle" --> "hsa04110"
           pathID <- gsub(" .*", "", input$sigPathways)
           pathID <- gsub("Path:", "", pathID)
-          #pathID <- keggPathwayID(input$sigPathways, Species, "KEGG", input$selectOrg)
+          # pathID <- keggPathwayID(input$sigPathways, Species, "KEGG", input$selectOrg)
           # cat("\nhere5  ",keggSpecies, " ",Species," ",input$sigPathways, "pathID:",pathID,"End", fold[1:5],names(fold)[1:5],"\n")
           # cat("\npathway:",is.na(input$sigPathways))
           # cat("\n",fold[1:5],"\n",keggSpecies,"\n",pathID)
 
           if (nchar(pathID) < 3) {
             return(blank)
-          } 
+          }
           randomString <- gsub(".*file", "", tempfile())
           tempFolder <- tempdir() # tempFolder = "temp";
           outfile <- paste(tempFolder, "/", pathID, ".", randomString, ".png", sep = "")
