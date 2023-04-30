@@ -972,11 +972,14 @@ server <- function(input, output, session) {
   output$stringDB_GO_enrichment <- renderTable(
     {
       result <- stringDB_GO_enrichmentData()
-      if (result == -1) {
-        return(NULL)
-      } else if (result == -2) {
-        return(as.data.frame("No significant enrichment found."))
-      } else {
+      req(!is.null(result))
+      if(class(result) == "numeric") {
+        if (result == -1) {
+          return(NULL)
+        } else if (result == -2) {
+          return(as.data.frame("No significant enrichment found."))
+        } 
+      }  else {
         result <- dplyr::select(
           result,
           c(

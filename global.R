@@ -24,7 +24,7 @@ datapath <- Sys.getenv("IDEP_DATABASE")[1]
 if (nchar(datapath) == 0) {
   datapath <- "../../data/data104b/"
 }
-
+datapath <- "c:/work/IDEP_data/data104b/"
 STRING_DB_VERSION <- "11.5" # what version of STRINGdb needs to be used
 Min_overlap <- 1
 minSetSize <- 3
