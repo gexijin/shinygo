@@ -1091,7 +1091,7 @@ server <- function(input, output, session) {
   output$stringDB_GO_enrichment <- renderTable(
     {
       result <- stringDB_GO_enrichmentData()
-browser()
+
       req(!is.null(result))
       if(class(result) == "numeric") {
         if (result == -1) {
