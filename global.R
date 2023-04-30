@@ -1668,6 +1668,20 @@ find_species_id_by_ensembl <- function(ensembl_dataset, org_info) {
   return(org_info[which(org_info$ensembl_dataset == ensembl_dataset), "id"])
 }
 
+#' Find taxon ID by species ID
+#'
+#' Find a species in the iDEP database with an
+#' ID.
+#'
+#' @param species_id Species ID to search the database with
+#' @param org_info iDEP data org_info file
+#'
+#' @export
+#' @return Only return the species name with this function.
+find_taxon_by_id <- function(species_id, org_info) {
+  # find species name use id
+  return(org_info[which(org_info$id == species_id), "taxon_id"])
+}
 
 #' Remove Pathway ID from pathway name
 #' Only for GO and KEGG pathways

@@ -930,6 +930,10 @@ server <- function(input, output, session) {
       return(NULL)
     }
 
+
+   if(0){
+
+ 
     if (!is.null(input$speciesName)) { # if species name is entered
       ix <- match(input$speciesName, STRING10_species$official_name)
     } else if (input$selectGO != "ID not recognized!") { # if no species is entered, try to resolve species using existing info
@@ -947,6 +951,9 @@ server <- function(input, output, session) {
       return(NULL)
     }
     return(STRING10_species$species_id[ix])
+      }
+    find_taxon_by_id(input$selectOrg, orgInfo)
+
   })
 
 
@@ -1084,10 +1091,14 @@ server <- function(input, output, session) {
   output$stringDB_GO_enrichment <- renderTable(
     {
       result <- stringDB_GO_enrichmentData()
-      if (result == -1) {
-        return(NULL)
-      } else if (result == -2) {
-        return(as.data.frame("No significant enrichment found."))
+browser()
+      req(!is.null(result))
+      if(class(result) == "numeric") {
+        if (result == -1) {
+          return(NULL)
+        } else if (result == -2) {
+          return(as.data.frame("No significant enrichment found."))
+        } 
       } else {
         result <- dplyr::select(
           result,

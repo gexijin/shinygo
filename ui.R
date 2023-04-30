@@ -615,19 +615,19 @@ ui <- fluidPage(
         ),
 
         #---Genome-----------------------------------------------------------
-        tabPanel("Promoter",
-          value = 10,
-          radioButtons("radio", label = NULL, choices = list(
-            "Upstream 300bp as promoter" = 300,
-            "Upstream 600bp as promoter" = 600
-          ), selected = 300),
-          tableOutput("promoter"),
-          downloadButton("downloadPromoter", "Download"),
-          h5("The promoter sequences of your genes are compared with those of the
-              other genes in the genome in terms of transcription factor (TF) binding motifs.
-              \"*Query gene\" indicates a transcription factor coded by a gene included in
-              your list.")
-        ),
+#        tabPanel("Promoter",
+#          value = 10,
+#          radioButtons("radio", label = NULL, choices = list(
+#            "Upstream 300bp as promoter" = 300,
+#            "Upstream 600bp as promoter" = 600
+#          ), selected = 300),
+#          tableOutput("promoter"),
+#          downloadButton("downloadPromoter", "Download"),
+#          h5("The promoter sequences of your genes are compared with those of the
+#              other genes in the genome in terms of transcription factor (TF) binding motifs.
+#              \"*Query gene\" indicates a transcription factor coded by a gene included in
+#              your list.")
+#        ),
         #---STRING-----------------------------------------------------------
         tabPanel("STRING",
           value = 11,
