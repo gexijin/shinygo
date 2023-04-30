@@ -242,16 +242,13 @@ ui <- fluidPage(
             p("We are working on a grant proposal (due May 31st) to redevelop, 
             improve, and maintain ShinyGO. 
             If you briefly state your general research area and how ShinyGO
-            facilitates your research, 
-            we can use it as a support letter. Also include your
-            scientific discoveries and any 
-            features requests in the new version (like multiple gene sets).
-            Funding will help sustain
-              and improve this service. Otherwise, it might disappear. 
-              We spent years building it. 
-              Please take two minutes to send us an email today.",
+            facilitates your work, including major findings, 
+            we can use it as a support letter. Also include any 
+            features requests such as multiple gene sets.
+            Without funding, ShinyGO might disappear. 
+            ",
             a(
-                " (gelabinfo@gmail.com)",
+                "gelabinfo@gmail.com",
                 href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO support letter"
               )
               
