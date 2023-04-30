@@ -30,8 +30,6 @@ server <- function(input, output, session) {
     # tried to solve the double reflashing problems
     # https://stackoverflow.com/questions/30991900/avoid-double-refresh-of-plot-in-shiny
 
-    updateSelectizeInput(session, "speciesName", choices = sort(STRING10_species$official_name))
-
     shinyjs::hideElement(id = "selectOrg")
   })
   # click_saved <- reactiveValues(GO = NULL)
@@ -929,29 +927,7 @@ server <- function(input, output, session) {
     if (input$goButton == 0) {
       return(NULL)
     }
-
-
-   if(0){
-
- 
-    if (!is.null(input$speciesName)) { # if species name is entered
-      ix <- match(input$speciesName, STRING10_species$official_name)
-    } else if (input$selectGO != "ID not recognized!") { # if no species is entered, try to resolve species using existing info
-      codedNames <- sapply(STRING10_species$compact_name, shortSpeciesNames)
-      ix <- match(gsub("_.*", "", converted()$species[1, 1]), codedNames)
-      if (input$selectOrg != speciesChoice[[1]]) { # if species is entered
-        selectedSpecies <- findSpeciesById(input$selectOrg)[1, 1]
-        ix <- match(gsub("_.*", "", selectedSpecies), codedNames)
-      }
-    } else {
-      return(NULL)
-    }
-
-    if (length(ix) == 0 | is.na(ix)) {
-      return(NULL)
-    }
-    return(STRING10_species$species_id[ix])
-      }
+    
     find_taxon_by_id(input$selectOrg, orgInfo)
 
   })
@@ -1009,21 +985,6 @@ server <- function(input, output, session) {
         incProgress(1)
       }) # progress
     }) # isolate
-  })
-
-  output$STRINGDB_species_stat <- renderUI({
-    tem <- ""
-    if (is.null(input$speciesName) && !is.null(findTaxonomyID())) {
-      ix <- match(findTaxonomyID(), STRING10_species$species_id)
-      if (length(ix) != 0 && !is.na(ix)) {
-        tem <- paste(tem, "If ", STRING10_species$official_name[ix], "is NOT the correct species, change below:")
-      }
-    } else {
-      tem <- paste(tem, " Select species below:")
-    }
-
-
-    return(HTML(tem))
   })
 
   output$STRINGDB_mapping_stat <- renderText({

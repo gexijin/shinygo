@@ -328,8 +328,6 @@ connect_convert_db_org <- function(datapath = datapath, select_org) {
 }
 
 
-
-
 # keggSpeciesID = read.csv(paste0(datapath,"data_go/KEGG_Species_ID.csv"))
 # List of GMT files in /gmt sub folder
 gmtFiles <- orgInfo$file
@@ -338,9 +336,6 @@ gmtFiles <- paste(datapath, "/db/", gmtFiles, sep = "")
 # geneInfoFiles <- paste(datapath, "geneInfo/", geneInfoFiles, sep = "")
 # motifFiles <- list.files(path = paste0(datapath, "motif"), pattern = ".*\\.db")
 # motifFiles <- paste(datapath, "motif/", motifFiles, sep = "")
-
-STRING10_species <- orgInfo[, c("id", "name")]
-
 
 # This function convert gene set names
 # x="GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA"
@@ -1351,11 +1346,14 @@ showGeneIDs <- function(species, nGenes = 10) {
   if (species == "BestMatch") {
     return(as.data.frame("Select a species above."))
   }
+  # connect to the database, this becomes a global variable
+  convert_species <- connect_convert_db_org(datapath, species)
 
   idTypes <- dbGetQuery(
-    convert,
-    paste0(" select DISTINCT idType from mapping where species = '", species, "'")
+    convert_species,
+    paste0(" select DISTINCT idType from mapping;")
   ) # slow
+
   idTypes <- idTypes[, 1, drop = TRUE]
 
   if (nGenes > 100) nGenes <- 100 # upper limit
@@ -1364,9 +1362,8 @@ showGeneIDs <- function(species, nGenes = 10) {
   for (k in 1:length(idTypes)) {
     # retrieve 500 gene ids and then random choose 10
     result <- dbGetQuery(
-      convert,
-      paste0(" select  id,idType from mapping where species = '", species, "'
-                                 AND idType ='", idTypes[k], "'
+      convert_species,
+      paste0(" select  id,idType from mapping where idType ='", idTypes[k], "'
                                  LIMIT ", 50 * nGenes)
     )
     result <- result[sample(1:(50 * nGenes), nGenes), ]
@@ -1379,13 +1376,13 @@ showGeneIDs <- function(species, nGenes = 10) {
 
   # Names of idTypes
   idNames <- dbGetQuery(
-    convert,
+    convert_species,
     paste0(
       " SELECT id,idType from idIndex where id IN ('",
       paste(idTypes, collapse = "', '"), "') "
     )
   )
-
+  dbDisconnect(convert_species)
   resultAll <- merge(resultAll, idNames, by.x = "idType", by.y = "id")
 
 
