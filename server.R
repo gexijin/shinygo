@@ -2007,7 +2007,7 @@ server <- function(input, output, session) {
 
   output$KeggImage <- renderImage(
     {
-      tem <- input$sigPathways
+      req(input$sigPathway)
 
       # First generate a blank image. Otherwise return(NULL) gives us errors.
       outfile <- tempfile(fileext = ".png")
@@ -2599,6 +2599,7 @@ server <- function(input, output, session) {
           # cat("\nhere5  ",keggSpecies, " ",Species," ",input$sigPathways, "pathID:",pathID,"End", fold[1:5],names(fold)[1:5],"\n")
           # cat("\npathway:",is.na(input$sigPathways))
           # cat("\n",fold[1:5],"\n",keggSpecies,"\n",pathID)
+
           if (is.null(pathID)) {
             return(blank)
           } # kegg pathway id not found.
