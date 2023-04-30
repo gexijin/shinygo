@@ -216,6 +216,25 @@ ui <- fluidPage(
              107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
             We also included 14,094 species from STRING-DB 11.5."
             ),
+
+            h3(
+              "We urgently need your emails of support",
+            ),
+            p("We are working on a grant proposal (due May 31st) to redevelop, 
+            improve, and maintain ShinyGO. 
+            If you briefly state your general research area and how ShinyGO
+            facilitates your work, including major findings, 
+            we can use it as a support letter. Also include any 
+            features requests such as multiple gene sets.
+            Without funding, ShinyGO might disappear. 
+            ",
+            a(
+                "gelabinfo@gmail.com",
+                href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO support letter"
+              )
+              
+              ),
+
             p(
               "Jan. 19, 2023: Thanks to a user's feedback, we found a serious bug 
               in ShinyGO 0.76. 
@@ -226,18 +245,6 @@ ui <- fluidPage(
               Please always double check your results with other tools
               such as G:profiler, Enrichr, STRING-db, and DAVID."
             ),
-            h3(
-              "Please ",
-              a(
-                "send us a brief email",
-                href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO support letter"
-              ),
-              " to show your support."
-            ),
-            p(" If you state your general research area and how ShinyGO
-            makes you more productive, we can use it as a support letter when we
-              apply for funding, which will help sustain
-              and improve this service."),
             p(
               "If this server is busy, please use a mirror sever ",
               a("http://ge-lab.org/go/", href = "http://149.165.154.220/go/"),
