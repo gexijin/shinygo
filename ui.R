@@ -207,6 +207,15 @@ ui <- fluidPage(
           conditionalPanel(
             "input.goButton == 0 ", # welcome screen
             br(),
+            p("5/1/2023: ",
+              a(
+                "ShinyGO 0.80",
+                href = "http://bioinformatics.sdstate.edu/go80/"
+              ),
+             "release in testing mode. Thanks to Jenny's hardwork, we update to Ensembl release
+             107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
+            We also included 14,094 species from STRING-DB 11.5."
+            ),
             p(
               "Jan. 19, 2023: Thanks to a user's feedback, we found a serious bug 
               in ShinyGO 0.76. 
@@ -215,7 +224,7 @@ ui <- fluidPage(
               pasted Ensembl gene IDs to ShinyGO 0.76 between April 4, 2022 and Jan. 19, 2023, 
               please rerun your analysis. ShinyGO has not been throughly tested.
               Please always double check your results with other tools
-              such as G:profiler, Enrichr, STRING-db, and DAVID.", style = "color:red"
+              such as G:profiler, Enrichr, STRING-db, and DAVID."
             ),
             h3(
               "Please ",
@@ -240,25 +249,7 @@ ui <- fluidPage(
               "Follow ", a("Dr Ge on Twitter", href = "https://twitter.com/StevenXGe"),
               " for updates. "
             ),
-            br(),
-            p("Oct 26, 2022: V. 0.76.3 Add hover text. Change plot styles.
-             When users select \"Sort by Fold Enrichment\", 
-             the minimum pathway size is raised to 10 to 
-             filter out noise from tiny gene sets."),
-            p("Sept 28, 2022: In ShinyGO 0.76.2, KEGG is now the default pathway database. More importantly,
-                    we reverted to 0.76 for default gene counting method, namely
-                    all protein-coding genes are used as the background by default.
-                    The new feature introduced in 0.76.1, which uses the pathway database
-                    to determine total number of genes in the background, can be turned on as an option
-                    ('Use pathway database for gene counts').
-                    This is based on feedback from some users that
-                     when using smaller pathway databases, such as KEGG, the new method changes
-                     the P values substantially."),
-            p("Sept 3, 2022: ShinyGO 0.76.1. In this small improvement, we improved how we count the number of genes for
-                    calculating P value. A gene must match at least one pathway in the selected pathway database. Otherwise this gene
-                    is ignored in the calculation of P values based on hypergeometric distribution. This applies to both query and background genes. "),
-            p("April 19, 2022: ShinyGO 0.76 released. Improved pathway filtering, pathway sorting, figure downloading.
-                       Version 0.75 is available", a("here.", href = "http://bioinformatics.sdstate.edu/go75")),
+
             p("Feb. 11, 2022: Like ShinyGO but your genome is not covered?",
               a("Customized ShinyGO", href = "http://bioinformatics.sdstate.edu/goc/"), " is now available.
                     Its database includes several custom genomes requested by users. To request to add a new species/genome, fill in this ",
@@ -752,6 +743,25 @@ ui <- fluidPage(
           br(), br(), img(src = "promoter.png", align = "center", width = "717", height = "288"),
           includeHTML("human_mouse_source.html"),
           br(), h4("Changes:"),
+            br(),
+            p("Oct 26, 2022: V. 0.76.3 Add hover text. Change plot styles.
+             When users select \"Sort by Fold Enrichment\", 
+             the minimum pathway size is raised to 10 to 
+             filter out noise from tiny gene sets."),
+            p("Sept 28, 2022: In ShinyGO 0.76.2, KEGG is now the default pathway database. More importantly,
+                    we reverted to 0.76 for default gene counting method, namely
+                    all protein-coding genes are used as the background by default.
+                    The new feature introduced in 0.76.1, which uses the pathway database
+                    to determine total number of genes in the background, can be turned on as an option
+                    ('Use pathway database for gene counts').
+                    This is based on feedback from some users that
+                     when using smaller pathway databases, such as KEGG, the new method changes
+                     the P values substantially."),
+            p("Sept 3, 2022: ShinyGO 0.76.1. In this small improvement, we improved how we count the number of genes for
+                    calculating P value. A gene must match at least one pathway in the selected pathway database. Otherwise this gene
+                    is ignored in the calculation of P values based on hypergeometric distribution. This applies to both query and background genes. "),
+            p("April 19, 2022: ShinyGO 0.76 released. Improved pathway filtering, pathway sorting, figure downloading.
+                       Version 0.75 is available", a("here.", href = "http://bioinformatics.sdstate.edu/go75")),
           p("April 17, 2022: Add more flexiblity for download figures in PDF, SVG and high-res PNG."),
           p("April 8, 2022: Add features to remove redundant pathways. Add filter to remove extrmely large or small pathways. Changed interface to always show KEGG tab."),
           p("Mar. 7, 2022: Fixed an R library issue affected KEGG diagrams for some organisms."),
