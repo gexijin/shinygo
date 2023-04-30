@@ -492,8 +492,9 @@ convertID <- function(query, selectOrg) {
       "select distinct id,ens,idType from mapping where id IN ", querSetString
     )
 
-    convert_species <<- connect_convert_db_org(datapath, selectOrg)
+
     result <- dbGetQuery(convert_species, querySTMT)
+
 
     if (dim(result)[1] == 0) {
       return(NULL)
@@ -1230,7 +1231,7 @@ colnames(keggSpeciesID)[3] <- "kegg"
 
 convertEnsembl2Entrez <- function(query, Species) {
   # finds id index corresponding to entrez gene and KEGG for id conversion
-  idType_Entrez <- dbGetQuery(convert, paste("select distinct * from idIndex where idType = 'entrezgene_id'"))
+  idType_Entrez <- dbGetQuery(convert_species, paste("select distinct * from idIndex where idType = 'entrezgene_id'"))
   if (dim(idType_Entrez)[1] != 1) {
     cat("Warning! entrezgene ID not found!")
   }
@@ -1241,10 +1242,9 @@ convertEnsembl2Entrez <- function(query, Species) {
   speciesID <- orgInfo$id[which(orgInfo$ensembl_dataset == Species)] # note uses species Identifying
 
   result <- dbGetQuery(
-    convert,
+    convert_species,
     paste0(
-      " SELECT  id,ens from mapping where species = '", speciesID, "'",
-      " AND idType ='", idType_Entrez, "'",
+      " SELECT  id,ens from mapping where idType ='", idType_Entrez, "'",
       " AND ens IN ('", paste(querySet, collapse = "', '"), "')"
     )
   )
@@ -1660,4 +1660,34 @@ find_species_by_id_name <- function(species_id, org_info) {
 find_species_id_by_ensembl <- function(ensembl_dataset, org_info) {
   # find species name use id
   return(org_info[which(org_info$ensembl_dataset == ensembl_dataset), "id"])
+}
+
+
+#' Remove Pathway ID from pathway name 
+#' Only for GO and KEGG pathways
+#'
+#' Path:hsa00270 Cysteine and methionine metabolism 
+#'           --> Cysteine and methionine metabolism
+#'
+#' @param strings a vector of strings
+#' @param select_go   GOBP, GOCC, GOMP or KEGG or something else
+#'
+#' @export
+#' @return a vector of strings
+#'
+#' @family pathway functions
+remove_pathway_id <- function(strings, select_go) {
+    if (is.null(strings)) {
+      return(NULL)
+    } else {
+      if (select_go %in% c("GOBP", "GOCC", "GOMF", "KEGG")) {
+        strings <- sub(
+          "^\\S+\\s",
+          "",
+          strings
+        )
+        strings <- proper(strings)
+      }
+      return(strings)
+    }
 }

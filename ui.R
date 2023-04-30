@@ -199,18 +199,38 @@ ui <- fluidPage(
           )
         )
       ), # fluidRow
-      checkboxInput(
-        "gene_count_pathwaydb", 
-        "Use pathway database for gene counts", 
-        value = FALSE
-      ),
-      tippy::tippy_this(
-        "gene_count_pathwaydb",
-        "If turned on, a gene must match at least one pathway in the selected pathway database.
-        Otherwise, this gene is ignored when calculating enrichment. Be cautious
-        when the selected pathway database is small, such as KEGG. ",
-        theme = "light-border"
-      ),
+
+      fluidRow(
+        column(
+          width = 6,
+          checkboxInput(
+            "gene_count_pathwaydb",
+            "Use pathway DB for gene counts",
+            value = FALSE
+          ),
+          tippy::tippy_this(
+            "gene_count_pathwaydb",
+            "If turned on, a gene must match at least one pathway in the selected pathway database.
+            Otherwise, this gene is ignored when calculating enrichment. Be cautious
+            when the selected pathway database is small, such as KEGG. ",
+            theme = "light-border"
+          )
+        ),
+        column(
+          width = 6, 
+          checkboxInput(
+            inputId = "show_pathway_id",
+            label = "Show pathway IDs",
+            value = FALSE
+          ),
+          tippy::tippy_this(
+            "show_pathway_id",
+            "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
+            theme = "light-border"
+          )
+        )
+      ), # fluidRow
+
       actionButton("MGeneIDexamples", "Gene IDs examples"),
       tippy::tippy_this(
         "MGeneIDexamples",

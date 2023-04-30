@@ -66,6 +66,19 @@ server <- function(input, output, session) {
     }
   })
 
+  # connect to species specific database
+  observeEvent(input$selectOrg, {
+
+     # connect to the database, this becomes a global variable
+     convert_species <- connect_convert_db_org(datapath, input$selectOrg)
+
+     # idIndex
+     idIndex <- dbGetQuery(
+      convert_species, 
+      "select * from idIndex;"
+    )
+  })
+
   # this defines an reactive object that can be accessed from other rendering functions
   converted <- reactive({
     if (input$goButton == 0 | nchar(input$input_text) < 20) {
@@ -605,7 +618,10 @@ server <- function(input, output, session) {
 
       withProgress(message = sample(quotes, 1), detail = myMessage, {
         pathways <- significantOverlaps()$x
-
+        # remove pathway ID  only in Ensembl species
+        if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
+          pathways$Pathway <- remove_pathway_id(pathways$Pathway , input$selectGO)
+        }
         pathways$Pathway <- hyperText(pathways$Pathway, pathways$URL)
 
         pathways <- pathways[, -7]
@@ -615,6 +631,7 @@ server <- function(input, output, session) {
         pathways[, 2] <- as.character(pathways[, 2]) # convert total genes into character 10/21/19
         pathways[, 3] <- as.character(pathways[, 3]) # convert total genes into character 10/21/19
         colnames(pathways)[5] <- "Pathways (click for details)"
+
         incProgress(1, detail = paste("Done"))
       })
 
@@ -649,6 +666,10 @@ server <- function(input, output, session) {
     colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes")
     tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
     tem$Direction <- "Diff"
+    # remove pathway ID  only in Ensembl species
+    if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
+      tem$Pathways <- remove_pathway_id(tem$Pathways , input$selectGO)
+    }
     tem
   })
 
@@ -666,6 +687,12 @@ server <- function(input, output, session) {
     tem <- tem$x
     colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes")
     tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
+
+    # remove pathway ID  only in Ensembl species
+    if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
+      tem$Pathways <- remove_pathway_id(tem$Pathways , input$selectGO)
+    }
+
     if (input$wrapTextNetwork) {
       tem$Pathways <- wrap_strings(tem$Pathways)
     } # wrap long pathway names using default width of 30 10/21/19
@@ -688,6 +715,10 @@ server <- function(input, output, session) {
     colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes")
     tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
 
+    # remove pathway ID  only in Ensembl species
+    if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
+      tem$Pathways <- remove_pathway_id(tem$Pathways , input$selectGO)
+    }
     if (input$wrapTextNetworkStatic) {
       tem$Pathways <- wrap_strings(tem$Pathways)
     } # wrap long pathway names using default width of 30 10/21/19
@@ -1819,6 +1850,7 @@ server <- function(input, output, session) {
     tem <- input$maxTerms
     tem <- input$abbreviatePathway
     req(input$ggplot2_theme)
+    tem <- input$show_pathway_id
 
     isolate({
       goTable <- significantOverlaps()$x[, 1:5]
@@ -1850,6 +1882,12 @@ server <- function(input, output, session) {
       if (ix > 0 && ix < dim(goTable)[2]) {
         goTable <- goTable[order(goTable[, ix], decreasing = TRUE), ]
       }
+
+      # remove pathway ID  only in Ensembl species
+      if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
+        goTable$Pathway <- remove_pathway_id(goTable$Pathway , input$selectGO)
+      }
+
       # convert to factor so that the levels are not reordered by ggplot2
       goTable$Pathway <- factor(goTable$Pathway, levels = rev(goTable$Pathway))
 
