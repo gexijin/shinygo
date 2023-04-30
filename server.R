@@ -12,10 +12,7 @@ server <- function(input, output, session) {
   options(warn = -1)
 
   observe({
-    #  updateSelectizeInput(session, "selectOrg", choices = speciesChoice, selected = speciesChoice[1])
-
-
-    # for gene ID example
+     # for gene ID example
 
     updateSelectizeInput(session, "userSpecieIDexample", choices = speciesChoice, selected = speciesChoice[1])
 
@@ -30,7 +27,7 @@ server <- function(input, output, session) {
     # tried to solve the double reflashing problems
     # https://stackoverflow.com/questions/30991900/avoid-double-refresh-of-plot-in-shiny
 
-    shinyjs::hideElement(id = "selectOrg")
+
   })
   # click_saved <- reactiveValues(GO = NULL)
   # observeEvent(eventExpr = input$selectGO, handlerExpr = { click_saved$GO <- input$selectGO })
@@ -97,8 +94,7 @@ server <- function(input, output, session) {
         p("Search annotated species by common or scientific names,
           or NCBI taxonomy id. Click on a row to select.
           Use annotation in STRING-db as a last resort.
-           If your species cannot be found here,
-          you can still use iDEP without pathway analysis."),
+          "),
         easyClose = TRUE,
         DT::renderDataTable({
           df <- orgInfo[
@@ -138,6 +134,7 @@ server <- function(input, output, session) {
     )
   })
 
+  shinyjs::hideElement(id = "selectOrg")
   observeEvent(input$clicked_row, {
     # find species ID from ensembl_dataset
     selected <- find_species_id_by_ensembl(
@@ -227,6 +224,24 @@ server <- function(input, output, session) {
         return(enrichment)
       })
     })
+  })
+
+  observe({
+    req(!is.null(significantOverlapsAll() )) # stop if null
+    req(input$goButton != 0)
+    req(significantOverlapsAll()$x[1,1] == "ID not recognized!" )
+
+    shiny::showModal(
+      shiny::modalDialog(
+        size = "s",
+        p("None of the gene IDs mapped to the IDs of the selected species.
+           From ShinyGO 0.80, you have to select the correct species first.
+           If you do not select, it defaults to human.
+          "),
+        easyClose = TRUE
+      )
+    )
+
   })
 
   # Filtering and ranking pathways

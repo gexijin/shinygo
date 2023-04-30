@@ -30,24 +30,15 @@ ui <- fluidPage(
   ),
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.8"),
-      h5("Required: Select or search your species:"),
-      selectInput(
-        inputId = "selectOrg",
-        label = NULL,
-        choices = setNames(99, "Human"), # Human is selected by default
-        multiple = FALSE,
-        selectize = TRUE,
-        selected = setNames(99, "Human")
-      ),
+      titlePanel("ShinyGO 0.80"),
       fluidRow(
         column(
           width = 6,
-          align = "center",
+          align = "left",
           # Species list and genome assemblies ----------
           actionButton(
             inputId = "genome_assembl_button",
-            label = "Search & select"
+            label = "Search & select a species"
           )
         ),
         column(
@@ -55,10 +46,11 @@ ui <- fluidPage(
           textOutput("selected_species")
         )
       ),
-      tags$head(tags$style("#load_data-selected_species{color: red;
+      tags$head(tags$style("#selected_species{color: red;
                                  font-size: 15px;
                                  font-style: italic;
                                  }")),
+      br(),
       fluidRow(
         column(8, actionButton("useDemo1", "Demo genes"), ),
         # column(4,   actionButton("useDemo2", "Demo 2"),	  	  ),
@@ -233,6 +225,9 @@ ui <- fluidPage(
       h5("Try ", a(" iDEP", href = "https://bioinformatics.sdstate.edu/idep/", target = "_blank"), "for RNA-Seq data analysis"),
       tableOutput("species")
     ), # sidebarPanel
+
+
+
     mainPanel(
       tabsetPanel(
         id = "tabs", type = "tabs",
@@ -241,6 +236,26 @@ ui <- fluidPage(
           conditionalPanel(
             "input.goButton == 0 ", # welcome screen
             br(),
+            h3(
+              "We urgently need your emails of support",
+            ),
+            p("We are working on a grant proposal (due May 31st) to redevelop, 
+            improve, and maintain ShinyGO. 
+            If you briefly state your general research area and how ShinyGO
+            facilitates your research, 
+            we can use it as a support letter. Also include your
+            scientific discoveries and any 
+            features requests in the new version (like multiple gene sets).
+            Funding will help sustain
+              and improve this service. Otherwise, it might disappear. 
+              We spent years building it. 
+              Please take two minutes to send us an email today.",
+            a(
+                " (gelabinfo@gmail.com)",
+                href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO support letter"
+              )
+              
+              ),
             p("5/1/2023: ShinyGO 0.80 release in testing mode. Thanks to Jenny's hardwork, we update to Ensembl release
              107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
             We also included 14,094 species from STRING-DB 11.5.",
@@ -256,21 +271,7 @@ ui <- fluidPage(
               Please always double check your results with other tools
               such as G:profiler, Enrichr, STRING-db, and DAVID."
             ),
-            h3(
-              "We urgently need your emails of support",
-            ),
-            p(" We are working on a grant proposal (due June 3rd) to redevelop, enhance, and maintain ShinyGO. 
-            If you briefly state your general research area and how ShinyGO
-            helps your research, we can use it as a support letter.
-            Funding will help sustain
-              and improve this service. Otherwise, it might disappear. 
-              We spent years building ShinyGO. Take 2 minutes to send us an email today!",
-            a(
-                " (gelabinfo@gmail.com)",
-                href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO support letter"
-              )
-              
-              ),
+
             p(
               "If this server is busy, please use a mirror sever ",
               a("http://ge-lab.org/go/", href = "http://149.165.154.220/go/"),
@@ -339,7 +340,7 @@ ui <- fluidPage(
                     background. FDR tells us how likely the enrichment is by chance. Due to increased statistical power,
                     large pathways tend to have smaller FDRs.
                     As a measure of effect size, Fold Enrichment indicates how drastically genes of a certain pathway is overrepresented.
-                    This is a important metric, even though often ignored."),
+                    This is an important metric, even though often ignored."),
             p("We highly recommend users upload a list of genes as the background.
                   These could be all the genes passed a low filter in RNA-seq.
                   If background genes are not uploaded, the default is to use
@@ -804,7 +805,16 @@ ui <- fluidPage(
           h5("4/30/2018: V0.42 changed figure configurations for tree."),
           h5("4/27/2018: V0.41 Change to ggplot2, add grid and gridExtra packages"),
           h5("4/24/2018: V0.4 Add STRING API, KEGG diagram, tree display and network.")
+          ,
+                  selectInput(
+                    inputId = "selectOrg",
+                    label = NULL,
+                    selectize = TRUE,
+                    choices = setNames(99, "Human"), # Human is selected by default
+                    selected = setNames(99, "Human")
+                  )
         )
+        
       ), # tabsetPanel
       bsModal("ModalExamplePPI", "Protein-protein interaction(PPIs) networks ", "ModalPPI",
         size = "large",

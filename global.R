@@ -243,6 +243,36 @@ convert <- connect_convert_db()
 # Create a list for Select Input options
 orgInfo <- dbGetQuery(convert, paste("select distinct * from orgInfo "))
 orgInfo <- orgInfo[order(orgInfo$name), ]
+
+top_choices <- c(
+  #"Best matching species", 
+  #"**NEW SPECIES**", 
+  "Human",
+  "Mouse",
+  "Drosophila melanogaster",
+  "Zebrafish",
+  "Caenorhabditis elegans",
+  "Arabidopsis thaliana",
+  "Saccharomyces cerevisiae",
+  "Escherichia coli",
+  "Rat",
+  "Cow",
+  "Pig", 
+  "Chicken", 
+  "Macaque", 
+  "Dog",
+  "Zea mays", 
+  "Glycine max",
+  "Oryza sativa Indica Group", 
+  "Oryza sativa Japonica Group", 
+  "Vitis vinifera"
+)
+
+#org_info <- org_info[order(org_info$group), ]
+ix <- match(orgInfo$name2, top_choices)
+orgInfo <- orgInfo[order(ix), ]
+orgInfo <- orgInfo[order(orgInfo$group == "STRINGv11.5"), ]
+
 annotatedSpeciesCounts <- sort(table(orgInfo$group)) # total species, Ensembl, Plants, Metazoa, STRINGv10
 speciesChoice <- setNames(as.list(orgInfo$id), orgInfo$name2)
 # add a defult element to list    # new element name       value
