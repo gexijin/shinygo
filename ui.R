@@ -578,7 +578,7 @@ ui <- fluidPage(
                         Mouse over to see gene symbols. Zoom in regions of interest.")
         ), 
 
-        #---Genome-----------------------------------------------------------
+        #---Promoter-----------------------------------------------------------
         tabPanel("Promoter",
           value = 10,
           radioButtons("radio", label = NULL, choices = list(
