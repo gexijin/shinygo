@@ -12,7 +12,7 @@ server <- function(input, output, session) {
   options(warn = -1)
 
   welcome_modal <- shiny::modalDialog(
-    title = "Find ShinyGO helful? Send us an email today so it will be here next year.",
+    title = "Find ShinyGO helpful? Send us an email today so it will be here next year.",
     tags$p("We need your help to support our NIH grant proposal due June 4th."),
     tags$p("As a side project that benefited from iDEP funding, ShinyGO has had a surprisingly big impact. 
     In the last 3 years, the paper has been cited 1,138 times. The website has been visited over 450,000 times."),
