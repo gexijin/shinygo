@@ -13,7 +13,8 @@ server <- function(input, output, session) {
 
   welcome_modal <- shiny::modalDialog(
     title = "Find ShinyGO helpful? Send us an email today so it will be here next year.",
-    tags$p("We need your help to support our NIH grant proposal due June 4th."),
+    tags$p("We are still collecting emails before June 5th!"),
+    tags$p("We need your help to support our NIH grant proposal due June 5th."),
     tags$p("As a side project that benefited from iDEP funding, ShinyGO has had a surprisingly big impact. 
     In the last 3 years, the paper has been cited 1,138 times. The website has been visited over 450,000 times."),
     tags$p("We urgently need funding to maintain and improve this service. We plan to update and expand the database regularly. 
@@ -21,7 +22,7 @@ server <- function(input, output, session) {
     tags$p("Please send us a support letter detailing your experience using ShinyGO. This might include your general research area, 
     how ShinyGO has facilitated your research,  the features you found most useful, and new features you suggest. To NIH grant reviewers, 
     your email prove the value of the software and the need for its further development."),
-    tags$p("You can send your letter directly to this email address before May 31st. It can be
+    tags$p("You can send your letter directly to this email address before June 5th. It can be
      just an email or an attached formal letter. Every email counts. 
      Your emails will be tremendously helpful to a small bioinformatics 
      lab's mission to make bioinformatics tools accessible to all, especially researchers with less resources."),

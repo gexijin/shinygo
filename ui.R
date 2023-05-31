@@ -220,7 +220,7 @@ ui <- fluidPage(
             h3(
               "We urgently need your emails of support",
             ),
-            p("We are working on a grant proposal (due May 31st) to redevelop, 
+            p("We are working on a grant proposal (deadline June 5th) to redevelop, 
             improve, and maintain ShinyGO. 
             If you briefly state your general research area and how ShinyGO
             facilitates your work, including major findings, 
