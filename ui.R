@@ -218,7 +218,7 @@ ui <- fluidPage(
             ),
 
             h4(
-              "Thank you to the 1% users who sent us support letters!",
+              "Thank you to the 1% of users who sent us support letters! To support us going forward, cite our paper.",
             ),
 
             p(
@@ -237,8 +237,14 @@ ui <- fluidPage(
               " hosted by NSF-funded JetStream2."
             ),
             p(
-              a("Email Jenny ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
-              "for questions, suggestions or data contributions.",
+              "Email Jenny ",
+              #a(, href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
+            a(
+              "gelabinfo@gmail.com",
+              href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO",
+              target = "_blank"
+            ),
+              " for questions, suggestions or data contributions.",
               "Follow ", a("Dr Ge on Twitter", href = "https://twitter.com/StevenXGe"),
               " for updates. "
             ),
