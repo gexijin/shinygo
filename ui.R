@@ -237,7 +237,7 @@ ui <- fluidPage(
             "input.goButton == 0 ", # welcome screen
             br(),
             h4(
-              "Thank you to the users who wrote us support emails.",
+              "Thank you to the 1% of users who wrote us support emails. To support us going forward, cite our paper!",
             ),
 
             p("5/1/2023: ShinyGO 0.80 release in testing mode. Thanks to Jenny's hardwork, we update to Ensembl release
