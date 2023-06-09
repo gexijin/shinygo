@@ -217,23 +217,9 @@ ui <- fluidPage(
             We also included 14,094 species from STRING-DB 11.5."
             ),
 
-            h3(
-              "We urgently need your emails of support",
+            h4(
+              "Thank you to the 1% users who sent us support letters!",
             ),
-            p("We are working on a grant proposal (deadline June 5th) to redevelop, 
-            improve, and maintain ShinyGO. 
-            If you briefly state your general research area and how ShinyGO
-            facilitates your work, including major findings, 
-            we can use it as a support letter. Also include any 
-            features requests such as multiple gene sets.
-            Without funding, ShinyGO might disappear. 
-            ",
-            a(
-                "gelabinfo@gmail.com",
-                href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO support letter"
-              )
-              
-              ),
 
             p(
               "Jan. 19, 2023: Thanks to a user's feedback, we found a serious bug 
