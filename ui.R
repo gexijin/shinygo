@@ -236,23 +236,10 @@ ui <- fluidPage(
           conditionalPanel(
             "input.goButton == 0 ", # welcome screen
             br(),
-            h3(
-              "We urgently need your emails of support",
+            h4(
+              "Thank you to the users who wrote us support emails.",
             ),
-            p("We are working on a grant proposal (deadline June 5th) to redevelop, 
-            improve, and maintain ShinyGO. 
-            If you briefly state your general research area and how ShinyGO
-            facilitates your work, including major findings, 
-            we can use it as a support letter. Also include any 
-            features requests such as multiple gene sets.
-            Without funding, ShinyGO might disappear. 
-            ",
-            a(
-                "gelabinfo@gmail.com",
-                href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO support letter"
-              )
-              
-              ),
+
             p("5/1/2023: ShinyGO 0.80 release in testing mode. Thanks to Jenny's hardwork, we update to Ensembl release
              107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
             We also included 14,094 species from STRING-DB 11.5.",
