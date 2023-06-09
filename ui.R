@@ -237,14 +237,12 @@ ui <- fluidPage(
               " hosted by NSF-funded JetStream2."
             ),
             p(
-              "Email Jenny ",
-              #a(, href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
-            a(
-              "gelabinfo@gmail.com",
-              href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO",
-              target = "_blank"
-            ),
-              " for questions, suggestions or data contributions.",
+              a(
+                "Email Jenny ",
+                href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO",
+                target = "_blank"
+              ),
+              "(gelabinfo@gmail.com) for questions, suggestions or data contributions.",
               "Follow ", a("Dr Ge on Twitter", href = "https://twitter.com/StevenXGe"),
               " for updates. "
             ),
