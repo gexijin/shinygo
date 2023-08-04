@@ -528,7 +528,6 @@ server <- function(input, output, session) {
             #         if('chromosome_name' %in% colnames(tem2)) {
             merged <- merge(tem$conversionTable, tem2, by = "ensembl_gene_id")
 
-
             merged <- subset(merged, select = c(
               User_input, symbol, ensembl_gene_id, entrezgene_id,
               gene_biotype, Species, chromosome_name, start_position,

@@ -545,7 +545,7 @@ convertID <- function(query, selectOrg) {
   colnames(speciesMatched) <- c("Matched Species (%genes)")
   conversionTable <- result[, 1:2]
   colnames(conversionTable) <- c("User_input", "ensembl_gene_id")
-  conversionTable$Species <- sapply(result[, 3], findSpeciesByIdName)
+  conversionTable$Species <- sapply(selectOrg, findSpeciesByIdName)
 
   return(list(
     originalIDs = querySet,
