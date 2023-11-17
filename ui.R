@@ -30,7 +30,10 @@ ui <- fluidPage(
   ),
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.80"),
+      titlePanel("ShinyGO 0.80",
+        tags$head(tags$link(rel = "icon", type = "image/png", href = "favicon.png"),
+             tags$title("ShinyGO 0.80"))
+      ),
       fluidRow(
         column(
           width = 6,
@@ -236,6 +239,20 @@ ui <- fluidPage(
           conditionalPanel(
             "input.goButton == 0 ", # welcome screen
             br(),
+            fluidRow(
+              column(
+                width = 9,
+                h4("ShinyGO: a graphical gene-set enrichment tool for animals and plants")
+              ),
+              column(
+                width = 3,
+                img(
+                  src = "shinygo_logo.png",
+                  width = "43",
+                  height = "50"
+                )
+              )
+            ),
             h4(
               "Thank you to the 1% of users who wrote us support emails. To support us going forward, cite our paper!",
             ),
