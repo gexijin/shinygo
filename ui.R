@@ -41,7 +41,12 @@ ui <- fluidPage(
           # Species list and genome assemblies ----------
           actionButton(
             inputId = "genome_assembl_button",
-            label = "Search & select a species"
+            label = strong("Select a species (Required)")
+          ),
+          tippy::tippy_this(
+            "genome_assembl_button",
+            "Search and click a row to select a species. ",
+            theme = "light-border"
           )
         ),
         column(
@@ -253,26 +258,19 @@ ui <- fluidPage(
                 )
               )
             ),
-            h4(
-              "Thank you to the 1% of users who wrote us support emails. To support us going forward, cite our paper!",
-            ),
 
-            p("5/1/2023: ShinyGO 0.80 release in testing mode. Thanks to Jenny's hardwork, we update to Ensembl release
+            p("1/5/2024: ShinyGO 0.80 becomes default. You have to select your species first. Database is updated to Ensembl release
              107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
             We also included 14,094 species from STRING-DB 11.5.",
               style = "color:red"
+            ),          
+            p("You can still use the old version", a("(ShinyGO V0.77). ",
+              href = "http://bioinformatics.sdstate.edu/go77/"
+            )),
+            p("To support this effort, please cite the paper, like ",
+                a("1700+ users did.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
+                "Just including URL is not enough."
             ),
-            p(
-              "Jan. 19, 2023: Thanks to a user's feedback, we found a serious bug
-              in ShinyGO 0.76.
-              As some genes are represented by multiple gene IDs in Ensebml, they are counted more
-              than once in calculating enrichment. We believe this is fixed. If you
-              pasted Ensembl gene IDs to ShinyGO 0.76 between April 4, 2022 and Jan. 19, 2023,
-              please rerun your analysis. ShinyGO has not been throughly tested.
-              Please always double check your results with other tools
-              such as G:profiler, Enrichr, STRING-db, and DAVID."
-            ),
-
             p(
               "If this server is busy, please use a mirror sever ",
               a("http://ge-lab.org/go/", href = "http://149.165.154.220/go/"),
@@ -281,7 +279,11 @@ ui <- fluidPage(
             p(
               a("Email Jenny ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
               "(gelabinfo@gmail.com) for questions, suggestions or data contributions.",
-              "Follow ", a("Dr Ge on Twitter", href = "https://twitter.com/StevenXGe"),
+              "Follow Dr Ge on ", a("Twitter", href = "https://twitter.com/StevenXGe"), " and ",
+              a("LinkedIn",
+                href = "https://www.linkedin.com/in/steven-ge-ab016947/",
+                target = "_blank"
+              ),
               " for updates. "
             ),
             br(),
@@ -289,8 +291,7 @@ ui <- fluidPage(
             p("Feb. 11, 2022: Like ShinyGO but your genome is not covered?",
               a("Customized ShinyGO", href = "http://bioinformatics.sdstate.edu/goc/"), " is now available.
                     Its database includes several custom genomes requested by users. To request to add a new species/genome, fill in this ",
-              a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76"),
-              style = "color:red"
+              a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76")
             ),
             h3("A graphical tool for gene enrichment analysis"),
             p("Just paste your gene list to get enriched GO terms and othe pathways for over 420 plant and animal species,
@@ -688,6 +689,11 @@ ui <- fluidPage(
           br(), br(),
           strong("Previous versions are still functional:"),
           br(),
+          a("ShinyGO V0.77, ",
+            href = "http://bioinformatics.sdstate.edu/go77/"
+          ),
+          "based on Ensembl Release 104, archived on Jan. 5, 2024",
+          br(),
           a("ShinyGO V0.76, ",
             href = "http://bioinformatics.sdstate.edu/go76/"
           ),
@@ -766,7 +772,21 @@ ui <- fluidPage(
           br(), br(), img(src = "promoter.png", align = "center", width = "717", height = "288"),
           includeHTML("human_mouse_source.html"),
           br(), h4("Changes:"),
-
+            p("5/1/2023: ShinyGO 0.80 release in testing mode. Thanks to Jenny's hardwork, we update to Ensembl release
+             107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
+            We also included 14,094 species from STRING-DB 11.5.",
+              style = "color:red"
+            ),
+            p(
+              "Jan. 19, 2023: Thanks to a user's feedback, we found a serious bug
+              in ShinyGO 0.76.
+              As some genes are represented by multiple gene IDs in Ensebml, they are counted more
+              than once in calculating enrichment. We believe this is fixed. If you
+              pasted Ensembl gene IDs to ShinyGO 0.76 between April 4, 2022 and Jan. 19, 2023,
+              please rerun your analysis. ShinyGO has not been throughly tested.
+              Please always double check your results with other tools
+              such as G:profiler, Enrichr, STRING-db, and DAVID."
+            ),
             p("Oct 26, 2022: V. 0.76.3 Add hover text. Change plot styles.
              When users select \"Sort by Fold Enrichment\",
              the minimum pathway size is raised to 10 to
