@@ -149,9 +149,9 @@ ui <- fluidPage(
           numericInput("maxSetSize",
             label = h5("Max."),
             min   = 1000,
-            max   = 5000,
-            value = 2000,
-            step  = 100
+            max   = 20000,
+            value = 5000,
+            step  = 200
           ),
           tippy::tippy_this(
             "maxSetSize",
@@ -258,7 +258,7 @@ ui <- fluidPage(
                 )
               )
             ),
-
+            p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),
             p("1/5/2024: ShinyGO 0.80 becomes default. You have to select your species first. Database is updated to Ensembl release
              107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
             We also included 14,094 species from STRING-DB 11.5.",
@@ -772,6 +772,7 @@ ui <- fluidPage(
           br(), br(), img(src = "promoter.png", align = "center", width = "717", height = "288"),
           includeHTML("human_mouse_source.html"),
           br(), h4("Changes:"),
+            p("4/12/2024: Max set size is increased to 5000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000 genes. "),
             p("5/1/2023: ShinyGO 0.80 release in testing mode. Thanks to Jenny's hardwork, we update to Ensembl release
              107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
             We also included 14,094 species from STRING-DB 11.5.",
