@@ -118,12 +118,12 @@ server <- function(input, output, session) {
         DT::renderDataTable({
           df <- orgInfo[
             ,
-            c("academicName", "name", "ensembl_dataset", "taxon_id", "group")
+            c("ensembl_dataset", "academicName", "name",  "taxon_id", "group")
           ]
           colnames(df) <- c(
+            "Ensembl/STRING-db ID",
             "Academic Name",
             "Name (Assembly)",
-            "Ensembl/STRING-db ID",
             "Taxonomy ID",
             "Source"
           )
@@ -157,6 +157,7 @@ server <- function(input, output, session) {
   selected_species_name <- reactiveVal("Human")
 
   output$selected_species <- renderText({
+    tem <- input$clicked_row
     selected_species_name()
   })
 
@@ -181,7 +182,6 @@ server <- function(input, output, session) {
     )
     # update species name
     selected_species_name(find_species_by_id_name(selected, orgInfo))
-
   })
 
   geneInfoLookup <- reactive({
