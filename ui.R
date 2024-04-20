@@ -244,8 +244,6 @@ ui <- fluidPage(
       #tableOutput("species")
     ), # sidebarPanel
 
-
-
     mainPanel(
       tabsetPanel(
         id = "tabs", type = "tabs",
