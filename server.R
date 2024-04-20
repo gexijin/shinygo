@@ -118,12 +118,12 @@ server <- function(input, output, session) {
         DT::renderDataTable({
           df <- orgInfo[
             ,
-            c("ensembl_dataset", "name", "academicName", "taxon_id", "group")
+            c("academicName", "name", "ensembl_dataset", "taxon_id", "group")
           ]
           colnames(df) <- c(
-            "Ensembl/STRING-db ID",
-            "Name (Assembly)",
             "Academic Name",
+            "Name (Assembly)",
+            "Ensembl/STRING-db ID",
             "Taxonomy ID",
             "Source"
           )
@@ -133,7 +133,7 @@ server <- function(input, output, session) {
             selection = "single",
             options = list(
               lengthChange = FALSE,
-              pageLength = 10,
+              pageLength = 20,
               scrollY = "400px"
             ),
             callback = DT::JS(
@@ -153,7 +153,13 @@ server <- function(input, output, session) {
     )
   })
 
-  shinyjs::hideElement(id = "selectOrg")
+  # default species name
+  selected_species_name <- reactiveVal("Human")
+
+  output$selected_species <- renderText({
+    selected_species_name()
+  })
+
   observeEvent(input$clicked_row, {
     # find species ID from ensembl_dataset
     selected <- find_species_id_by_ensembl(
@@ -173,14 +179,10 @@ server <- function(input, output, session) {
       selected = selected,
       server = TRUE
     )
-    output$selected_species <- renderText({
-      paste0(
-        # "Selected: ",
-        find_species_by_id_name(selected, orgInfo)
-      )
-    })
-  })
+    # update species name
+    selected_species_name(find_species_by_id_name(selected, orgInfo))
 
+  })
 
   geneInfoLookup <- reactive({
     if (input$goButton == 0) {

@@ -12,7 +12,6 @@ library(shiny, verbose = FALSE)
 library(shinyBS, verbose = FALSE) # for popup figures
 library(plotly) # interactive network plot
 library(visNetwork)
-library("shinyjs", verbose = FALSE)
 library("reactable", verbose = FALSE)
 columnSelection <- list(
   "-log10(FDR)" = "EnrichmentFDR",
@@ -34,6 +33,17 @@ ui <- fluidPage(
         tags$head(tags$link(rel = "icon", type = "image/png", href = "favicon.png"),
              tags$title("ShinyGO 0.80"))
       ),
+      # use conditional panel to hide the selectOrg input
+      conditionalPanel(
+        condition = "0", # hide the selectOrg input, always
+        selectInput(
+          inputId = "selectOrg",
+          label = NULL,
+          selectize = TRUE,
+          choices = setNames(99, "Human"), # Human is selected by default
+          selected = setNames(99, "Human")
+        )
+      ),
       fluidRow(
         column(
           width = 6,
@@ -41,7 +51,7 @@ ui <- fluidPage(
           # Species list and genome assemblies ----------
           actionButton(
             inputId = "genome_assembl_button",
-            label = strong("Select a species (Required)")
+            label = strong("Change species")
           ),
           tippy::tippy_this(
             "genome_assembl_button",
@@ -293,7 +303,7 @@ ui <- fluidPage(
                     Its database includes several custom genomes requested by users. To request to add a new species/genome, fill in this ",
               a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76")
             ),
-            h3("A graphical tool for gene enrichment analysis"),
+            h3("GO Enrichment analysis, plus a lot more!"),
             p("Just paste your gene list to get enriched GO terms and othe pathways for over 420 plant and animal species,
 				    based on annotation from Ensembl, Ensembl plants and Ensembl Metazoa. An additional 5000 genomes
 				    (including bacteria and fungi) are annotated based on STRING-db (v.11). In addition, it also produces
@@ -308,25 +318,28 @@ ui <- fluidPage(
             br(), br(), img(src = "PPInetwork2.png", align = "center", width = "500", height = "391"),
             br(), br(), img(src = "chr.png", align = "center", width = "444", height = "338"),
             br(), br(), img(src = "downSyndrome.png", align = "center", width = "371", height = "276"),
-            br(), br(), img(src = "promoter.png", align = "center", width = "717", height = "288")
+            #br(), br(), img(src = "promoter.png", align = "center", width = "717", height = "288")
           ),
           br(),
-          div(
-            style = "display:inline-block",
-            selectInput(
-              inputId = "SortPathways",
-              label = NULL,
-              choices = c(
-                "Sort by FDR" = "Sort by FDR",
-                "Sort by Fold Enrichment" = "Sort by Fold Enrichment",
-                "Sort by average ranks(FDR & Fold)" = "Sort by FDR & Fold Enrichment",
-                "Select by FDR, sort by Fold Enrichment" = "Select by FDR, sort by Fold Enrichment",
-                "Sort by Genes" = "Sort by Genes",
-                "Sort by Category Name" = "Sort by Category Name"
+          conditionalPanel(
+            "input.goButton != 0",
+            div(
+              style = "display:inline-block",
+              selectInput(
+                inputId = "SortPathways",
+                label = NULL,
+                choices = c(
+                  "Sort by FDR" = "Sort by FDR",
+                  "Sort by Fold Enrichment" = "Sort by Fold Enrichment",
+                  "Sort by average ranks(FDR & Fold)" = "Sort by FDR & Fold Enrichment",
+                  "Select by FDR, sort by Fold Enrichment" = "Select by FDR, sort by Fold Enrichment",
+                  "Sort by Genes" = "Sort by Genes",
+                  "Sort by Category Name" = "Sort by Category Name"
+                ),
+                selected = "Select by FDR, sort by Fold Enrichment"
               ),
-              selected = "Select by FDR, sort by Fold Enrichment"
-            ),
-            style = "algn:right"
+              style = "algn:right"
+            )
           ),
           tableOutput("EnrichmentTable"),
           conditionalPanel(
@@ -827,14 +840,7 @@ ui <- fluidPage(
           h5("4/30/2018: V0.42 changed figure configurations for tree."),
           h5("4/27/2018: V0.41 Change to ggplot2, add grid and gridExtra packages"),
           h5("4/24/2018: V0.4 Add STRING API, KEGG diagram, tree display and network.")
-          ,
-                  selectInput(
-                    inputId = "selectOrg",
-                    label = NULL,
-                    selectize = TRUE,
-                    choices = setNames(99, "Human"), # Human is selected by default
-                    selected = setNames(99, "Human")
-                  )
+
         )
         
       ), # tabsetPanel
