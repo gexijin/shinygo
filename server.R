@@ -110,11 +110,13 @@ server <- function(input, output, session) {
     shiny::showModal(
       shiny::modalDialog(
         size = "l",
+        title = "Click on a row to select a species",
         p("Search annotated species by common or scientific names,
           or NCBI taxonomy id. Click on a row to select.
           Use annotation in STRING-db as a last resort.
           "),
         easyClose = TRUE,
+
         DT::renderDataTable({
           df <- orgInfo[
             ,

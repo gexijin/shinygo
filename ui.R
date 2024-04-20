@@ -268,32 +268,19 @@ ui <- fluidPage(
                 )
               )
             ),
-            p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),
-            p("1/5/2024: ShinyGO 0.80 becomes default. You have to select your species first. Database is updated to Ensembl release
-             107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
-            We also included 14,094 species from STRING-DB 11.5.",
-              style = "color:red"
-            ),          
-            p("You can still use the old version", a("(ShinyGO V0.77). ",
-              href = "http://bioinformatics.sdstate.edu/go77/"
-            )),
-            p("To support this effort, please cite the paper, like ",
-                a("1700+ users did.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
-                "Just including URL is not enough."
-            ),
-            p(
-              "If this server is busy, please use a mirror sever ",
+            p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),        
+            p("You can still use the old version", 
+              a("(ShinyGO V0.77). ", href = "http://bioinformatics.sdstate.edu/go77/"),
+              "To support this effort, please cite our paper, like ",
+                a("over 2000 users did.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
+                "Just including URL is not enough.",
+              "Mirror sever ",
               a("http://ge-lab.org/go/", href = "http://149.165.154.220/go/"),
-              " hosted by NSF-funded JetStream2."
-            ),
-            p(
+              " hosted by NSF-funded JetStream2.",
               a("Email Jenny ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
               "(gelabinfo@gmail.com) for questions, suggestions or data contributions.",
               "Follow Dr Ge on ", a("Twitter", href = "https://twitter.com/StevenXGe"), " and ",
-              a("LinkedIn",
-                href = "https://www.linkedin.com/in/steven-ge-ab016947/",
-                target = "_blank"
-              ),
+              a("LinkedIn", href = "https://www.linkedin.com/in/steven-ge-ab016947/", target = "_blank"),
               " for updates. "
             ),
             br(),
@@ -304,12 +291,11 @@ ui <- fluidPage(
               a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76")
             ),
             h3("GO Enrichment analysis, plus a lot more!"),
-            p("Just paste your gene list to get enriched GO terms and othe pathways for over 420 plant and animal species,
-				    based on annotation from Ensembl, Ensembl plants and Ensembl Metazoa. An additional 5000 genomes
-				    (including bacteria and fungi) are annotated based on STRING-db (v.11). In addition, it also produces
+            p("Just paste your gene list to get enriched GO terms and othe pathways for over 14,000 species.
+				    based on annotation from Ensembl and STRING-db. Produce
 				    KEGG pathway diagrams with your genes highlighted, hierarchical clustering trees and networks summarizing
 				    overlapping terms/pathways, protein-protein interaction networks, gene characterristics plots, and enriched promoter motifs.
-                 See example outputs below:"),
+            "),
             br(), img(src = "enrich.png", align = "center", width = "660", height = "339"),
             br(), img(src = "enrichmentChart.png", align = "center", width = "700", height = "400"),
             br(), br(), img(src = "KEGG2.png", align = "center", width = "541", height = "360"),
@@ -784,8 +770,13 @@ ui <- fluidPage(
           "ShinyGO also detects transcription factor (TF) binding motifs enriched in the promoters of user's genes.",
           br(), br(), img(src = "promoter.png", align = "center", width = "717", height = "288"),
           includeHTML("human_mouse_source.html"),
-          br(), h4("Changes:"),
-            p("4/12/2024: Max set size is increased to 5000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000 genes. "),
+          br(), 
+          h4("Changes:"),
+            p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),
+            p("1/5/2024: ShinyGO 0.80 becomes default. You have to select your species first. Database is updated to Ensembl release
+             107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
+            We also included 14,094 species from STRING-DB 11.5."
+            ), 
             p("5/1/2023: ShinyGO 0.80 release in testing mode. Thanks to Jenny's hardwork, we update to Ensembl release
              107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
             We also included 14,094 species from STRING-DB 11.5.",
