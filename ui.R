@@ -76,7 +76,7 @@ ui <- fluidPage(
       ),
       tags$style(type = "text/css", "textarea {width:100%}"),
       tags$textarea(
-        id = "input_text", placeholder = "Just paste a list of genes and click Submit. Most types of gene IDs accepted. Double check the guessed species, and adjust if needed. ",
+        id = "input_text", placeholder = "Change the species if it is not human. Then just paste a list of genes and click Submit. Gene IDs can be NCBI, Ensembl, symbol, or other common types.",
         rows = 8, ""
       ),
       fluidRow(
@@ -241,7 +241,7 @@ ui <- fluidPage(
         theme = "light-border"
       ),
       h5("Try ", a(" iDEP", href = "https://bioinformatics.sdstate.edu/idep/", target = "_blank"), "for RNA-Seq data analysis"),
-      tableOutput("species")
+      #tableOutput("species")
     ), # sidebarPanel
 
 
@@ -525,8 +525,9 @@ ui <- fluidPage(
           ),
           conditionalPanel(
             "input.selectGO == 'KEGG' ",
+            br(),
             uiOutput("listSigPathways"),
-            br(), br(), imageOutput("KeggImage", width = "100%", height = "100%"),
+            br(), imageOutput("KeggImage", width = "100%", height = "100%"),
             h5("Your genes are highlighted in red. Downloading pathway diagram from KEGG can take 3 minutes. ")
           )
         ),
@@ -772,6 +773,7 @@ ui <- fluidPage(
           includeHTML("human_mouse_source.html"),
           br(), 
           h4("Changes:"),
+            p("4/20/2024: UI adjustment"),
             p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),
             p("1/5/2024: ShinyGO 0.80 becomes default. You have to select your species first. Database is updated to Ensembl release
              107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 

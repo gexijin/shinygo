@@ -2003,7 +2003,7 @@ server <- function(input, output, session) {
     tem$x <- tem$x[order(-tem$x[, 4]), ] # sort by fold-enrichment
     choices <- tem$x[, 5]
     selectInput("sigPathways",
-      label = "Select a significant KEGG pathway to show diagram with your genes highlighted in red:",
+      label = "Select a significant KEGG pathway:",
       choices = choices
     )
   })
