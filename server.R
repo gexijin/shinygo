@@ -1994,6 +1994,33 @@ server <- function(input, output, session) {
     }) # isolate
   })
 
+  observeEvent(input$enrichChartType, {
+    req (input$enrichChartType == "barplot_inside") 
+    updateSliderInput(
+      inputId = "SortPathwaysPlotFontSize",
+      value = 10
+    )
+    updateSliderInput(
+      inputId = "enrichChartAspectRatio",
+      value = 1.5
+    )
+    updateSelectInput(
+      inputId = "SortPathwaysPlotLowColor",
+      selected = "yellow"
+    )
+    updateSelectInput(
+      inputId = "maxTerms",
+      selected = "15"
+    )
+    #show notification that maxTerms is set to 15
+    showNotification(
+      "To improve the chart, we adjusted the aspect ratio, font size, and color:low. The number of pathways to show is set to 15.",
+      type = "message",
+      duration = 5
+    )
+  })
+
+
   # Enrichment plot for display on the screen
   # https://stackoverflow.com/questions/34792998/shiny-variable-height-of-renderplot
   output$enrichChart <- renderPlot(
