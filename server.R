@@ -1957,17 +1957,31 @@ server <- function(input, output, session) {
           xlab(names(columns)[columns == x]) +
           ylab(NULL) +
           theme(axis.text = element_text(size = fontSize))
-      } else if(input$enrichChartType == "inside") {
+      } else if(input$enrichChartType == "barplot_inside") {
+        p <- ggplot(goTable, aes_string(x = x, y = "Pathway", fill = colorBy)) +
+          geom_col(width = 0.8, position = position_dodge(0.7)) +
+          scale_fill_continuous(
+            low = input$SortPathwaysPlotLowColor,
+            high = input$SortPathwaysPlotHighColor,
+            name = names(columns)[columns == colorBy],
+            guide = guide_colorbar(reverse = TRUE)
+          )
+        p <- refine_ggplot2(
+          p = p,
+          gridline = FALSE,
+          ggplot2_theme = input$ggplot2_theme
+        )
         p <- p +
-          geom_segment(aes_string(
-            x = 0,
-            xend = x,
-            y = "Pathway",
-            yend = "Pathway"
-          ),
-          size = 1
-          ) +
-          geom_text(aes_string(x=0, label = "Pathway"), hjust=0, vjust = 1, color="black", size=fontSize)  +
+          xlab(names(columns)[columns == x]) +
+          ylab(NULL) +
+          theme(axis.text = element_text(size = fontSize))+
+          geom_text( # add text inside the bars
+            aes_string(x = 0, label = "Pathway"),
+            hjust = 0, 
+            #vjust = -1, 
+            color="black", 
+            size=fontSize / 2
+          )  +
           theme(
             axis.title.y=element_blank(),
             axis.ticks.y=element_blank(),

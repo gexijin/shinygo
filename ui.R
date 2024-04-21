@@ -108,7 +108,9 @@ ui <- fluidPage(
           selectInput("maxTerms", h5("# pathways to show"),
             choices = list(
               "10" = 10,
+              "15" = 15,
               "20" = 20,
+              "25" = 25,
               "30" = 30,
               "40" = 40,
               "50" = 50,
@@ -432,7 +434,7 @@ ui <- fluidPage(
             column(width = 3, selectInput(
               inputId = "enrichChartType",
               label = h5("Chart type"),
-              choices = c("lollipop", "dotplot", "barplot", "inside"),
+              choices = c("lollipop", "dotplot", "barplot", "barplot_inside"),
               selected = "lollipop"
             )),
             column(3, selectInput(
