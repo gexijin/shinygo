@@ -268,6 +268,7 @@ ui <- fluidPage(
                 )
               )
             ),
+            p("4/21/2024: New barchart with GO terms on the bars."),
             p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),        
             p("You can still use the old version", 
               a("(ShinyGO V0.77). ", href = "http://bioinformatics.sdstate.edu/go77/"),
@@ -773,6 +774,7 @@ ui <- fluidPage(
           includeHTML("human_mouse_source.html"),
           br(), 
           h4("Changes:"),
+            p("4/21/2024: New barchart with GO terms on the bars."),
             p("4/20/2024: UI adjustment"),
             p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),
             p("1/5/2024: ShinyGO 0.80 becomes default. You have to select your species first. Database is updated to Ensembl release
