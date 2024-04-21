@@ -432,7 +432,7 @@ ui <- fluidPage(
             column(width = 3, selectInput(
               inputId = "enrichChartType",
               label = h5("Chart type"),
-              choices = c("lollipop", "dotplot", "barplot"),
+              choices = c("lollipop", "dotplot", "barplot", "inside"),
               selected = "lollipop"
             )),
             column(3, selectInput(

@@ -1957,7 +1957,25 @@ server <- function(input, output, session) {
           xlab(names(columns)[columns == x]) +
           ylab(NULL) +
           theme(axis.text = element_text(size = fontSize))
+      } else if(input$enrichChartType == "inside") {
+        p <- p +
+          geom_segment(aes_string(
+            x = 0,
+            xend = x,
+            y = "Pathway",
+            yend = "Pathway"
+          ),
+          size = 1
+          ) +
+          geom_text(aes_string(x=0, label = "Pathway"), hjust=0, vjust = 1, color="black", size=fontSize)  +
+          theme(
+            axis.title.y=element_blank(),
+            axis.ticks.y=element_blank(),
+            axis.text.y=element_blank()
+          )
+
       }
+
       return(p)
     }) # isolate
   })
