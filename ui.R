@@ -334,37 +334,74 @@ ui <- fluidPage(
             downloadButton("downloadEnrichment", "Top Pathways shown above"),
             downloadButton("downloadEnrichmentAll", "Results on all Pathways"),
             br(), br(),
-            p("All query genes are first converted to ENSEMBL gene IDs or STRING-db protein IDs. Our gene ID mapping and pathway
-                     data are mostly derived from these two sources. For the 20 most studied species, we also manually collected a
-                     large number of pathways from various public databases."),
-            p("FDR is calculated based on nominal P-value from the hypergeometric test. Fold Enrichment is defined as the percentage
-                    of genes in your list belonging to a pathway, divided by the corresponding percentage in the
-                    background. FDR tells us how likely the enrichment is by chance. Due to increased statistical power,
-                    large pathways tend to have smaller FDRs.
-                    As a measure of effect size, Fold Enrichment indicates how drastically genes of a certain pathway is overrepresented.
-                    This is an important metric, even though often ignored."),
-            p("We highly recommend users upload a list of genes as the background.
-                  These could be all the genes passed a low filter in RNA-seq.
-                  If background genes are not uploaded, the default is to use
-                  all protein-coding genes. Alternatively, you can check the box next to 'Use pathway database
-                  for gene counts', which will calculate background genes as the total unique
-                  nubmer of genes in pathway database that users choose.
-                  As some pathway database can be huge and have genes not properly
-                  converted, we limit the total nubmer to between 5000 and 30,000. When this option is used,
-                  any genes in user's original gene list but
-                  not in the pathway database will also be ignored."),
-            p("Only pathways that are within the specified size limits are used for enrichment analysis.
-                    After the analysis is done, pathways are first filtered based on a user specified FDR cutoff.
-                    Then the siginificant pathways are sorted by FDR, Fold Enrichment, or other metrics.
-                    When 'Sort by average ranks(FDR & Fold)' is selected, significant pathways are
-                    sorted by the average of the ranks by FDR and Fold Enrichment.
-                    By selecting 'Select by FDR, sort by Fold Enrichment',
-                    users first select the top pathways by FDR,
-                    then these are sorted by Fold Enrichment.
-                    When 'Remove redundancy' is selected, similar pathways sharing 95% of genes are represented by the most significant pathway.
-                    Redundant pathways also needs to share 50% of the words in their names. When 'Remove redundancy' is selected longer pathway names
-                    are also represented by the first 80 characters.
-                    ")
+            h3("Methods"),
+            p("All query genes are converted to ENSEMBL gene IDs or STRING-db protein IDs. Our gene ID mapping and pathway
+                     data are mostly derived from these two sources. For the most researched species, we also
+                     manually compiled an extensive list of pathways from various public databases."),
+            p("Enrichment P-value are derived using the hypergeometric test.
+             To correct for multiple testing, False Discovery Rate (FDR) is calculated using the Benjamini-Hochberg method.
+                    Fold Enrichment of a pathway is defined as the ratio of the percentage
+                    of genes in your list  to the corresponding percentage in the
+                    background genes. "),
+            p("We recommend that users provide their own list of background genes, which could include all genes that pass 
+            a minimal filter in RNA-seq analysis. If no background genes are uploaded, the default setting uses all 
+            protein-coding genes. Alternatively, you may select the option 'Use pathway DB for gene counts,' 
+            which calculates the background based on the total number of unique genes in the chosen pathway database,
+             with a limit set between 5,000 and 30,000 genes. When this option is selected, any genes in the user's 
+             original list that are not in the pathway database are excluded."),
+            p("For enrichment analysis, only pathways within specified size limits are considered. 
+            After the analysis, pathways are initially filtered by a user-defined FDR cutoff. 
+            Significant pathways are then ranked based on FDR, Fold Enrichment, or other metrics. 
+            When the 'Sort by average ranks (FDR & Fold Enrichment)' option is selected, pathways are sorted by the average 
+            of their ranks based on both FDR and Fold Enrichment. By selecting 'Sort by FDR, then by Fold Enrichment,'
+             users first filter pathways by FDR and then sort those pathways by Fold Enrichment. The 'Remove redundancy'
+              option eliminates similar pathways that share 95% of their genes and 50% of the words in their names, 
+              representing them with the pathway that has the highest significance."),
+
+        h3("Interpreting GO  Enrichment Results"),
+        
+        # Introduction and explanation of the GO terms
+        p("The Gene Ontology (GO) includes over tens of thousands of terms (functional categories), 
+                each tested individually for enrichment. These results are ranked, and only the top ones are displayed. 
+                Understanding this process is crucial for interpreting GO enrichment results."),
+        
+        # Detailed explanation of metrics used
+        tags$ul(
+          tags$li("P-value: Reflects the statistical significance of the enrichment. 
+          Lower values suggest a lower likelihood of the result occurring by chance (null hypothesis).
+           FDR q-values adjust P-values for multiple testing to control the proportion of type I error."),
+          tags$li("Fold Enrichment: Measures the magnitude of enrichment. Higher values indicate stronger 
+          enrichment and are an important metric of effect size."),
+          tags$li("Pathway Genes: The total number of genes in a pathway or GO term."),
+          tags$li("nGenes: The number of genes in the pathway that overlap with your gene list.")
+        ),
+        
+        # Warnings and considerations
+        tags$p("Exercise caution when encountering FDR values of 0.01 or 0.001 for GO terms, 
+        as these levels often represent noise due to the vast number of terms tested. 
+        For a gene list of reasonable size, more significant results (FDR < 1E-5) are expected."),
+        
+        # Discussion on the bias towards large pathways
+        tags$p("Large pathways, such as the cell cycle, often show smaller FDRs due to increased statistical power, 
+        while smaller pathways might have higher FDRs despite their biological relevance. 
+        Enrichment analysis tends to favor larger pathways."),
+        
+        # Discussion on filtering and ranking
+        tags$p("With a default cutoff of FDR < 0.05, we often detect thousands of significant GO terms, 
+        though only a subset is shown. The method of filtering and ranking these terms is therefore crucial."),
+
+        tags$p("With large sample sizes, small differences can appear extremely significant. Therefore,
+        ranking by FDR alone rarely makes biological sense.  Fold enrichment should also be considered when 
+        prioritizing pathways as it reflects the strength of the enrichment. We offer several methods 
+        that take into account both FDR q-value and fold enrichment."),
+        
+        # Notes on related GO terms and visualization
+        tags$p("Many GO terms are closely related (e.g., Cell Cycle, Regulation of Cell Cycle) and can dominate the 
+        top 20, obscuring other pathways. To avoid this, consider examining the top 50 terms. Additionally, 
+        use tree plots and network plots to identify clusters of related GO terms and uncover 
+        overarching themes."),
+        tags$p("Do not skip the most significant pathways and discuss others that fits a narrative.")
+
           )
         ), # enrichment tab
 
