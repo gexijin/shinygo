@@ -400,7 +400,7 @@ ui <- fluidPage(
         top 20, obscuring other pathways. To avoid this, consider examining the top 50 terms. Additionally, 
         use tree plots and network plots to identify clusters of related GO terms and uncover 
         overarching themes."),
-        tags$p("Do not skip the most significant pathways and discuss others that fits a narrative.")
+        tags$p("Discuss the most significant pathways first, even if they do not fit your narrative.")
 
           )
         ), # enrichment tab
