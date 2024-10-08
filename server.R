@@ -27,8 +27,24 @@ server <- function(input, output, session) {
     easyClose = FALSE,
     size = "l"
   )
-
   #shiny::showModal(welcome_modal)
+
+  # Pop-up Modal about Licensing
+  commercial_use_modal <- shiny::modalDialog(
+    title = "ShinyGO Usage Policy",
+
+    tags$br(),
+    tags$h4("ShinyGO is available to the public strictly for education and
+      non-profit organizations. If you are affiliated with a company or intend
+      to use Chatlize for commercial activities, you must obtain a license from us.
+      Please contact us at ",
+      a("ge@orditus.com", href = "mailto:ge@orditus.com?Subject=ShinyGO&cc=jenna@orditus.com")
+    ),
+    easyClose = TRUE,
+    size = "l"
+  )
+  shiny::showModal(commercial_use_modal)
+
     
   observe({
     updateSelectizeInput(session, "selectOrg", choices = speciesChoice, selected = speciesChoice[1])
