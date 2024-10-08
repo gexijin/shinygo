@@ -36,7 +36,7 @@ server <- function(input, output, session) {
     tags$br(),
     tags$h4("ShinyGO is available to the public strictly for education and
       non-profit organizations. If you are affiliated with a company or intend
-      to use Chatlize for commercial activities, you must obtain a license from us.
+      to use ShinyGO for commercial activities, you must obtain a license from us.
       Please contact us at ",
       a("ge@orditus.com", href = "mailto:ge@orditus.com?Subject=ShinyGO&cc=jenna@orditus.com")
     ),
