@@ -938,7 +938,7 @@ Currently only less than 30,000 genes are accepted.",
       ) # bsModal 6
     ) # mainPanel
   ), # sidebarLayout
-  tags$head(includeScript("google_analytics.js")), # tracking usage
-  tags$head(includeHTML(("google_analytics_GA4.html")))
+  #tags$head(includeScript("google_analytics.js")), # tracking usage
+  #tags$head(includeHTML(("google_analytics_GA4.html")))
   #  ,tags$head(includeHTML(("../google_analytics_golem.html")))
 ) # fluidPage
