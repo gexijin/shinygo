@@ -27,7 +27,7 @@ db_url <<- "http://bioinformatics.sdstate.edu/data/"
 datapath <<- Sys.getenv("IDEP_DATABASE")[1]
 # if not defined in the environment, use too levels above
 if (nchar(datapath) == 0) {
-  datapath <<- paste0(".")
+  datapath <<- paste0("/srv/shiny-sever")
 }
 # Add version
 datapath <<- paste0(datapath, "/", db_ver, "/")
