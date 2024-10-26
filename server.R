@@ -508,6 +508,16 @@ server <- function(input, output, session) {
     }
   )
 
+  output$mapping_stats <- renderText({
+    req(input$goButton)
+    req(converted())
+    n_genes <- length(converted()$originalIDs)
+    n_mapped <- length(converted()$IDs)
+
+    paste0(n_genes, " IDs mapped to ", n_mapped, " (", round(n_mapped / n_genes * 100, 0), "%) ", converted()$species$name2, " genes.")
+  })
+
+
   conversionTableData <- reactive({
     if (input$goButton == 0) {
       return()
@@ -568,6 +578,7 @@ server <- function(input, output, session) {
       if (input$goButton == 0) {
         return()
       } # still have problems when geneInfo is not found!!!!!
+      req(input$selectOrg)
       tem <- input$showDetailedGeneInfo
       isolate({
         df <- conversionTableData()[, 1:9]

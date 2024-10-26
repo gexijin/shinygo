@@ -29,9 +29,9 @@ ui <- fluidPage(
   ),
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.80",
+      titlePanel("ShinyGO 0.81",
         tags$head(tags$link(rel = "icon", type = "image/png", href = "favicon.png"),
-             tags$title("ShinyGO 0.80"))
+             tags$title("ShinyGO 0.81"))
       ),
       # use conditional panel to hide the selectOrg input
       conditionalPanel(
@@ -75,7 +75,16 @@ ui <- fluidPage(
                                  }")),
       br(),
       fluidRow(
-        column(8, actionButton("useDemo1", "Demo genes"), ),
+        column(8, 
+          conditionalPanel(
+            condition = "input.goButton == 0", 
+            actionButton("useDemo1", "Demo genes"), 
+          ),
+          conditionalPanel(
+            condition = "input.goButton != 0", 
+            textOutput("mapping_stats") 
+          ),
+        ),
         # column(4,   actionButton("useDemo2", "Demo 2"),	  	  ),
         column(4, p(HTML("<div align=\"right\"> <A HREF=\"javascript:history.go(0)\">Reset</A></div>")))
       ),
@@ -727,15 +736,11 @@ ui <- fluidPage(
             "Our team consists of ",
             a(" Xijin Ge (PI), ", href = "https://www.sdstate.edu/directory/xijin-ge", target = "_blank"),
             "Jianli Qi (research associate), and
-        a few graduate students.
-        None of us are trained as software engineers. But
-        we share the passion about  developing an
-        user-friendly tool for all biologists,
-        especially those who do not have access to bioinformaticians."
+        a few graduate students."
           ),
           " For feedbacks, ",
           a("email us, ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
-          "or file bug report or feature request on our",
+          "or file a bug report or feature request on our",
           a(" GitHub repository, ", href = "https://github.com/gexijin/shinygo", target = "_blank"),
           " where you can also find the source code.",
           "For details, please see our", a("paper", href = "https://doi.org/10.1093/bioinformatics/btz931", target = "_blank"),
