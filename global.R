@@ -540,8 +540,11 @@ convertID <- function(query, selectOrg) {
 
     speciesMatched <- as.data.frame(paste("Using selected species ", findSpeciesByIdName(selectOrg)))
   }
+  # if multiple user ids mapped to the same Ensembl id, only keep one.
   result <- result[which(!duplicated(result[, 2])), ] # remove duplicates in ensembl_gene_id
-  result <- result[which(!duplicated(result[, 1])), ] # remove duplicates in user ID
+
+  # If user id maps to multiple Ensembl IDs, keep all of them. Some of them can be non-coding.
+  #result <- result[which(!duplicated(result[, 1])), ] # remove duplicates in user ID
   colnames(speciesMatched) <- c("Matched Species (%genes)")
   conversionTable <- result[, 1:2]
   colnames(conversionTable) <- c("User_input", "ensembl_gene_id")
