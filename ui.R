@@ -29,7 +29,7 @@ ui <- fluidPage(
   ),
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.80 for Lonza",
+      titlePanel("ShinyGO 0.80",
         tags$head(tags$link(rel = "icon", type = "image/png", href = "favicon.png"),
              tags$title("ShinyGO 0.80"))
       ),
