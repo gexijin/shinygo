@@ -287,7 +287,7 @@ ui <- fluidPage(
                     Its database includes several custom genomes requested by users. To request to add a new species/genome, fill in this ",
               a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76")
             ),            
-            h3("Private businesses: please email us for licnesing, local installation, or customization services.", style="color: red;"),
+            h3("Private businesses: contact us for licnesing, local installation, or customization services.", style="color: red;"),
             br(),
 
             h3("GO Enrichment analysis, plus a lot more!"),
