@@ -595,7 +595,7 @@ server <- function(input, output, session) {
         # coding is not shown
         df$Type <- gsub("protein_coding", "coding", df$Type)
         df$Type <- gsub("_gene", "", df$Type)
-        df$Chr[nchar(df$Chr) > 5] <- ""
+        df$Chr[nchar(df$Chr) > 50] <- ""
 
         # first see if it is Ensembl gene ID-----------------------
         ix <- grepl("ENS", df$"Ensembl Gene ID")
