@@ -268,29 +268,28 @@ ui <- fluidPage(
                 )
               )
             ),
+            p("10/25/24: Migrated to new server. R upgraded to V 4.4.0."),
+
             p("4/21/2024: New barchart with GO terms on the bars."),
             p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),        
-            p("You can still use the old version", 
-              a("(ShinyGO V0.77). ", href = "http://bioinformatics.sdstate.edu/go77/"),
+            p("You can still use the old versions using links on the About tab.", 
               "To support this effort, please cite our paper, like ",
                 a("over 2000 users did.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
                 "Just including URL is not enough.",
-              "Mirror sever ",
-              a("http://ge-lab.org/go/", href = "http://149.165.154.220/go/"),
-              " hosted by NSF-funded JetStream2.",
               a("Email Jenny ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
               "(gelabinfo@gmail.com) for questions, suggestions or data contributions.",
               "Follow Dr Ge on ", a("Twitter", href = "https://twitter.com/StevenXGe"), " and ",
               a("LinkedIn", href = "https://www.linkedin.com/in/steven-ge-ab016947/", target = "_blank"),
               " for updates. "
             ),
-            br(),
-
             p("Feb. 11, 2022: Like ShinyGO but your genome is not covered?",
               a("Customized ShinyGO", href = "http://bioinformatics.sdstate.edu/goc/"), " is now available.
                     Its database includes several custom genomes requested by users. To request to add a new species/genome, fill in this ",
               a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76")
-            ),
+            ),            
+            h3("Private businesses: please email us for licnesing, local installation, or customization services.", style="color: red;"),
+            br(),
+
             h3("GO Enrichment analysis, plus a lot more!"),
             p("Just paste your gene list to get enriched GO terms and othe pathways for over 14,000 species.
 				    based on annotation from Ensembl and STRING-db. Produce
@@ -404,7 +403,6 @@ ui <- fluidPage(
 
           )
         ), # enrichment tab
-
 
         #---Enrichment Chart-----------------------------------------------------------
         tabPanel("Chart",
