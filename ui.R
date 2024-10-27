@@ -47,6 +47,10 @@ ui <- fluidPage(
       fluidRow(
         column(
           width = 6,
+          textOutput("selected_species")
+        ),
+        column(
+          width = 6,
           align = "left",
           # hide the change species button, once submit button is clicked. 
           # this avoids errors where some analyses are not updated when user changes species in the middle of an analysis
@@ -63,10 +67,6 @@ ui <- fluidPage(
               theme = "light-border"
             )
           )
-        ),
-        column(
-          width = 6,
-          textOutput("selected_species")
         )
       ),
       tags$head(tags$style("#selected_species{color: red;
@@ -79,11 +79,7 @@ ui <- fluidPage(
           conditionalPanel(
             condition = "input.goButton == 0", 
             actionButton("useDemo1", "Demo genes"), 
-          ),
-          conditionalPanel(
-            condition = "input.goButton != 0", 
-            textOutput("mapping_stats") 
-          ),
+          )
         ),
         # column(4,   actionButton("useDemo2", "Demo 2"),	  	  ),
         column(4, p(HTML("<div align=\"right\"> <A HREF=\"javascript:history.go(0)\">Reset</A></div>")))
@@ -92,6 +88,10 @@ ui <- fluidPage(
       tags$textarea(
         id = "input_text", placeholder = "Change the species if it is not human. Then just paste a list of genes and click Submit. Gene IDs can be NCBI, Ensembl, symbol, or other common types.",
         rows = 8, ""
+      ),
+      conditionalPanel(
+        condition = "input.goButton != 0", 
+        textOutput("mapping_stats") 
       ),
       fluidRow(
         column(8, actionButton("backgroundGenes", "Background (recommended)")),
@@ -646,6 +646,12 @@ ui <- fluidPage(
           value = 9,
           plotlyOutput("genomePlotly", height = "900px"),
           fluidRow(
+            column(3, checkboxInput("labelGeneSymbol", "Label genes", value = FALSE)),
+            column(3, checkboxInput("ignoreNonCoding", "Coding genes only", value = TRUE)),
+            column(3, checkboxInput("show_all_chr", "All chr.", value = FALSE)),
+            column(3, actionButton("gPlotstatic", "Static plot"))
+          ),
+          fluidRow(
             column(3, selectInput(
               inputId = "MAwindowSize",
               label = h5("Window Size(Mb)"),
@@ -664,11 +670,6 @@ ui <- fluidPage(
               selected = 0.00001,
               choices = c(0.1, 0.05, 0.01, 0.001, 0.0001, 0.00001, 0.000001)
             ))
-          ),
-          fluidRow(
-            column(4, checkboxInput("labelGeneSymbol", "Label genes", value = FALSE)),
-            column(4, checkboxInput("ignoreNonCoding", "Coding genes only", value = TRUE)),
-            column(4, actionButton("gPlotstatic", "Static plot"))
           ),
           h5("The genes are represented by red dots. The purple lines indicate regions where
                         these genes are statistically enriched, compared to the density of genes in the background.

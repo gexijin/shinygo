@@ -580,10 +580,10 @@ geneInfo <- function(converted, selectOrg) {
   x <- dbGetQuery(convert_species, querySTMT)
   dbDisconnect(convert_species)
 
-  nchars_chr_name <- nchar(x$chromosome_name)
-  medean_nchars <- median(nchars_chr_name)
-  x <- x[which(nchars_chr_name < 3 * medean_nchars + 1), ]
-
+  # tried to hide chromosomes like patches... 
+  #nchars_chr_name <- nchar(x$chromosome_name)
+  #medean_nchars <- median(nchars_chr_name)
+  #x <- x[which(nchars_chr_name < 3 * medean_nchars + 1), ]
 
   Set <- match(x$ensembl_gene_id, querySet)
   Set[which(is.na(Set))] <- "Genome"
