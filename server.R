@@ -1457,7 +1457,7 @@ server <- function(input, output, session) {
             # chromosomes
             if (sum(!is.na(x$chromosome_name)) >= minGenes && length(unique(x$chromosome_name)) > 2 && length(which(x$Set == "List")) > minGenes) {
               freq <- table(x$chromosome_name, x$Set)
-              freq <- as.matrix(freq[which(nchar(row.names(freq)) < 10), ]) # remove unmapped chromosomes
+              freq <- as.matrix(freq[which(nchar(row.names(freq)) < 50), ]) # remove unmapped chromosomes
               if (dim(freq)[2] > 1 && dim(freq)[1] > 1) { # some organisms do not have fully seuqence genome: chr. names: scaffold_99816
                 Pval <- chisq.test(freq)$p.value
                 sig <- paste("Distribution of query genes on chromosomes \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
@@ -1914,6 +1914,9 @@ server <- function(input, output, session) {
         goTable$Pathway <- remove_pathway_id(goTable$Pathway, input$selectGO)
       }
 
+      # Error when two pathways are of the same name due to truncation of long pathways
+      goTable$Pathway <- mark_duplicates(goTable$Pathway)
+      
       # convert to factor so that the levels are not reordered by ggplot2
       goTable$Pathway <- factor(goTable$Pathway, levels = rev(goTable$Pathway))
 

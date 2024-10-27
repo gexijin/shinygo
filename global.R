@@ -1742,3 +1742,41 @@ remove_pathway_id <- function(strings, select_go) {
     return(strings)
   }
 }
+
+
+#' Mark Duplicate Strings with Occurrence Index
+#'
+#' This function takes a character vector and appends an occurrence index
+#' to each duplicated string, starting from 1 for the first occurrence. 
+#' Strings that only appear once are left unchanged.
+#'
+#' If the input is not a character vector with at least two elements,
+#' the function returns the input object unchanged.
+#'
+#' @param strings A character vector of strings.
+#' 
+#' @return A character vector where each duplicated string has an occurrence index
+#' appended (e.g., "aa 1", "aa 2"), while unique strings remain unchanged.
+#' If the input is not a valid character vector, the same input object is returned.
+#' 
+#' @examples
+#' strings <- c("aa", "bb", "aa", "cc", "aa")
+#' mark_duplicates(strings)
+#' # Expected output: "aa 1" "bb" "aa 2" "cc" "aa 3"
+#'
+#' @export
+mark_duplicates <- function(strings) {
+  # Check if input is a character vector with at least two elements
+  if (!is.character(strings) || length(strings) < 2) {
+    return(strings)
+  }
+  
+  # Create an index for each occurrence within unique string groups
+  counts <- ave(seq_along(strings), strings, FUN = seq_along)
+  
+  # Check if a string appears more than once, and append the count if so
+  result <- ifelse(table(strings)[strings] > 1, paste(strings, counts), strings)
+  
+  return(result)
+}
+
