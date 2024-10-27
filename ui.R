@@ -282,7 +282,9 @@ ui <- fluidPage(
                 )
               )
             ),
-            p("10/25/24: Migrated to new server. R upgraded to V 4.4.0."),
+            p("10/26/24: v0.81. Diabled the switch of species during analysis. Fixed errors with STRING tab when STRINGdb species are used. 
+            If a user ID maps multiple Ensembl genes, all are kept for enrichment. "),
+            p("10/25/24: Migrated to new server. Upgraded R to 4.4.0."),
 
             p("4/21/2024: New barchart with GO terms on the bars."),
             p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),        

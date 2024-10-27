@@ -323,7 +323,7 @@ level2Terms <- GO_levels[which(GO_levels$level %in% c(2, 3)), 1] # level 2 and 3
 # idIndex <- dbGetQuery(convert, paste("select distinct * from idIndex "))
 
 quotes <- dbGetQuery(convert, " select * from quotes")
-quotes <- paste0("\"", quotes$quotes, "\"", " -- ", quotes$author, ".       ")
+quotes <- paste0(quotes$quotes, " -- ", quotes$author)
 
 columnSelection <- list(
   "-log10(FDR)" = "EnrichmentFDR",
