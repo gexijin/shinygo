@@ -376,7 +376,7 @@ server <- function(input, output, session) {
           enrichment$x[, 5] <- gsub("Regulation", "Reg.", enrichment$x[, 5])
           enrichment$x[, 5] <- gsub(" regulation ", " reg. ", enrichment$x[, 5])
           enrichment$x[, 5] <- gsub(" process ", " proc. ", enrichment$x[, 5])
-          enrichment$x[, 5] <- substr(enrichment$x[, 5], 1, 80) # maximum 80 characters
+          enrichment$x[, 5] <- substr(enrichment$x[, 5], 1, 100) # maximum 80 characters
         }
       }
     }) # progress bar
@@ -508,6 +508,16 @@ server <- function(input, output, session) {
     }
   )
 
+  output$mapping_stats <- renderText({
+    req(input$goButton)
+    req(converted())
+    n_genes <- length(converted()$originalIDs)
+    n_mapped <- length(converted()$IDs)
+
+    paste0(n_genes, " IDs mapped to ", n_mapped, " (", round(n_mapped / n_genes * 100, 0), "%) ", converted()$species$name2, " genes.")
+  })
+
+
   conversionTableData <- reactive({
     if (input$goButton == 0) {
       return()
@@ -526,8 +536,10 @@ server <- function(input, output, session) {
         if (is.null(tem)) {
           as.data.frame("ID not recognized.")
         } else {
-          if (dim(tem2)[1] == 1) {
-            return(tem$conversionTable)
+          if (dim(tem2)[1] <= 1) {
+            merged <- tem$conversionTable
+            ix <- which(colnames(merged) == "ensembl_gene_id")
+            colnames(merged)[ix] <- "STRINGdb ID"
           } else { # if gene info is  available
             #         if('chromosome_name' %in% colnames(tem2)) {
             merged <- merge(tem$conversionTable, tem2, by = "ensembl_gene_id")
@@ -568,49 +580,54 @@ server <- function(input, output, session) {
       if (input$goButton == 0) {
         return()
       } # still have problems when geneInfo is not found!!!!!
+      req(input$selectOrg)
       tem <- input$showDetailedGeneInfo
       isolate({
-        df <- conversionTableData()[, 1:9]
-        # show detailed gene info for string species
-        if (!input$showDetailedGeneInfo) {
-          df$Description <- gsub(";.*|\\[.*", "", df$Description)
-        }
-        # Remove columns with all missing values; chr and start possition in STRINGdb species
-        df <- df[, which(!apply(is.na(df), 2, sum) == nrow(df))]
-        df$Species <- gsub("STRINGdb", "", df$Species)
+        if(dim(conversionTableData())[2] < 9) { # STRINGdb species only 3 columns
+          df <- conversionTableData()
+        } else { # ENSEMBL species
+          df <- conversionTableData()[, 1:9]
+          # show detailed gene info for string species
+          if (!input$showDetailedGeneInfo) {
+            df$Description <- gsub(";.*|\\[.*", "", df$Description)
+          }
+          # Remove columns with all missing values; chr and start possition in STRINGdb species
+          df <- df[, which(!apply(is.na(df), 2, sum) == nrow(df))]
+          df$Species <- gsub("STRINGdb", "", df$Species)
 
-        #      df$Type <- gsub(".*_", "", df$Type)
-        df$Type <- gsub(".*pseudogene", "pseudo", df$Type)
-        # coding is not shown
-        df$Type <- gsub("protein_coding", "coding", df$Type)
-        df$Type <- gsub("_gene", "", df$Type)
-        df$Chr[nchar(df$Chr) > 5] <- ""
+          #      df$Type <- gsub(".*_", "", df$Type)
+          df$Type <- gsub(".*pseudogene", "pseudo", df$Type)
+          # coding is not shown
+          df$Type <- gsub("protein_coding", "coding", df$Type)
+          df$Type <- gsub("_gene", "", df$Type)
+          df$Chr[nchar(df$Chr) > 50] <- ""
 
-        # first see if it is Ensembl gene ID-----------------------
-        ix <- grepl("ENS", df$"Ensembl Gene ID")
-        if (sum(ix) > 0) { # at least one has http?
-          tem <- paste0(
-            "<a href='http://www.ensembl.org/id/",
-            df$"Ensembl Gene ID",
-            "' target='_blank'>",
-            df$"Ensembl Gene ID",
-            "</a>"
-          )
-          # only change the ones with URL
-          df$"Ensembl Gene ID"[ix] <- tem[ix]
-        }
-        # first see if it is Ensembl gene ID-----------------------
-        ix <- !is.na(as.numeric(df$Entrez))
-        if (sum(ix) > 0) { # at least one has http?
-          tem <- paste0(
-            "<a href='https://www.ncbi.nlm.nih.gov/gene/",
-            df$Entrez,
-            "' target='_blank'>",
-            df$Entrez,
-            "</a>"
-          )
-          # only change the ones with URL
-          df$Entrez[ix] <- tem[ix]
+          # first see if it is Ensembl gene ID-----------------------
+          ix <- grepl("ENS", df$"Ensembl Gene ID")
+          if (sum(ix) > 0) { # at least one has http?
+            tem <- paste0(
+              "<a href='http://www.ensembl.org/id/",
+              df$"Ensembl Gene ID",
+              "' target='_blank'>",
+              df$"Ensembl Gene ID",
+              "</a>"
+            )
+            # only change the ones with URL
+            df$"Ensembl Gene ID"[ix] <- tem[ix]
+          }
+          # first see if it is Ensembl gene ID-----------------------
+          ix <- !is.na(as.numeric(df$Entrez))
+          if (sum(ix) > 0) { # at least one has http?
+            tem <- paste0(
+              "<a href='https://www.ncbi.nlm.nih.gov/gene/",
+              df$Entrez,
+              "' target='_blank'>",
+              df$Entrez,
+              "</a>"
+            )
+            # only change the ones with URL
+            df$Entrez[ix] <- tem[ix]
+          }
         }
         return(df)
       }) # avoid showing things initially
@@ -1001,7 +1018,9 @@ server <- function(input, output, session) {
 
         # using expression data
         genes <- conversionTableData()
-        colnames(genes)[3] <- c("gene")
+        # STRINGdb species the columns are ensemble_gene_id
+        ix <- which(colnames(genes) == "Ensembl Gene ID" | colnames(genes) == "STRINGdb ID")
+        colnames(genes)[ix] <- c("gene")
         genes$lfc <- 1
         # remove space character in front of gene symbols. Otherwise STRING won't convert
         genes$gene <- gsub(" ", "", genes$gene)
@@ -1109,6 +1128,7 @@ server <- function(input, output, session) {
           "FDR", "nGenes", "GO terms or pathways",
           "Description"
         )
+        result$FDR <- as.character(result$FDR)
         if (nrow(result) > 30) {
           result <- result[1:30, ]
         }

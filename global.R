@@ -323,7 +323,7 @@ level2Terms <- GO_levels[which(GO_levels$level %in% c(2, 3)), 1] # level 2 and 3
 # idIndex <- dbGetQuery(convert, paste("select distinct * from idIndex "))
 
 quotes <- dbGetQuery(convert, " select * from quotes")
-quotes <- paste0("\"", quotes$quotes, "\"", " -- ", quotes$author, ".       ")
+quotes <- paste0(gsub("\"", "", quotes$quotes), " -- ", quotes$author)
 
 columnSelection <- list(
   "-log10(FDR)" = "EnrichmentFDR",
@@ -540,8 +540,11 @@ convertID <- function(query, selectOrg) {
 
     speciesMatched <- as.data.frame(paste("Using selected species ", findSpeciesByIdName(selectOrg)))
   }
+  # if multiple user ids mapped to the same Ensembl id, only keep one.
   result <- result[which(!duplicated(result[, 2])), ] # remove duplicates in ensembl_gene_id
-  result <- result[which(!duplicated(result[, 1])), ] # remove duplicates in user ID
+
+  # If user id maps to multiple Ensembl IDs, keep all of them. Some of them can be non-coding.
+  #result <- result[which(!duplicated(result[, 1])), ] # remove duplicates in user ID
   colnames(speciesMatched) <- c("Matched Species (%genes)")
   conversionTable <- result[, 1:2]
   colnames(conversionTable) <- c("User_input", "ensembl_gene_id")
