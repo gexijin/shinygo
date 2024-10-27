@@ -323,7 +323,8 @@ level2Terms <- GO_levels[which(GO_levels$level %in% c(2, 3)), 1] # level 2 and 3
 # idIndex <- dbGetQuery(convert, paste("select distinct * from idIndex "))
 
 quotes <- dbGetQuery(convert, " select * from quotes")
-quotes <- paste0(gsub("\"", "", quotes$quotes), " -- ", quotes$author)
+quotes$quotes <- gsub("\\\"", "", quotes$quotes) # remove the quotes \"
+quotes <- paste0(quotes$quotes, " -- ", quotes$author)
 
 columnSelection <- list(
   "-log10(FDR)" = "EnrichmentFDR",
@@ -579,10 +580,10 @@ geneInfo <- function(converted, selectOrg) {
   x <- dbGetQuery(convert_species, querySTMT)
   dbDisconnect(convert_species)
 
-  nchars_chr_name <- nchar(x$chromosome_name)
-  medean_nchars <- median(nchars_chr_name)
-  x <- x[which(nchars_chr_name < 3 * medean_nchars + 1), ]
-
+  # tried to hide chromosomes like patches... 
+  #nchars_chr_name <- nchar(x$chromosome_name)
+  #medean_nchars <- median(nchars_chr_name)
+  #x <- x[which(nchars_chr_name < 3 * medean_nchars + 1), ]
 
   Set <- match(x$ensembl_gene_id, querySet)
   Set[which(is.na(Set))] <- "Genome"
@@ -1741,3 +1742,41 @@ remove_pathway_id <- function(strings, select_go) {
     return(strings)
   }
 }
+
+
+#' Mark Duplicate Strings with Occurrence Index
+#'
+#' This function takes a character vector and appends an occurrence index
+#' to each duplicated string, starting from 1 for the first occurrence. 
+#' Strings that only appear once are left unchanged.
+#'
+#' If the input is not a character vector with at least two elements,
+#' the function returns the input object unchanged.
+#'
+#' @param strings A character vector of strings.
+#' 
+#' @return A character vector where each duplicated string has an occurrence index
+#' appended (e.g., "aa 1", "aa 2"), while unique strings remain unchanged.
+#' If the input is not a valid character vector, the same input object is returned.
+#' 
+#' @examples
+#' strings <- c("aa", "bb", "aa", "cc", "aa")
+#' mark_duplicates(strings)
+#' # Expected output: "aa 1" "bb" "aa 2" "cc" "aa 3"
+#'
+#' @export
+mark_duplicates <- function(strings) {
+  # Check if input is a character vector with at least two elements
+  if (!is.character(strings) || length(strings) < 2) {
+    return(strings)
+  }
+  
+  # Create an index for each occurrence within unique string groups
+  counts <- ave(seq_along(strings), strings, FUN = seq_along)
+  
+  # Check if a string appears more than once, and append the count if so
+  result <- ifelse(table(strings)[strings] > 1, paste(strings, counts), strings)
+  
+  return(result)
+}
+

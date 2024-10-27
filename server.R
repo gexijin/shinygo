@@ -514,7 +514,7 @@ server <- function(input, output, session) {
     n_genes <- length(converted()$originalIDs)
     n_mapped <- length(converted()$IDs)
 
-    paste0(n_genes, " IDs mapped to ", n_mapped, " (", round(n_mapped / n_genes * 100, 0), "%) ", converted()$species$name2, " genes.")
+    paste0(n_genes, " IDs mapped to ", n_mapped, " (", round(n_mapped / n_genes * 100, 0), "%) ", tolower(converted()$species$name2), " genes.")
   })
 
 
@@ -1457,7 +1457,7 @@ server <- function(input, output, session) {
             # chromosomes
             if (sum(!is.na(x$chromosome_name)) >= minGenes && length(unique(x$chromosome_name)) > 2 && length(which(x$Set == "List")) > minGenes) {
               freq <- table(x$chromosome_name, x$Set)
-              freq <- as.matrix(freq[which(nchar(row.names(freq)) < 10), ]) # remove unmapped chromosomes
+              freq <- as.matrix(freq[which(nchar(row.names(freq)) < 50), ]) # remove unmapped chromosomes
               if (dim(freq)[2] > 1 && dim(freq)[1] > 1) { # some organisms do not have fully seuqence genome: chr. names: scaffold_99816
                 Pval <- chisq.test(freq)$p.value
                 sig <- paste("Distribution of query genes on chromosomes \nChi-squared test P=", formatC(Pval, digits = 2, format = "G"))
@@ -1914,6 +1914,9 @@ server <- function(input, output, session) {
         goTable$Pathway <- remove_pathway_id(goTable$Pathway, input$selectGO)
       }
 
+      # Error when two pathways are of the same name due to truncation of long pathways
+      goTable$Pathway <- mark_duplicates(goTable$Pathway)
+      
       # convert to factor so that the levels are not reordered by ggplot2
       goTable$Pathway <- factor(goTable$Pathway, levels = rev(goTable$Pathway))
 
@@ -2722,6 +2725,7 @@ server <- function(input, output, session) {
     tem <- input$ignoreNonCoding
     tem <- input$chRegionPval
     tem <- input$labelGeneSymbol
+    tem <- input$show_all_chr
     library(dplyr)
     ####################################
 
@@ -2784,10 +2788,18 @@ server <- function(input, output, session) {
           x <- x[!is.na(x$chromosome_name), ]
           x <- x[!is.na(x$start_position), ]
 
+          #median # of characters in chr. names
+          medean_nchars <- median(nchar(x$chromosome_name))
+          
           tem <- sort(table(x$chromosome_name), decreasing = T)
           ch <- names(tem[tem >= 1]) # ch with less than 100 genes are excluded
+
           if (length(ch) > 50) ch <- ch[1:50] # at most 50 ch
-          ch <- ch[nchar(ch) <= 12] # ch. name less than 10 characters
+          #ch <- ch[nchar(ch) <= 12] # ch. name less than 10 characters
+          # hide chrs with extra long names:  "CHR_HSCHR19_5_CTG2"
+          if(!input$show_all_chr) {
+            ch <- ch[nchar(ch) <= 3 * medean_nchars + 1]
+          }
           ch <- ch[order(as.numeric(ch))]
           tem <- ch
           ch <- 1:(length(ch)) # the numbers are continous from 1 to length(ch)
