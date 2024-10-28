@@ -531,12 +531,12 @@ server <- function(input, output, session) {
         incProgress(0.1)
         tem2 <- geneInfoLookup()
         incProgress(0.3)
-
         incProgress(0.6)
         if (is.null(tem)) {
           as.data.frame("ID not recognized.")
         } else {
-          if (dim(tem2)[1] <= 1) {
+          # some STRINGdb species has geneInfo, alought incomplete.
+          if (dim(tem2)[1] <= 1 | grepl("STRINGdb", converted()$species$name2)) {
             merged <- tem$conversionTable
             ix <- which(colnames(merged) == "ensembl_gene_id")
             colnames(merged)[ix] <- "STRINGdb ID"
@@ -1916,7 +1916,7 @@ server <- function(input, output, session) {
 
       # Error when two pathways are of the same name due to truncation of long pathways
       goTable$Pathway <- mark_duplicates(goTable$Pathway)
-      
+
       # convert to factor so that the levels are not reordered by ggplot2
       goTable$Pathway <- factor(goTable$Pathway, levels = rev(goTable$Pathway))
 
