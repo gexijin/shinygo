@@ -16,6 +16,7 @@ library(gridExtra)
 library(plotly)
 library(reshape2)
 library(visNetwork)
+library(dplyr)
 library(DT, verbose = FALSE) # for renderDataTable
 
 
@@ -78,7 +79,7 @@ PvalGeneInfo <- 0.05
 minGenes <- 10 # min number of genes for plotting
 PvalGeneInfo1 <- 0.01
 PvalGeneInfo2 <- 0.001
-maxGenesBackground <- 30000
+maxGenesBackground <- 100000
 redudantGeneSetsRatio <- 0.95 # remove redundant pathways if they share 90% of genes.
 min_gene_fold <- 10 # minimum number of  genes in pathways, when sorting by fold.
 pdf(NULL) # this prevents error Cannot open file 'Rplots.pdf'
@@ -580,11 +581,18 @@ geneInfo <- function(converted, selectOrg) {
   x <- dbGetQuery(convert_species, querySTMT)
   dbDisconnect(convert_species)
 
-  # tried to hide chromosomes like patches... 
-  #nchars_chr_name <- nchar(x$chromosome_name)
-  #medean_nchars <- median(nchars_chr_name)
-  #x <- x[which(nchars_chr_name < 3 * medean_nchars + 1), ]
-
+  # mark duplicated genes; mostly the same genes on pached chromosomes.
+  if(as.numeric(selectOrg) > 0) { # if it is a ENSEMBL species
+    x <- x |>
+      mutate(coding_status = if_else(gene_biotype == "protein_coding", TRUE, FALSE)) |> # TRUE for coding
+      mutate(chr_name_length = nchar(chromosome_name)) |>    # chr 20 --> 2
+      mutate(entrez_symbol = paste(entrezgene_id, symbol)) |>  # "7105 TSPAN6"
+      arrange(entrez_symbol, entrezgene_id, -coding_status, chr_name_length) |>
+      mutate(duplicated = duplicated(entrez_symbol)) |> # both entrez and symbol the same?
+      #if entrez is missing, does not count
+      mutate(duplicated = if_else(is.na(entrezgene_id), FALSE, duplicated)) |>
+      select(-c(coding_status, chr_name_length, entrez_symbol)) # clean up
+  }
   Set <- match(x$ensembl_gene_id, querySet)
   Set[which(is.na(Set))] <- "Genome"
   Set[which(Set != "Genome")] <- "List"

@@ -100,7 +100,19 @@ server <- function(input, output, session) {
       return()
     }
 
-    convertID(input$input_text, input$selectOrg)
+    converted <- convertID(input$input_text, input$selectOrg)
+
+    # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
+    if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
+      gene_info <- geneInfo(converted, input$selectOrg)
+      converted$IDs <- gene_info |>
+        filter(!duplicated) |>
+        filter(ensembl_gene_id %in% converted$IDs) |>
+        pull(ensembl_gene_id)
+      #conversionTable is not changed. Not unique.
+    }
+    converted
+
   })
 
 
@@ -207,8 +219,29 @@ server <- function(input, output, session) {
     if (nchar(input$input_text_b) < 10) {
       return()
     }
+    
+    withProgress(message = sample(quotes, 1), detail = "Converting background genes", {
+      incProgress(0.1)
+      converted <- convertID(input$input_text_b, input$selectOrg)
+      incProgress(0.5)
+      if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
+        gene_info <- geneInfo(converted, input$selectOrg)
+        # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
+        converted$IDs <- gene_info |>
+          filter(!duplicated) |>
+          filter(ensembl_gene_id %in% converted$IDs) |>
+          pull(ensembl_gene_id)
+        #conversionTable is not changed. Not unique.
+      }
 
-    convertID(input$input_text_b, input$selectOrg)
+      # if more than 100k genes, take samples
+      if(length(converted$IDs) < maxGenesBackground + 1) {
+        converted$IDs <- sample(converted$IDs, maxGenesBackground)
+      }
+    })
+
+    converted
+
   })
   geneInfoLookup_background <- reactive({
     if (input$goButton == 0 | nchar(input$input_text_b) < 10) {
@@ -1438,9 +1471,7 @@ server <- function(input, output, session) {
         xB <- geneInfoLookup_background()
         convertedB <- converted_background()
         if (!is.null(xB) &&
-          !is.null(convertedB) &&
-          length(convertedB$IDs) < maxGenesBackground + 1) { # if more than 30k genes, ignore background genes.
-
+          !is.null(convertedB) ) { 
           x <- x[x$Set == "List", ] # remove background from selected genes
           xB <- xB[xB$Set == "List", ] # remove Genome genes from background
           xB$Set <- "Background"
@@ -1644,8 +1675,7 @@ server <- function(input, output, session) {
         xB <- geneInfoLookup_background()
         convertedB <- converted_background()
         if (!is.null(xB) &&
-          !is.null(convertedB) &&
-          length(convertedB$IDs) < maxGenesBackground + 1) { # if more than 30k genes, ignore background genes.
+          !is.null(convertedB)) { # if more than 30k genes, ignore background genes.
 
           x <- x[x$Set == "List", ] # remove background from selected genes
           xB <- xB[xB$Set == "List", ] # remove Genome genes from background
@@ -2751,8 +2781,7 @@ server <- function(input, output, session) {
         xB <- geneInfoLookup_background()
         convertedB <- converted_background()
         if (!is.null(xB) &&
-          !is.null(convertedB) &&
-          length(convertedB$IDs) < maxGenesBackground + 1) { # if more than 30k genes, ignore background genes.
+          !is.null(convertedB)) { # if more than 30k genes, ignore background genes.
 
           x <- x[x$Set == "List", ] # remove background from selected genes
           xB <- xB[xB$Set == "List", ] # remove Genome genes from background
