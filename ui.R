@@ -27,11 +27,12 @@ ui <- fluidPage(
       "label { font-size:100%; font-family:Times New Roman; margin-bottom:-15px; }"
     ))
   ),
+  shinybusy::add_busy_spinner(spin = "fading-circle"), # add spinner
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.81",
+      titlePanel("ShinyGO 0.82",
         tags$head(tags$link(rel = "icon", type = "image/png", href = "favicon.png"),
-             tags$title("ShinyGO 0.81"))
+             tags$title("ShinyGO 0.82"))
       ),
       # use conditional panel to hide the selectOrg input
       conditionalPanel(
@@ -282,12 +283,7 @@ ui <- fluidPage(
                 )
               )
             ),
-            p("10/26/24: v0.81. Disabled the switch of species during analysis. Fixed errors with STRING tab when STRINGdb species are used. 
-            If a gene ID maps multiple Ensembl genes, all are kept for enrichment. "),
-            p("10/25/24: Migrated to new server. Upgraded R to 4.4.0."),
-
-            p("4/21/2024: New barchart with GO terms on the bars."),
-            p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),        
+            p("2/3/25: v.0.82. Fix issues caused by multiple ENSEMBL IDs for the same gene on patched chromosomes, causing inaccurate enrichment results. Duplicated ENSEMBL IDs are now ignored. "),
             p("You can still use the old versions using links on the About tab.", 
               "To support this effort, please cite our paper, like ",
                 a("over 2000 users did.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
@@ -759,6 +755,10 @@ ui <- fluidPage(
           br(), br(),
           strong("Previous versions are still functional:"),
           br(),
+          a("ShinyGO V0.81, ",
+            href = "http://bioinformatics.sdstate.edu/go81/"
+          ),
+          br(),
           a("ShinyGO V0.80, ",
             href = "http://bioinformatics.sdstate.edu/go80/"
           ),
@@ -848,6 +848,12 @@ ui <- fluidPage(
           includeHTML("human_mouse_source.html"),
           br(), 
           h4("Changes:"),
+            p("10/26/24: v0.81. Disabled the switch of species during analysis. Fixed errors with STRING tab when STRINGdb species are used. 
+            If a gene ID maps multiple Ensembl genes, all are kept for enrichment. "),
+            p("10/25/24: Migrated to new server. Upgraded R to 4.4.0."),
+
+            p("4/21/2024: New barchart with GO terms on the bars."),
+            p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),        
             p("4/21/2024: New barchart with GO terms on the bars."),
             p("4/20/2024: UI adjustment"),
             p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),

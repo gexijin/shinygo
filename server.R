@@ -115,8 +115,6 @@ server <- function(input, output, session) {
 
   })
 
-
-
   # Pop-up modal for gene assembl information ----
   observeEvent(input$genome_assembl_button, {
     shiny::showModal(
@@ -220,29 +218,26 @@ server <- function(input, output, session) {
       return()
     }
     
-    withProgress(message = sample(quotes, 1), detail = "Converting background genes", {
-      incProgress(0.1)
-      converted <- convertID(input$input_text_b, input$selectOrg)
-      incProgress(0.5)
-      if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
-        gene_info <- geneInfo(converted, input$selectOrg)
-        # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
-        converted$IDs <- gene_info |>
-          filter(!duplicated) |>
-          filter(ensembl_gene_id %in% converted$IDs) |>
-          pull(ensembl_gene_id)
-        #conversionTable is not changed. Not unique.
-      }
+    converted <- convertID(input$input_text_b, input$selectOrg)
+    if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
+      gene_info <- geneInfo(converted, input$selectOrg)
+      # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
+      converted$IDs <- gene_info |>
+        filter(!duplicated) |>
+        filter(ensembl_gene_id %in% converted$IDs) |>
+        pull(ensembl_gene_id)
+      #conversionTable is not changed. Not unique.
+    }
 
-      # if more than 100k genes, take samples
-      if(length(converted$IDs) < maxGenesBackground + 1) {
-        converted$IDs <- sample(converted$IDs, maxGenesBackground)
-      }
-    })
+    # if more than 100k genes, take samples
+    if(length(converted$IDs) > maxGenesBackground + 1) {
+      converted$IDs <- sample(converted$IDs, maxGenesBackground)
+    }
 
     converted
 
   })
+
   geneInfoLookup_background <- reactive({
     if (input$goButton == 0 | nchar(input$input_text_b) < 10) {
       return()

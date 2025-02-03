@@ -808,8 +808,7 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
 
   # Background genes----------------------------------------------------
   if (!is.null(convertedB) &&
-    !is.null(gInfoB) &&
-    length(convertedB$IDs) < maxGenesBackground + 1) { # if more than 30k genes, ignore background genes.
+    !is.null(gInfoB)) { # if more than 30k genes, ignore background genes.
     querySetB <- convertedB$IDs
     if (!is.null(gInfoB)) {
       if (dim(gInfoB)[1] > 1) { # some species does not have geneInfo. STRING
