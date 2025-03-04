@@ -758,6 +758,7 @@ ui <- fluidPage(
           a("ShinyGO V0.81, ",
             href = "http://bioinformatics.sdstate.edu/go81/"
           ),
+          "based on Ensembl Release 104, archived on Feb. 3, 2025",
           br(),
           a("ShinyGO V0.80, ",
             href = "http://bioinformatics.sdstate.edu/go80/"
