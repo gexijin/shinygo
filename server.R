@@ -656,53 +656,6 @@ server <- function(input, output, session) {
     tem
   })
 
-  output$GOTermsTree <- renderPlot(
-    {
-      if (input$goButton == 0) {
-        return(NULL)
-      }
-      if (is.null(significantOverlaps2())) {
-        return(NULL)
-      }
-      tem <- input$maxTerms
-      # enrichmentPlot(significantOverlaps2(), 56  )
-      tree_plot()
-    },
-    height = function() {
-      round(max(350, min(2500, round(18 * as.numeric(input$maxTerms)))))
-    },
-    width = function() {
-      width1 <- round(max(350, min(1000, round(18 * as.numeric(input$maxTerms)))) * as.numeric(input$treeChartAspectRatio))
-      return(min(width1, 1000)) # max width is 1000
-    }
-  )
-
-
-
-  tree_plot <- reactive({
-    if (input$goButton == 0) {
-      return(NULL)
-    }
-    if (is.null(significantOverlaps2())) {
-      return(NULL)
-    }
-    tem <- input$maxTerms
-    p <- enrichmentPlot(significantOverlaps2(), 45)
-    return(p)
-  })
-
-  download_tree <- mod_download_images_server(
-    "download_tree",
-    filename = "tree_plot",
-    figure = reactive({
-      tree_plot()
-    }),
-    width = 10,
-    height = round(10 / as.numeric(input$treeChartAspectRatio), 1)
-  )
-
-
-
   output$downloadEnrichment <- downloadHandler(
     filename = function() {
       "enrichment.csv"
@@ -993,6 +946,31 @@ server <- function(input, output, session) {
     }),
     width = 8,
     height = round(8 / as.numeric(input$enrichChartAspectRatio), 1)
+  )
+
+    mod_tree_server("tree", 
+    significantOverlaps2 = reactive({
+      if (input$goButton == 0) {
+        return()
+      }
+      tem <- input$input_text_b # just to make it re-calculate if user changes background
+
+      tem <- significantOverlaps()
+      if (dim(tem$x)[2] == 1) {
+        return(NULL)
+      }
+      tem <- tem$x
+      colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes")
+      tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
+      tem$Direction <- "Diff"
+      # remove pathway ID only in Ensembl species
+      if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
+        tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
+      }
+      tem
+    }),
+    input_goButton = reactive(input$goButton),
+    input_maxTerms = reactive(input$maxTerms)
   )
 
   mod_network_server("network", 
