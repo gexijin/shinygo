@@ -45,24 +45,6 @@ server <- function(input, output, session) {
   # click_saved <- reactiveValues(GO = NULL)
   # observeEvent(eventExpr = input$selectGO, handlerExpr = { click_saved$GO <- input$selectGO })
 
-  #-----------hide tabs when N/A----------------------------------
-  observeEvent(input$selectGO, {
-
-    # Show KEGG tab only when KEGG is selected  #disabled as of 4/8/2022. Confused biologists.
-    # if(input$selectGO == "KEGG") {
-    #  showTab(inputId = "tabs", target = "2")
-    # } else {
-    # hideTab(inputId = "tabs", target = "2")
-    # }
-
-    # Show Groups tab only when GOBP is selected
-    if (input$selectGO == "GOBP" | input$selectGO == "GOCC" | input$selectGO == "GOMF") {
-      showTab(inputId = "tabs", target = "7")
-    } else {
-      hideTab(inputId = "tabs", target = "7")
-    }
-  })
-
   observe({
     # Hide genome tab when STRINGdb is matched
     showTab(inputId = "tabs", target = "8")
@@ -974,38 +956,7 @@ server <- function(input, output, session) {
     hover = T
   )
 
-  output$grouping <- renderTable(
-    {
-      if (input$goButton == 0) {
-        return()
-      }
-      myMessage <- "Just a minute. Matching your genes with level 2 and level 3 Gene Ontology biological process terms.
-	       This can take up to 1 minute as we have to glue together a large number of gene names. "
-      withProgress(message = sample(quotes, 1), detail = myMessage, {
-        tem <- significantOverlaps()
-
-        incProgress(1, detail = paste("Done"))
-      })
-      tem$groupings
-    },
-    digits = 1,
-    spacing = "s",
-    striped = TRUE,
-    bordered = TRUE,
-    width = "auto",
-    hover = T
-  )
-
-  output$downloadGrouping <- downloadHandler(
-    filename = function() {
-      "GO_Gropus.csv"
-    },
-    content = function(file) {
-      write.csv(significantOverlaps()$groupings, file, row.names = FALSE)
-    }
-  )
-
-
+ 
   # ggplot2 object for the enrichment chart;
   # used both for display and download
   enrichChartObject <- reactive({
