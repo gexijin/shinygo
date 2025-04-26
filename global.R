@@ -25,6 +25,8 @@ source("R/mod_plots.R")
 source("R/mod_genes.R") 
 source("R/mod_kegg.R") 
 source("R/mod_network.R") 
+source("R/mod_tree.R")
+source("R/mod_chart.R")
 
 # define where database is located
 db_ver <<- "data107"

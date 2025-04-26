@@ -973,6 +973,16 @@ server <- function(input, output, session) {
     input_maxTerms = reactive(input$maxTerms)
   )
 
+  mod_chart_server("chart", 
+    significantOverlaps = significantOverlaps,
+    input_goButton = reactive(input$goButton),
+    input_selectOrg = reactive(input$selectOrg),
+    input_selectGO = reactive(input$selectGO),
+    input_maxTerms = reactive(input$maxTerms),
+    input_show_pathway_id = reactive(input$show_pathway_id)
+  )
+
+
   mod_network_server("network", 
     significantOverlaps = significantOverlaps,
     input_goButton = reactive(input$goButton),
@@ -995,8 +1005,8 @@ server <- function(input, output, session) {
     converted = converted, 
     geneInfoLookup = geneInfoLookup,
     input_goButton = reactive(input$goButton),
-    conversionTableData = conversionTableData,  # Add comma here
-    significantOverlapsAll = significantOverlapsAll  # Pass the original non-filtered data
+    conversionTableData = conversionTableData,  
+    significantOverlapsAll = significantOverlapsAll  
   )
 
   mod_plots_server("plots", 
@@ -1006,10 +1016,10 @@ server <- function(input, output, session) {
     converted_background = converted_background,
     input_goButton = reactive(input$goButton),
     input_ggplot2_theme = reactive(input$ggplot2_theme),
-    PvalGeneInfo = 0.05,    # Default values or update as needed
-    PvalGeneInfo1 = 0.01,   # Default values or update as needed
-    PvalGeneInfo2 = 0.001,  # Default values or update as needed
-    minGenes = 10           # Default value or update as needed
+    PvalGeneInfo = 0.05,    
+    PvalGeneInfo1 = 0.01,   
+    PvalGeneInfo2 = 0.001,  
+    minGenes = 10           
   )
 
   mod_genome_server("genome",
