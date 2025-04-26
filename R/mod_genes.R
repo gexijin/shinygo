@@ -19,18 +19,25 @@ mod_genes_ui <- function(id) {
       column(3, downloadButton(ns("downloadGeneInfo"), "More info")),
       column(4, checkboxInput(ns("showDetailedGeneInfo"), "Detailed Description", value = FALSE))
     ),
-    tableOutput(ns("conversionTable"))
+    tableOutput(ns("conversionTable")),
+    
+    # Add Groups section with conditional display
+    conditionalPanel(
+      condition = "input.selectGO == 'GOBP' || input.selectGO == 'GOCC' || input.selectGO == 'GOMF'",
+      h3("Gene Groups"),
+      downloadButton(ns("downloadGrouping"), "Download"),
+      h5("Your genes are grouped by functional categories defined by high-level GO terms."),
+      tableOutput(ns("grouping"))
+    )
   )
 }
 
 #' @rdname mod_genes
 #' @export
 #' @keywords internal
-mod_genes_server <- function(id, converted, geneInfoLookup, input_goButton, conversionTableData) {
+mod_genes_server <- function(id, converted, geneInfoLookup, input_goButton, conversionTableData, significantOverlapsAll = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
-    # Remove the internal conversionTableData reactive since we're now accepting it as a parameter
     
     # Render the conversion table
     output$conversionTable <- renderTable(
@@ -68,6 +75,48 @@ mod_genes_server <- function(id, converted, geneInfoLookup, input_goButton, conv
       },
       content = function(file) {
         write.csv(conversionTableData(), file, row.names = FALSE)
+      }
+    )
+    
+    # Add Groups table rendering
+    output$grouping <- renderTable(
+      {
+        if (input_goButton() == 0) {
+          return()
+        }
+        
+        # Check if significantOverlapsAll is provided
+        if (is.null(significantOverlapsAll)) {
+          return()
+        }
+        
+        # Access the groupings from significantOverlapsAll
+        enrichment <- significantOverlapsAll()
+        
+        # Make sure enrichment exists and has groupings
+        if (is.null(enrichment) || is.null(enrichment$groupings)) {
+          return()
+        }
+        
+        return(enrichment$groupings)
+      },
+      digits = 1,
+      spacing = "s",
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = T
+    )
+    
+    # Download handler for grouping data
+    output$downloadGrouping <- downloadHandler(
+      filename = function() {
+        "GO_Groups.csv"
+      },
+      content = function(file) {
+        if (!is.null(significantOverlapsAll()) && !is.null(significantOverlapsAll()$groupings)) {
+          write.csv(significantOverlapsAll()$groupings, file, row.names = FALSE)
+        }
       }
     )
   })

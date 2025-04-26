@@ -1871,7 +1871,8 @@ server <- function(input, output, session) {
     converted = converted, 
     geneInfoLookup = geneInfoLookup,
     input_goButton = reactive(input$goButton),
-    conversionTableData = conversionTableData  # Pass the existing reactive
+    conversionTableData = conversionTableData,  # Add comma here
+    significantOverlapsAll = significantOverlapsAll  # Pass the original non-filtered data
   )
 
   mod_plots_server("plots", 
