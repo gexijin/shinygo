@@ -1178,29 +1178,6 @@ server <- function(input, output, session) {
   )
 
 
-  output$listSigPathways <- renderUI({
-    tem <- input$selectOrg
-    if (input$goButton == 0 | is.null(significantOverlaps())) {
-      return(NULL)
-    }
-
-    tem <- significantOverlaps()
-
-    if (dim(tem$x)[2] == 1) {
-      return(NULL)
-    }
-    tem$x <- tem$x[tem$x[, 3] < 1000, ] # remove patways with more than 1000 genes.  Very slow.
-    tem$x <- tem$x[order(-tem$x[, 4]), ] # sort by fold-enrichment
-    choices <- tem$x[, 5]
-    selectInput("sigPathways",
-      label = "Select a significant KEGG pathway:",
-      choices = choices
-    )
-  })
-
-
-  
-
   mod_kegg_server("kegg", 
     converted = converted, 
     significantOverlaps = significantOverlaps, 
