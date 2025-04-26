@@ -19,7 +19,8 @@ library(visNetwork)
 library(dplyr)
 library(DT, verbose = FALSE) # for renderDataTable
 
-
+source("R/mod_about.R") 
+source("R/mod_string.R") 
 # define where database is located
 db_ver <<- "data107"
 db_url <<- "http://bioinformatics.sdstate.edu/data/"
