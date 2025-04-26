@@ -1177,6 +1177,15 @@ server <- function(input, output, session) {
     height = round(8 / as.numeric(input$enrichChartAspectRatio), 1)
   )
 
+  mod_network_server("network", 
+    significantOverlaps = significantOverlaps,
+    input_goButton = reactive(input$goButton),
+    input_input_text_b = reactive(input$input_text_b),
+    input_show_pathway_id = reactive(input$show_pathway_id),
+    input_selectOrg = reactive(input$selectOrg),
+    input_selectGO = reactive(input$selectGO)
+  )
+
 
   mod_kegg_server("kegg", 
     converted = converted, 

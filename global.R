@@ -24,6 +24,8 @@ source("R/mod_string.R")
 source("R/mod_plots.R") 
 source("R/mod_genes.R") 
 source("R/mod_kegg.R") 
+source("R/mod_network.R") 
+
 # define where database is located
 db_ver <<- "data107"
 db_url <<- "http://bioinformatics.sdstate.edu/data/"
