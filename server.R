@@ -65,7 +65,7 @@ server <- function(input, output, session) {
         pull(ensembl_gene_id)
       # conversionTable is not changed. Not unique.
     }
-    converted_data
+    return(converted_data)
   })
 
   # Pop-up modal for gene assembl information ----
@@ -164,23 +164,23 @@ server <- function(input, output, session) {
       return()
     }
     
-    converted <- convertID(input$input_text_b, input$selectOrg)
+    converted_data <- convertID(input$input_text_b, input$selectOrg)
     if (as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
-      gene_info <- geneInfo(converted, input$selectOrg)
+      gene_info <- geneInfo(converted_data, input$selectOrg)
       # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
-      converted$IDs <- gene_info |>
+      converted_data$IDs <- gene_info |>
         filter(!duplicated) |>
-        filter(ensembl_gene_id %in% converted$IDs) |>
+        filter(ensembl_gene_id %in% converted_data$IDs) |>
         pull(ensembl_gene_id)
       # conversionTable is not changed. Not unique.
     }
 
     # if more than 100k genes, take samples
-    if (length(converted$IDs) > maxGenesBackground + 1) {
-      converted$IDs <- sample(converted$IDs, maxGenesBackground)
+    if (length(converted_data$IDs) > maxGenesBackground + 1) {
+      converted_data$IDs <- sample(converted_data$IDs, maxGenesBackground)
     }
 
-    converted
+    return(converted_data)
   })
 
   geneInfoLookup_background <- reactive({
@@ -506,8 +506,7 @@ server <- function(input, output, session) {
     }) # avoid showing things initially
   })
 
-  #----------------------------------------------------
-  # STRING-db functionality
+
   # find Taxonomy ID from species official name
   findTaxonomyID <- reactive({
     if (input$goButton == 0) {

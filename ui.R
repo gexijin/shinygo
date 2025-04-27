@@ -23,10 +23,10 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       titlePanel(
-        "ShinyGO 0.82",
+        "ShinyGO 0.83",
         tags$head(
           tags$link(rel = "icon", type = "image/png", href = "favicon.png"),
-          tags$title("ShinyGO 0.82")
+          tags$title("ShinyGO 0.83")
         )
       ),
       # use conditional panel to hide the selectOrg input
@@ -90,11 +90,14 @@ ui <- fluidPage(
         )
       ),
       tags$style(type = "text/css", "textarea {width:100%}"),
-      tags$textarea(
-        id = "input_text", 
-        placeholder = "Change the species if it is not human. Then just paste a list of genes and click Submit. Gene IDs can be NCBI, Ensembl, symbol, or other common types.",
-        rows = 8, 
-        ""
+      conditionalPanel(
+        condition = "input.goButton == 0",       
+        tags$textarea(
+          id = "input_text", 
+          placeholder = "Change the species if it is not human. Then just paste a list of genes and click Submit. Gene IDs can be NCBI, Ensembl, symbol, or other common types.",
+          rows = 8, 
+          ""
+        )
       ),
       conditionalPanel(
         condition = "input.goButton != 0", 
