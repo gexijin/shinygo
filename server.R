@@ -68,7 +68,7 @@ server <- function(input, output, session) {
     return(converted_data)
   })
 
-  # Pop-up modal for gene assembl information ----
+  # Pop-up modal for gene assembly information ----
   observeEvent(input$genome_assembly_button, {
     shiny::showModal(
       shiny::modalDialog(
