@@ -660,29 +660,29 @@ server <- function(input, output, session) {
 
  
     mod_tree_server("tree", 
-    significantOverlaps2 = reactive({
-      if (input$goButton == 0) {
-        return()
-      }
-      tem <- input$input_text_b # just to make it re-calculate if user changes background
+      significantOverlaps2 = reactive({
+        if (input$goButton == 0) {
+          return()
+        }
+        tem <- input$input_text_b # just to make it re-calculate if user changes background
 
-      tem <- significantOverlaps()
-      if (dim(tem$x)[2] == 1) {
-        return(NULL)
-      }
-      tem <- tem$x
-      colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes")
-      tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
-      tem$Direction <- "Diff"
-      # remove pathway ID only in Ensembl species
-      if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-        tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
-      }
-      tem
-    }),
-    input_goButton = reactive(input$goButton),
-    input_maxTerms = reactive(input$maxTerms)
-  )
+        tem <- significantOverlaps()
+        if (dim(tem$x)[2] == 1) {
+          return(NULL)
+        }
+        tem <- tem$x
+        colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes")
+        tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
+        tem$Direction <- "Diff"
+        # remove pathway ID only in Ensembl species
+        if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
+          tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
+        }
+        tem
+      }),
+      input_goButton = reactive(input$goButton),
+      input_maxTerms = reactive(input$maxTerms)
+    )
 
   mod_chart_server("chart", 
     significantOverlaps = significantOverlaps,
