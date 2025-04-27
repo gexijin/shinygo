@@ -306,7 +306,7 @@ ui <- fluidPage(
             p("Just paste your gene list to get enriched GO terms and othe pathways for over 14,000 species.
 				    based on annotation from Ensembl and STRING-db. Produce
 				    KEGG pathway diagrams with your genes highlighted, hierarchical clustering trees and networks summarizing
-				    overlapping terms/pathways, protein-protein interaction networks, gene characterristics plots, and enriched promoter motifs.
+				    overlapping terms/pathways, protein-protein interaction networks, and gene characterristics plots.
             "),
             br(), img(src = "enrich.png", align = "center", width = "660", height = "339"),
             br(), img(src = "enrichmentChart.png", align = "center", width = "700", height = "400"),
@@ -315,8 +315,7 @@ ui <- fluidPage(
             br(), br(), img(src = "GOnetwork2.png", align = "center", width = "500", height = "248"),
             br(), br(), img(src = "PPInetwork2.png", align = "center", width = "500", height = "391"),
             br(), br(), img(src = "chr.png", align = "center", width = "444", height = "338"),
-            br(), br(), img(src = "downSyndrome.png", align = "center", width = "371", height = "276"),
-            #br(), br(), img(src = "promoter.png", align = "center", width = "717", height = "288")
+            br(), br(), img(src = "downSyndrome.png", align = "center", width = "371", height = "276")
           ),
           br(),
           conditionalPanel(

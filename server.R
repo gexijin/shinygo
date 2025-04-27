@@ -463,54 +463,6 @@ server <- function(input, output, session) {
     df
   })
 
-  promoterData <- reactive({
-    if (input$goButton == 0) {
-      return()
-    }
-    tem <- input$radio
-    tem <- input$selectOrg
-    isolate({
-      myMessage <- "Promoter analysis"
-      withProgress(message = sample(quotes, 1), detail = myMessage, {
-        tem <- promoter(converted(), input$selectOrg, input$radio)
-        incProgress(1, detail = paste("Done"))
-      })
-
-      if (is.null(tem)) {
-        return(as.data.frame("ID not recognized."))
-      } else {
-        return(tem)
-      }
-    }) # avoid showing things initially
-  })
-
-  output$promoter <- renderTable(
-    {
-      if (input$goButton == 0) {
-        return()
-      }
-      tem <- input$radio
-      tem <- input$selectOrg
-      isolate({
-        promoterData()
-      }) # avoid showing things initially
-    },
-    digits = -1,
-    spacing = "s",
-    striped = TRUE,
-    bordered = TRUE,
-    width = "auto",
-    hover = T
-  )
-
-  output$downloadPromoter <- downloadHandler(
-    filename = function() {
-      "promoterMotif.csv"
-    },
-    content = function(file) {
-      write.csv(promoterData(), file, row.names = FALSE)
-    }
-  )
 
   output$mapping_stats <- renderText({
     req(input$goButton)
