@@ -65,7 +65,7 @@ minGenes <- 10 # min number of genes for plotting
 PvalGeneInfo1 <- 0.01
 PvalGeneInfo2 <- 0.001
 maxGenesBackground <- 100000
-redudantGeneSetsRatio <- 0.95 # remove redundant pathways if they share 90% of genes.
+redundantGeneSetsRatio <- 0.95 # remove redundant pathways if they share 90% of genes.
 min_gene_fold <- 10 # minimum number of  genes in pathways, when sorting by fold.
 pdf(NULL) # this prevents error Cannot open file 'Rplots.pdf'
 

@@ -52,22 +52,22 @@ server <- function(input, output, session) {
       return()
     }
 
-    converted <- convertID(input$input_text, input$selectOrg)
+    converted_data <- convertID(input$input_text, input$selectOrg)
 
     # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
     if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
-      gene_info <- geneInfo(converted, input$selectOrg)
-      converted$IDs <- gene_info |>
+      gene_info <- geneInfo(converted_data, input$selectOrg)
+      converted_data$IDs <- gene_info |>
         filter(!duplicated) |>
-        filter(ensembl_gene_id %in% converted$IDs) |>
+        filter(ensembl_gene_id %in% converted_data$IDs) |>
         pull(ensembl_gene_id)
       #conversionTable is not changed. Not unique.
     }
-    converted
+    converted_data
   })
 
   # Pop-up modal for gene assembl information ----
-  observeEvent(input$genome_assembl_button, {
+  observeEvent(input$genome_assembly_button, {
     shiny::showModal(
       shiny::modalDialog(
         size = "l",
@@ -300,7 +300,7 @@ server <- function(input, output, session) {
 
 
         # remove redudant gene sets-------------------------------------------
-        if (input$removeRedudantSets) reduced <- redudantGeneSetsRatio else reduced <- FALSE
+        if (input$removeRedundantSets) reduced <- redundantGeneSetsRatio else reduced <- FALSE
         incProgress(0.2)
         # reduced=FALSE no filtering,  reduced = 0.9 filter sets overlap with 90%
         if (reduced != FALSE && dim(enrichment$x)[1] > 5) {

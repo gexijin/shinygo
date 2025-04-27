@@ -2,7 +2,7 @@
 # Author: Steven Ge Xijin.Ge@sdstate.edu
 # R version 4.0.5
 # Project: ShinyGO v85
-# File: global.R
+# File: ui.R
 # Purpose of file: ui for ShinyGO
 # Data last modified: 4/27/2025
 #######################################################
@@ -12,12 +12,6 @@ library(shinyBS, verbose = FALSE) # for popup figures
 library(plotly) # interactive network plot
 library(visNetwork)
 library("reactable", verbose = FALSE)
-columnSelection <- list(
-  "-log10(FDR)" = "EnrichmentFDR",
-  "Fold Enrichment" = "FoldEnrichment",
-  "Genes" = "nGenes",
-  "Category Name" = "Pathway"
-)
 
 ui <- fluidPage(
   tags$head(
@@ -28,9 +22,12 @@ ui <- fluidPage(
   shinybusy::add_busy_spinner(spin = "fading-circle"), # add spinner
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.82",
-        tags$head(tags$link(rel = "icon", type = "image/png", href = "favicon.png"),
-             tags$title("ShinyGO 0.82"))
+      titlePanel(
+        "ShinyGO 0.82",
+        tags$head(
+          tags$link(rel = "icon", type = "image/png", href = "favicon.png"),
+          tags$title("ShinyGO 0.82")
+        )
       ),
       # use conditional panel to hide the selectOrg input
       conditionalPanel(
@@ -55,38 +52,49 @@ ui <- fluidPage(
           # this avoids errors where some analyses are not updated when user changes species in the middle of an analysis
           conditionalPanel(
             condition = "input.goButton == 0", 
-          # Species list and genome assemblies ----------
+            # Species list and genome assemblies ----------
             actionButton(
-              inputId = "genome_assembl_button",
+              inputId = "genome_assembly_button",
               label = strong("Change species")
             ),
             tippy::tippy_this(
-              "genome_assembl_button",
+              "genome_assembly_button",
               "Search and click a row to select a species. ",
               theme = "light-border"
             )
           )
         )
       ),
-      tags$head(tags$style("#selected_species{color: red;
-                                 font-size: 15px;
-                                 font-style: italic;
-                                 }")),
+      tags$head(
+        tags$style(
+          "#selected_species{
+            color: red;
+            font-size: 15px;
+            font-style: italic;
+          }"
+        )
+      ),
       br(),
       fluidRow(
-        column(8, 
+        column(
+          8, 
           conditionalPanel(
             condition = "input.goButton == 0", 
-            actionButton("useDemo1", "Demo genes"), 
+            actionButton("useDemo1", "Demo genes")
           )
         ),
-        # column(4,   actionButton("useDemo2", "Demo 2"),	  	  ),
-        column(4, p(HTML("<div align=\"right\"> <A HREF=\"javascript:history.go(0)\">Reset</A></div>")))
+        # column(4, actionButton("useDemo2", "Demo 2")),
+        column(
+          4, 
+          p(HTML("<div align=\"right\"> <A HREF=\"javascript:history.go(0)\">Reset</A></div>"))
+        )
       ),
       tags$style(type = "text/css", "textarea {width:100%}"),
       tags$textarea(
-        id = "input_text", placeholder = "Change the species if it is not human. Then just paste a list of genes and click Submit. Gene IDs can be NCBI, Ensembl, symbol, or other common types.",
-        rows = 8, ""
+        id = "input_text", 
+        placeholder = "Change the species if it is not human. Then just paste a list of genes and click Submit. Gene IDs can be NCBI, Ensembl, symbol, or other common types.",
+        rows = 8, 
+        ""
       ),
       conditionalPanel(
         condition = "input.goButton != 0", 
@@ -104,21 +112,24 @@ ui <- fluidPage(
           numericInput(
             inputId = "minFDR",
             label = h5("FDR cutoff"),
-            value = 0.05, step = 0.01
+            value = 0.05, 
+            step = 0.01
           ),
           tippy::tippy_this(
             "minFDR",
-            "Minimum  P-value, ajusted using the FDR (false discovery rate)
-          method. P-value is derived from hypergeometric distribution.
-           Really significant FDR are between 1E-5 to 1E-20. Be cautious
-           when you get an FDR of 1E-2 or 1E-3, as thousands of
-           gene sets are tested.",
+            "Minimum P-value, adjusted using the FDR (false discovery rate)
+            method. P-value is derived from hypergeometric distribution.
+            Really significant FDR are between 1E-5 to 1E-20. Be cautious
+            when you get an FDR of 1E-2 or 1E-3, as thousands of
+            gene sets are tested.",
             theme = "light-border"
           )
         ),
         column(
           6,
-          selectInput("maxTerms", h5("# pathways to show"),
+          selectInput(
+            "maxTerms", 
+            h5("# pathways to show"),
             choices = list(
               "10" = 10,
               "15" = 15,
@@ -149,32 +160,33 @@ ui <- fluidPage(
         )
       ),
 
-
       fluidRow(
         column(
           width = 6,
-          numericInput("minSetSize",
+          numericInput(
+            "minSetSize",
             label = h5("Pathway size: Min."),
-            min   = 2,
-            max   = 30,
+            min = 2,
+            max = 30,
             value = 2,
-            step  = 1
+            step = 1
           ),
           tippy::tippy_this(
             "minSetSize",
-            "Smaller pathways can introduce noise. Generally safe to incrase to 10 or 15.
+            "Smaller pathways can introduce noise. Generally safe to increase to 10 or 15.
             It is automatically raised to 10 when \"Sort by Fold Enrichment \" is selected.",
             theme = "light-border"
           )
         ),
         column(
           width = 6,
-          numericInput("maxSetSize",
+          numericInput(
+            "maxSetSize",
             label = h5("Max."),
-            min   = 1000,
-            max   = 20000,
+            min = 1000,
+            max = 20000,
             value = 5000,
-            step  = 200
+            step = 200
           ),
           tippy::tippy_this(
             "maxSetSize",
@@ -185,16 +197,17 @@ ui <- fluidPage(
           )
         )
       ), # fluidRow
+      
       fluidRow(
         column(
           width = 6,
           checkboxInput(
-            "removeRedudantSets",
+            "removeRedundantSets",
             "Remove redundancy",
             value = TRUE
           ),
           tippy::tippy_this(
-            "removeRedudantSets",
+            "removeRedundantSets",
             "Similar pathways sharing 95% of genes are represented by the most significant pathway.",
             theme = "light-border"
           )
@@ -239,7 +252,7 @@ ui <- fluidPage(
           ),
           tippy::tippy_this(
             "show_pathway_id",
-            "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770,  will be appended to pathway name.",
+            "If selected, pathway IDs, such as Path:mmu04115 and GO:0042770, will be appended to pathway name.",
             theme = "light-border"
           )
         )
@@ -251,16 +264,22 @@ ui <- fluidPage(
         "Show some example gene IDs in our database for a specific species.",
         theme = "light-border"
       ),
-      h5("Try ", a(" iDEP", href = "https://bioinformatics.sdstate.edu/idep/", target = "_blank"), "for RNA-Seq data analysis"),
+      h5(
+        "Try ", 
+        a(" iDEP", href = "https://bioinformatics.sdstate.edu/idep/", target = "_blank"), 
+        "for RNA-Seq data analysis"
+      ),
     ), # sidebarPanel
 
     mainPanel(
       tabsetPanel(
-        id = "tabs", type = "tabs",
-        tabPanel("Enrichment",
+        id = "tabs", 
+        type = "tabs",
+        tabPanel(
+          "Enrichment",
           value = 1,
           conditionalPanel(
-            "input.goButton == 0 ", # welcome screen
+            "input.goButton == 0", # welcome screen
             br(),
             fluidRow(
               column(
@@ -277,98 +296,128 @@ ui <- fluidPage(
               )
             ),
             p("2/3/25: v.0.82. Fix issues caused by multiple ENSEMBL IDs for the same gene on patched chromosomes, causing inaccurate enrichment results. Duplicated ENSEMBL IDs are now ignored. "),
-            p("You can still use the old versions using links on the About tab.", 
+            p(
+              "You can still use the old versions using links on the About tab.", 
               "To support this effort, please cite our paper, like ",
-                a("over 2000 users did.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
-                "Just including URL is not enough.",
+              a("over 2000 users did.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
+              "Just including URL is not enough.",
               a("Email Jenny ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
               "(gelabinfo@gmail.com) for questions, suggestions or data contributions.",
-              "Follow Dr Ge on ", a("Twitter", href = "https://twitter.com/StevenXGe"), " and ",
+              "Follow Dr Ge on ", 
+              a("Twitter", href = "https://twitter.com/StevenXGe"), 
+              " and ",
               a("LinkedIn", href = "https://www.linkedin.com/in/steven-ge-ab016947/", target = "_blank"),
               " for updates. "
             ),
-            p("Feb. 11, 2022: Like ShinyGO but your genome is not covered?",
-              a("Customized ShinyGO", href = "http://bioinformatics.sdstate.edu/goc/"), " is now available.
-                    Its database includes several custom genomes requested by users. To request to add a new species/genome, fill in this ",
+            p(
+              "Feb. 11, 2022: Like ShinyGO but your genome is not covered?",
+              a("Customized ShinyGO", href = "http://bioinformatics.sdstate.edu/goc/"), 
+              " is now available. Its database includes several custom genomes requested by users. To request to add a new species/genome, fill in this ",
               a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76")
             ),            
-            h3("For-profit organizations: contact us for licensing, local installation, or customization services.", style="color: red;"),
+            h3("For-profit organizations: contact us for licensing, local installation, or customization services.", style = "color: red;"),
             br(),
 
             h3("GO Enrichment analysis, plus a lot more!"),
-            p("Just paste your gene list to get enriched GO terms and othe pathways for over 14,000 species.
-				    based on annotation from Ensembl and STRING-db. Produce
-				    KEGG pathway diagrams with your genes highlighted, hierarchical clustering trees and networks summarizing
-				    overlapping terms/pathways, protein-protein interaction networks, and gene characterristics plots.
+            p("Just paste your gene list to get enriched GO terms and other pathways for over 14,000 species.
+              based on annotation from Ensembl and STRING-db. Produce
+              KEGG pathway diagrams with your genes highlighted, hierarchical clustering trees and networks summarizing
+              overlapping terms/pathways, protein-protein interaction networks, and gene characterristics plots.
             "),
-            br(), img(src = "enrich.png", align = "center", width = "660", height = "339"),
-            br(), img(src = "enrichmentChart.png", align = "center", width = "700", height = "400"),
-            br(), br(), img(src = "KEGG2.png", align = "center", width = "541", height = "360"),
-            br(), br(), img(src = "GOtree3.png", align = "center", width = "500", height = "258"),
-            br(), br(), img(src = "GOnetwork2.png", align = "center", width = "500", height = "248"),
-            br(), br(), img(src = "PPInetwork2.png", align = "center", width = "500", height = "391"),
-            br(), br(), img(src = "chr.png", align = "center", width = "444", height = "338"),
-            br(), br(), img(src = "downSyndrome.png", align = "center", width = "371", height = "276")
+            br(), 
+            img(src = "enrich.png", align = "center", width = "660", height = "339"),
+            br(), 
+            img(src = "enrichmentChart.png", align = "center", width = "700", height = "400"),
+            br(), 
+            br(), 
+            img(src = "KEGG2.png", align = "center", width = "541", height = "360"),
+            br(), 
+            br(), 
+            img(src = "GOtree3.png", align = "center", width = "500", height = "258"),
+            br(), 
+            br(), 
+            img(src = "GOnetwork2.png", align = "center", width = "500", height = "248"),
+            br(), 
+            br(), 
+            img(src = "PPInetwork2.png", align = "center", width = "500", height = "391"),
+            br(), 
+            br(), 
+            img(src = "chr.png", align = "center", width = "444", height = "338"),
+            br(), 
+            br(), 
+            img(src = "downSyndrome.png", align = "center", width = "371", height = "276")
           ),
           mod_enrichment_ui("enrichment")
         ), # enrichment tab
 
-        #---Enrichment Chart-----------------------------------------------------------
-        tabPanel("Chart",
+        # Enrichment Chart -----------------------------------------------------------
+        tabPanel(
+          "Chart",
           value = 3,
           mod_chart_ui("chart")
         ),
 
-        #---Tree-----------------------------------------------------------
-        tabPanel("Tree",
+        # Tree -----------------------------------------------------------
+        tabPanel(
+          "Tree",
           value = 4,
           mod_tree_ui("tree")
         ),
 
-        #---Enrichment network-------------------------------------------------------
-        tabPanel("Network",
+        # Enrichment network -------------------------------------------------------
+        tabPanel(
+          "Network",
           value = 5,
           mod_network_ui("network")
         ),
 
-        #---KEGG-----------------------------------------------------------
-        tabPanel("KEGG",
+        # KEGG -----------------------------------------------------------
+        tabPanel(
+          "KEGG",
           value = 2,
           mod_kegg_ui("kegg")
         ),
 
-        #---Genes-----------------------------------------------------------
-        tabPanel("Genes",
+        # Genes -----------------------------------------------------------
+        tabPanel(
+          "Genes",
           value = 6,
           mod_genes_ui("genes")
         ),
-        #---Plots-----------------------------------------------------------
-        tabPanel("Plots",
+        
+        # Plots -----------------------------------------------------------
+        tabPanel(
+          "Plots",
           value = 8,
           mod_plots_ui("plots")
         ),
 
-        #---Genome-----------------------------------------------------------
-        tabPanel("Genome",
+        # Genome -----------------------------------------------------------
+        tabPanel(
+          "Genome",
           value = 9,
           mod_genome_ui("genome")
         ),
 
-        #---STRING-----------------------------------------------------------
-        tabPanel("STRING",
+        # STRING -----------------------------------------------------------
+        tabPanel(
+          "STRING",
           value = 11,
           mod_string_ui("string")
         ),
 
-        #--------------------------------------------------------------
-        tabPanel("About",
+        # About --------------------------------------------------------------
+        tabPanel(
+          "About",
           value = 12,
           mod_about_ui("about")
         )
-        
       ), # tabsetPanel
 
-      bsModal("BackgroundGenes", "Customized background genes (recommended)", "backgroundGenes",
+      bsModal(
+        "BackgroundGenes", 
+        "Customized background genes (recommended)", 
+        "backgroundGenes",
         size = "large",
         tags$textarea(
           id = "input_text_b",
@@ -382,7 +431,7 @@ By default, we compare your gene list with a background of all
 protein-coding genes in the genome. When your genes are not selected
 from genome-wide data, customized background genes might yield more
 accurate results for enrichment analysis. For gene lists derived from
-a typical RNA-seq dataset, many  use the subset of genes with detectable
+a typical RNA-seq dataset, many use the subset of genes with detectable
 expression, typically the genes passed a minimum filter.
 We can also customize background genes to overcome bias in selection.
 Currently only less than 30,000 genes are accepted.",
@@ -391,15 +440,19 @@ Currently only less than 30,000 genes are accepted.",
         )
       ), # bsModal
 
-      bsModal("geneIDexamples", "What the gene IDs in our database look like?", "MGeneIDexamples",
+      bsModal(
+        "geneIDexamples", 
+        "What the gene IDs in our database look like?", 
+        "MGeneIDexamples",
         size = "large",
         selectizeInput(
           inputId = "userSpecieIDexample",
-          label = "Select or search for species", choices = NULL
+          label = "Select or search for species", 
+          choices = NULL
         ),
         tableOutput("showGeneIDs4Species")
       ) # bsModal
     ) # mainPanel
   ), # sidebarLayout
-  tags$head(includeHTML(("google_analytics_GA4.html")))
+  tags$head(includeHTML("google_analytics_GA4.html"))
 ) # fluidPage
