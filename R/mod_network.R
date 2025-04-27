@@ -264,3 +264,12 @@ mod_network_server <- function(id,
     )
   })
 }
+
+# Wrapping long text by adding \n
+#  "Mitotic DNA damage checkpoint"  --> "Mitotic DNA damage\ncheckpoint"
+# https://stackoverflow.com/questions/7367138/text-wrap-for-plot-titles
+wrap_strings <- function(vector_of_strings, width = 30) {
+  as.character(sapply(vector_of_strings, FUN = function(x) {
+    paste(strwrap(x, width = width), collapse = "\n")
+  }))
+}

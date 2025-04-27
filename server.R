@@ -1,12 +1,10 @@
-####################################################
+###################################################
 # Author: Steven Ge Xijin.Ge@sdstate.edu
-# Lab: Ge Lab
 # R version 4.0.5
-# Project: ShinyGO v76
+# Project: ShinyGO v85
 # File: server.R
-# Purpose of file:main server logic of app
-# Start data: NA (mm-dd-yyyy)
-# Data last modified: 09-2-2021
+# Purpose of file: server logic for ShinyGO
+# Data last modified: 4/27/2025
 #######################################################
 server <- function(input, output, session) {
   options(warn = -1)

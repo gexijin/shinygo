@@ -1,13 +1,12 @@
-###################################################
-# Author: Steven Ge Xijin.Ge@sdstate.edu
-# Lab: Ge Lab
-# R version 4.1
-# Project: ShinyGO
-# File: ui.R
-# Purpose of file:ui logic of app
-# Start data: NA (mm-dd-yyyy)
-# Data last modified: 04-8-2022
 #######################################################
+# Author: Steven Ge Xijin.Ge@sdstate.edu
+# R version 4.0.5
+# Project: ShinyGO v85
+# File: global.R
+# Purpose of file: ui for ShinyGO
+# Data last modified: 4/27/2025
+#######################################################
+
 library(shiny, verbose = FALSE)
 library(shinyBS, verbose = FALSE) # for popup figures
 library(plotly) # interactive network plot
