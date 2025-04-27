@@ -8,40 +8,18 @@
 #######################################################
 server <- function(input, output, session) {
   options(warn = -1)
-  welcome_modal <- shiny::modalDialog(
-    title = "Find ShinyGO helpful? Send us an email today so it will be here next year.",
-    tags$h3("We are still working on it until June 5th!"),
-    tags$p("We need your help to support our NIH grant proposal due June 5th."),
- 
-    tags$p(
-      " Please take a few minutes to send us an email today:  ",
-      a(
-        " gelabinfo@gmail.com",
-        href = "mailto:gelabinfo@gmail.com",
-        target = "_blank"
-      ), 
-      "  Thank you!"
-    ),
 
-    easyClose = FALSE,
-    size = "l"
-  )
-
-  #shiny::showModal(welcome_modal)
   observe({
      # for gene ID example
-
     updateSelectizeInput(session, "userSpecieIDexample", choices = speciesChoice, selected = speciesChoice[1])
 
     # load demo data when clicked
-
     if (input$useDemo1) {
       updateTextInput(session, "input_text", value = ExampleGeneList1)
     }
 
   })
-  # click_saved <- reactiveValues(GO = NULL)
-  # observeEvent(eventExpr = input$selectGO, handlerExpr = { click_saved$GO <- input$selectGO })
+
 
   observe({
     # Hide genome tab when STRINGdb is matched

@@ -149,8 +149,6 @@ ui <- fluidPage(
           )
         )
       ),
-      # tags$style(type='text/css', "#minFDR { width:100%;   margin-top:-15px}"),
-      # selectInput("selectOrg", label = NULL,"Best matching species",width='100%'),
 
 
       fluidRow(
@@ -257,7 +255,6 @@ ui <- fluidPage(
         theme = "light-border"
       ),
       h5("Try ", a(" iDEP", href = "https://bioinformatics.sdstate.edu/idep/", target = "_blank"), "for RNA-Seq data analysis"),
-      #tableOutput("species")
     ), # sidebarPanel
 
     mainPanel(
@@ -373,27 +370,6 @@ ui <- fluidPage(
         )
         
       ), # tabsetPanel
-      bsModal("ModalExamplePPI", "Protein-protein interaction networks ", "ModalPPI",
-        size = "large",
-        h5("By sending your genes to the STRING website,
-			shinyGO is retrieving a sub-network, calculating PPI enrichment,
-		  and generating custom URLs to the STRING website containing your genes. This can take 5 minutes. Patience will pay off! "),
-        sliderInput("nGenesPPI", label = h5("Genes to include:"), min = 0, max = 400, value = 20, step = 10),
-        # ,htmlOutput("stringDB_network_link")
-        # ,tags$head(tags$style("#stringDB_network_link{color: blue; font-size: 15px;}"))
-
-        plotOutput("stringDB_network1")
-      ), # bsModal 1
-
-      bsModal("InteractiveNetwork", "Interactive enrichment networks ", "GONetwork",
-        size = "large",
-        fluidRow(
-          column(2, actionButton("layoutButtonStatic", "Change layout")),
-          column(2, downloadButton("enrichmentNetworkPlotDownload", "Download")),
-          column(2, checkboxInput("wrapTextNetworkStatic", "Wrap text", value = FALSE))
-        ),
-        plotOutput("enrichmentNetworkPlot")
-      ), # bsModal 2
 
       bsModal("BackgroundGenes", "Customized background genes (recommended)", "backgroundGenes",
         size = "large",
@@ -416,7 +392,7 @@ Currently only less than 30,000 genes are accepted.",
           rows = 20,
           ""
         )
-      ), # bsModal 3
+      ), # bsModal
 
       bsModal("geneIDexamples", "What the gene IDs in our database look like?", "MGeneIDexamples",
         size = "large",
@@ -425,10 +401,8 @@ Currently only less than 30,000 genes are accepted.",
           label = "Select or search for species", choices = NULL
         ),
         tableOutput("showGeneIDs4Species")
-      ) # bsModal 4
+      ) # bsModal
     ) # mainPanel
   ), # sidebarLayout
-  tags$head(includeScript("google_analytics.js")), # tracking usage
   tags$head(includeHTML(("google_analytics_GA4.html")))
-  #  ,tags$head(includeHTML(("../google_analytics_golem.html")))
 ) # fluidPage
