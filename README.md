@@ -61,3 +61,10 @@ The typical user journey involves:
 4. Submitting the analysis
 5. Exploring results across different visualization tabs
 6. Downloading tables, images, or other outputs
+   
+![shinygo_workflow_corrected](https://github.com/user-attachments/assets/1bc677d5-50b2-48b0-910f-613dc2035c9c)
+
+![image](https://github.com/user-attachments/assets/32d8dbb3-4278-4d1a-bb4d-84b7441aaeb3)
+
+
+
