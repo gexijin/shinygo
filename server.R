@@ -289,7 +289,7 @@ server <- function(input, output, session) {
 
         incProgress(0.1)
         # Sort and keep top pathways -------------------------------------------------------
-        if (input$SortPathways == "Select by FDR, sort by Fold Enrichment") {
+        if (!is.null(selected_sort()) && selected_sort() == "Select by FDR, sort by Fold Enrichment") {
           # sort by FDR
           enrichment$x <- enrichment$x[order(enrichment$x[, 1]), ]
           # filter/top 20
@@ -299,22 +299,22 @@ server <- function(input, output, session) {
           # rank by fold
           enrichment$x <- enrichment$x[order(enrichment$x[, 4], decreasing = TRUE), ]
         } else {
-          if (input$SortPathways == "Sort by FDR") {
+          if (!is.null(selected_sort()) && selected_sort() == "Sort by FDR") {
             enrichment$x <- enrichment$x[order(enrichment$x[, 1]), ]
           }
-          if (input$SortPathways == "Sort by Fold Enrichment") {
+          if (!is.null(selected_sort()) && selected_sort() == "Sort by Fold Enrichment") {
             enrichment$x <- enrichment$x[order(enrichment$x[, 4], decreasing = TRUE), ]
             # when sorting by fold, sometimes tiny pathways on top. Here we require at
             # least 10 genes
             enrichment$x <- enrichment$x[which(enrichment$x[, 3] > min_gene_fold), ]
           }
-          if (input$SortPathways == "Sort by Genes") {
+          if (!is.null(selected_sort()) && selected_sort() == "Sort by Genes") {
             enrichment$x <- enrichment$x[order(enrichment$x[, 2], decreasing = TRUE), ]
           }
-          if (input$SortPathways == "Sort by Category Name") {
+          if (!is.null(selected_sort()) && selected_sort() == "Sort by Category Name") {
             enrichment$x <- enrichment$x[order(enrichment$x[, 5]), ]
           }
-          if (input$SortPathways == "Sort by FDR & Fold Enrichment") {
+          if (!is.null(selected_sort()) && selected_sort() == "Sort by FDR & Fold Enrichment") {
             fdr_rank <- rank(enrichment$x[, 1]) # rank by FDR
             fold_rank <- rank(-1 * enrichment$x[, 4]) # rank by fold_enrichment, descending
             average_rank <- (fdr_rank + fold_rank) / 2
@@ -387,6 +387,7 @@ server <- function(input, output, session) {
 
     return(enrichment)
   })
+
 
   output$species <- renderTable(
     {
@@ -531,79 +532,6 @@ server <- function(input, output, session) {
     }) # avoid showing things initially
   })
 
- 
-
-  output$EnrichmentTable <- renderTable(
-    {
-      if (input$goButton == 0) {
-        return(NULL)
-      }
-      tem <- input$input_text_b # just to make it re-calculate if user changes background
-
-      myMessage <- "Analyzing genes."
-
-      if (is.null(significantOverlaps())) {
-        return(NULL)
-      }
-      # this solves an error when there is no significant enrichment
-
-      if (ncol(significantOverlaps()$x) == 1) {
-        return(significantOverlaps()$x)
-      }
-
-      withProgress(message = sample(quotes, 1), detail = myMessage, {
-        pathways <- significantOverlaps()$x
-        # remove pathway ID  only in Ensembl species
-        if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-          pathways$Pathway <- remove_pathway_id(pathways$Pathway, input$selectGO)
-        }
-        pathways$Pathway <- hyperText(pathways$Pathway, pathways$URL)
-
-        pathways <- pathways[, -7]
-        # rownames(pathways) <- NULL
-        # pathways[, 1] <- as.numeric( format(pathways[, 1], scientific = TRUE, digits = 3 ) )
-        pathways[, 4] <- as.character(round(pathways[, 4], 1))
-        pathways[, 2] <- as.character(pathways[, 2]) # convert total genes into character 10/21/19
-        pathways[, 3] <- as.character(pathways[, 3]) # convert total genes into character 10/21/19
-        colnames(pathways)[5] <- "Pathways (click for details)"
-
-        incProgress(1, detail = paste("Done"))
-      })
-
-      if (dim(pathways)[2] > 1) pathways[, 2] <- as.character(pathways[, 2])
-
-      if (dim(pathways)[2] == 1) {
-        return(pathways)
-      } else {
-        return(pathways[, 1:5])
-      } # If no significant enrichment found x only has 1 column.
-    },
-    digits = -1,
-    spacing = "s",
-    striped = TRUE,
-    bordered = TRUE,
-    width = "auto",
-    hover = TRUE,
-    sanitize.text.function = function(x) x
-  )
-
-  output$downloadEnrichment <- downloadHandler(
-    filename = function() {
-      "enrichment.csv"
-    },
-    content = function(file) {
-      write.csv(significantOverlaps()$x, file, row.names = FALSE)
-    }
-  )
-
-  output$downloadEnrichmentAll <- downloadHandler(
-    filename = function() {
-      "enrichment_all.csv"
-    },
-    content = function(file) {
-      write.csv(significantOverlapsAll()$x, file, row.names = FALSE)
-    }
-  )
 
 
   #----------------------------------------------------
@@ -658,6 +586,28 @@ server <- function(input, output, session) {
     hover = T
   )
 
+
+
+  selected_sort <- mod_enrichment_server("enrichment", 
+    significantOverlaps = significantOverlaps,
+    significantOverlapsAll = significantOverlapsAll,
+    input_goButton = reactive(input$goButton),
+    input_input_text_b = reactive(input$input_text_b),
+    input_show_pathway_id = reactive(input$show_pathway_id),
+    input_selectOrg = reactive(input$selectOrg),
+    input_selectGO = reactive(input$selectGO)
+  )
+
+
+  mod_chart_server("chart", 
+    significantOverlaps = significantOverlaps,
+    input_goButton = reactive(input$goButton),
+    input_selectOrg = reactive(input$selectOrg),
+    input_selectGO = reactive(input$selectGO),
+    input_maxTerms = reactive(input$maxTerms),
+    input_show_pathway_id = reactive(input$show_pathway_id)
+  )
+
  
     mod_tree_server("tree", 
       significantOverlaps2 = reactive({
@@ -684,14 +634,6 @@ server <- function(input, output, session) {
       input_maxTerms = reactive(input$maxTerms)
     )
 
-  mod_chart_server("chart", 
-    significantOverlaps = significantOverlaps,
-    input_goButton = reactive(input$goButton),
-    input_selectOrg = reactive(input$selectOrg),
-    input_selectGO = reactive(input$selectGO),
-    input_maxTerms = reactive(input$maxTerms),
-    input_show_pathway_id = reactive(input$show_pathway_id)
-  )
 
 
   mod_network_server("network", 
