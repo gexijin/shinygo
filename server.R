@@ -1,4 +1,4 @@
-###################################################
+######################################################
 # Author: Steven Ge Xijin.Ge@sdstate.edu
 # R version 4.0.5
 # Project: ShinyGO v85
@@ -64,7 +64,6 @@ server <- function(input, output, session) {
       #conversionTable is not changed. Not unique.
     }
     converted
-
   })
 
   # Pop-up modal for gene assembl information ----
@@ -155,12 +154,7 @@ server <- function(input, output, session) {
     geneInfo(converted(), input$selectOrg) # uses converted gene ids thru converted() call
   })
 
-  detailedGeneInfoLookup <- reactive({
-    if (input$goButton == 0) {
-      return()
-    }
-    geneInfoDetails(converted(), input$selectOrg) # uses converted gene ids thru converted() call
-  })
+
   # this defines an reactive object that can be accessed from other rendering functions
   converted_background <- reactive({
     if (input$goButton == 0 | is.null(input$input_text_b)) {

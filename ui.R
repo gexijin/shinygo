@@ -20,7 +20,6 @@ columnSelection <- list(
 )
 
 ui <- fluidPage(
-  # reduce the space between label and widgets, globally
   tags$head(
     tags$style(HTML(
       "label { font-size:100%; font-family:Times New Roman; margin-bottom:-15px; }"
@@ -35,12 +34,12 @@ ui <- fluidPage(
       ),
       # use conditional panel to hide the selectOrg input
       conditionalPanel(
-        condition = "0", # hide the selectOrg input, always
+        condition = "0", 
         selectInput(
           inputId = "selectOrg",
           label = NULL,
           selectize = TRUE,
-          choices = setNames(99, "Human"), # Human is selected by default
+          choices = setNames(99, "Human"),
           selected = setNames(99, "Human")
         )
       ),
@@ -186,8 +185,6 @@ ui <- fluidPage(
           )
         )
       ), # fluidRow
-      # tags$style(type='text/css', "#minSetSize { width:100%;   margin-top:-12px}"),
-      # tags$style(type='text/css', "#maxSetSize { width:100%;   margin-top:-12px}"),
       fluidRow(
         column(
           width = 6,

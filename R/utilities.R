@@ -307,7 +307,7 @@ geneInfo <- function(converted, selectOrg) {
 # For debug:  converted = converted(); gInfo = tem;  GO=input$selectGO; selectOrg=input$selectOrg;  minFDR=input$minFDR; input_maxTerms=input$maxTerms
 FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInfoB = NULL, minSetSize = 2, maxSetSize = 4000, gene_count_pathwaydb = FALSE) {
   minFDR <- 0.2 # internal cutoff; avoids passing a large number of pathways
-  maxTerms <- 1000 # only keep 1000 pathways at the most
+  maxTerms <- 1000 # only keep 1000 pathways at the most    !!!! NOT USED !!!!
 
   idNotRecognized <- list(
     x = as.data.frame("ID not recognized!"),
