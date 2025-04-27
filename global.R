@@ -173,33 +173,6 @@ ENSG00000185515"
 
 
 ############################################################
-# Used at all?
-############################################################
-
-# function to increase vertical spacing between legend keys
-# @clauswilke https://stackoverflow.com/questions/11366964/is-there-a-way-to-change-the-spacing-between-legend-items-in-ggplot2
-draw_key_polygon3 <- function(data, params, size) {
-  lwd <- min(data$size, min(size) / 4)
-
-  grid::rectGrob(
-    width = grid::unit(0.6, "npc"),
-    height = grid::unit(0.6, "npc"),
-    gp = grid::gpar(
-      col = data$colour,
-      fill = alpha(data$fill, data$alpha),
-      lty = data$linetype,
-      lwd = lwd * .pt,
-      linejoin = "mitre"
-    )
-  )
-}
-# register new key drawing function,
-# the effect is global & persistent throughout the R session
-GeomBar$draw_key <- draw_key_polygon3
-
-
-
-############################################################
 # Species list for selectInput
 ############################################################
 # Create a list for Select Input options
