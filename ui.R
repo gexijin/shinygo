@@ -1,6 +1,6 @@
 #######################################################
 # Author: Steven Ge Xijin.Ge@sdstate.edu
-# R version 4.0.5
+# R version 4.43
 # Project: ShinyGO v85
 # File: ui.R
 # Purpose of file: ui for ShinyGO

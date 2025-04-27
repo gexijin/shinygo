@@ -10,16 +10,19 @@ server <- function(input, output, session) {
   options(warn = -1)
 
   observe({
-     # for gene ID example
-    updateSelectizeInput(session, "userSpecieIDexample", choices = speciesChoice, selected = speciesChoice[1])
+    # for gene ID example
+    updateSelectizeInput(
+      session, 
+      "userSpecieIDexample", 
+      choices = speciesChoice, 
+      selected = speciesChoice[1]
+    )
 
     # load demo data when clicked
     if (input$useDemo1) {
       updateTextInput(session, "input_text", value = ExampleGeneList1)
     }
-
   })
-
 
   observe({
     # Hide genome tab when STRINGdb is matched
@@ -34,7 +37,6 @@ server <- function(input, output, session) {
 
   # connect to species specific database
   observeEvent(input$selectOrg, {
-
     # connect to the database, this becomes a global variable
     convert_species <- connect_convert_db_org(datapath, input$selectOrg)
 
@@ -55,13 +57,13 @@ server <- function(input, output, session) {
     converted_data <- convertID(input$input_text, input$selectOrg)
 
     # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
-    if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
+    if (as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
       gene_info <- geneInfo(converted_data, input$selectOrg)
       converted_data$IDs <- gene_info |>
         filter(!duplicated) |>
         filter(ensembl_gene_id %in% converted_data$IDs) |>
         pull(ensembl_gene_id)
-      #conversionTable is not changed. Not unique.
+      # conversionTable is not changed. Not unique.
     }
     converted_data
   })
@@ -74,14 +76,13 @@ server <- function(input, output, session) {
         title = "Click on a row to select a species",
         p("Search annotated species by common or scientific names,
           or NCBI taxonomy id. Click on a row to select.
-          Use annotation in STRING-db as a last resort.
-          "),
+          Use annotation in STRING-db as a last resort."),
         easyClose = TRUE,
 
         DT::renderDataTable({
           df <- orgInfo[
             ,
-            c("ensembl_dataset", "academicName", "name",  "taxon_id", "group")
+            c("ensembl_dataset", "academicName", "name", "taxon_id", "group")
           ]
           colnames(df) <- c(
             "Ensembl/STRING-db ID",
@@ -154,7 +155,6 @@ server <- function(input, output, session) {
     geneInfo(converted(), input$selectOrg) # uses converted gene ids thru converted() call
   })
 
-
   # this defines an reactive object that can be accessed from other rendering functions
   converted_background <- reactive({
     if (input$goButton == 0 | is.null(input$input_text_b)) {
@@ -165,23 +165,22 @@ server <- function(input, output, session) {
     }
     
     converted <- convertID(input$input_text_b, input$selectOrg)
-    if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
+    if (as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
       gene_info <- geneInfo(converted, input$selectOrg)
       # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
       converted$IDs <- gene_info |>
         filter(!duplicated) |>
         filter(ensembl_gene_id %in% converted$IDs) |>
         pull(ensembl_gene_id)
-      #conversionTable is not changed. Not unique.
+      # conversionTable is not changed. Not unique.
     }
 
     # if more than 100k genes, take samples
-    if(length(converted$IDs) > maxGenesBackground + 1) {
+    if (length(converted$IDs) > maxGenesBackground + 1) {
       converted$IDs <- sample(converted$IDs, maxGenesBackground)
     }
 
     converted
-
   })
 
   geneInfoLookup_background <- reactive({
@@ -213,7 +212,8 @@ server <- function(input, output, session) {
         if (class(temb) == "data.frame") {
           temb <- temb[which(temb$Set == "List"), ]
         }
-        enrichment <- FindOverlap(converted(), tem, input$selectGO, input$selectOrg,
+        enrichment <- FindOverlap(
+          converted(), tem, input$selectGO, input$selectOrg,
           converted_background(), temb,
           minSetSize = input$minSetSize, maxSetSize = input$maxSetSize,
           gene_count_pathwaydb = input$gene_count_pathwaydb
@@ -224,21 +224,19 @@ server <- function(input, output, session) {
   })
 
   observe({
-    req(!is.null(significantOverlapsAll() )) # stop if null
+    req(!is.null(significantOverlapsAll())) # stop if null
     req(input$goButton != 0)
-    req(significantOverlapsAll()$x[1,1] == "ID not recognized!" )
+    req(significantOverlapsAll()$x[1, 1] == "ID not recognized!")
 
     shiny::showModal(
       shiny::modalDialog(
         size = "s",
         p("None of the gene IDs mapped to the IDs of the selected species.
            From ShinyGO 0.80, you have to select the correct species first.
-           If you do not select, it defaults to human.
-          "),
+           If you do not select, it defaults to human."),
         easyClose = TRUE
       )
     )
-
   })
 
   # Filtering and ranking pathways
@@ -298,9 +296,12 @@ server <- function(input, output, session) {
           enrichment$x <- enrichment$x[1:(3 * as.integer(input$maxTerms)), ]
         }
 
-
         # remove redudant gene sets-------------------------------------------
-        if (input$removeRedundantSets) reduced <- redundantGeneSetsRatio else reduced <- FALSE
+        if (input$removeRedundantSets) {
+          reduced <- redundantGeneSetsRatio
+        } else {
+          reduced <- FALSE
+        }
         incProgress(0.2)
         # reduced=FALSE no filtering,  reduced = 0.9 filter sets overlap with 90%
         if (reduced != FALSE && dim(enrichment$x)[1] > 5) {
@@ -358,7 +359,6 @@ server <- function(input, output, session) {
     return(enrichment)
   })
 
-
   output$species <- renderTable(
     {
       if (input$goButton == 0) {
@@ -388,12 +388,11 @@ server <- function(input, output, session) {
     hover = T
   )
 
-
   # Species match message ---------- stole from Gavin's code 4/20/22
   observe({
     req(
-      input$selectOrg == speciesChoice[[1]] # best matching species
-      && !is.null(converted()) # finished
+      input$selectOrg == speciesChoice[[1]], # best matching species
+      !is.null(converted()) # finished
     )
     showNotification(
       ui = paste(
@@ -434,16 +433,18 @@ server <- function(input, output, session) {
     df
   })
 
-
   output$mapping_stats <- renderText({
     req(input$goButton)
     req(converted())
     n_genes <- length(converted()$originalIDs)
     n_mapped <- length(converted()$IDs)
 
-    paste0(n_genes, " IDs mapped to ", n_mapped, " (", round(n_mapped / n_genes * 100, 0), "%) ", tolower(converted()$species$name2), " genes.")
+    paste0(
+      n_genes, " IDs mapped to ", n_mapped, " (", 
+      round(n_mapped / n_genes * 100, 0), "%) ", 
+      tolower(converted()$species$name2), " genes."
+    )
   })
-
 
   conversionTableData <- reactive({
     if (input$goButton == 0) {
@@ -471,13 +472,16 @@ server <- function(input, output, session) {
             #         if('chromosome_name' %in% colnames(tem2)) {
             merged <- merge(tem$conversionTable, tem2, by = "ensembl_gene_id")
 
-            merged <- subset(merged, select = c(
-              User_input, symbol, ensembl_gene_id, entrezgene_id,
-              gene_biotype, Species, chromosome_name, start_position,
-              description, percentage_gc_content, transcript_count,
-              genomeSpan, cds_length, transcript_length, FiveUTR,
-              ThreeUTR, nExons
-            ))
+            merged <- subset(
+              merged, 
+              select = c(
+                User_input, symbol, ensembl_gene_id, entrezgene_id,
+                gene_biotype, Species, chromosome_name, start_position,
+                description, percentage_gc_content, transcript_count,
+                genomeSpan, cds_length, transcript_length, FiveUTR,
+                ThreeUTR, nExons
+              )
+            )
 
             tem3 <- as.data.frame(tem$originalIDs)
             colnames(tem3) <- "User_input"
@@ -502,8 +506,6 @@ server <- function(input, output, session) {
     }) # avoid showing things initially
   })
 
-
-
   #----------------------------------------------------
   # STRING-db functionality
   # find Taxonomy ID from species official name
@@ -513,7 +515,6 @@ server <- function(input, output, session) {
     }
     
     find_taxon_by_id(input$selectOrg, orgInfo)
-
   })
 
   output$selectGO1 <- renderUI({ # gene set for pathway analysis
@@ -531,8 +532,8 @@ server <- function(input, output, session) {
       selected <- "KEGG"
     }
 
-
-    selectInput("selectGO",
+    selectInput(
+      "selectGO",
       label = h5("Pathway database:"),
       choices = choices,
       selected = selected
@@ -556,9 +557,8 @@ server <- function(input, output, session) {
     hover = T
   )
 
-
-
-  selected_sort <- mod_enrichment_server("enrichment", 
+  selected_sort <- mod_enrichment_server(
+    "enrichment", 
     significantOverlaps = significantOverlaps,
     significantOverlapsAll = significantOverlapsAll,
     input_goButton = reactive(input$goButton),
@@ -568,8 +568,8 @@ server <- function(input, output, session) {
     input_selectGO = reactive(input$selectGO)
   )
 
-
-  mod_chart_server("chart", 
+  mod_chart_server(
+    "chart", 
     significantOverlaps = significantOverlaps,
     input_goButton = reactive(input$goButton),
     input_selectOrg = reactive(input$selectOrg),
@@ -578,35 +578,34 @@ server <- function(input, output, session) {
     input_show_pathway_id = reactive(input$show_pathway_id)
   )
 
- 
-    mod_tree_server("tree", 
-      significantOverlaps2 = reactive({
-        if (input$goButton == 0) {
-          return()
-        }
-        tem <- input$input_text_b # just to make it re-calculate if user changes background
+  mod_tree_server(
+    "tree", 
+    significantOverlaps2 = reactive({
+      if (input$goButton == 0) {
+        return()
+      }
+      tem <- input$input_text_b # just to make it re-calculate if user changes background
 
-        tem <- significantOverlaps()
-        if (dim(tem$x)[2] == 1) {
-          return(NULL)
-        }
-        tem <- tem$x
-        colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes")
-        tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
-        tem$Direction <- "Diff"
-        # remove pathway ID only in Ensembl species
-        if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-          tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
-        }
-        tem
-      }),
-      input_goButton = reactive(input$goButton),
-      input_maxTerms = reactive(input$maxTerms)
-    )
+      tem <- significantOverlaps()
+      if (dim(tem$x)[2] == 1) {
+        return(NULL)
+      }
+      tem <- tem$x
+      colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes")
+      tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
+      tem$Direction <- "Diff"
+      # remove pathway ID only in Ensembl species
+      if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
+        tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
+      }
+      tem
+    }),
+    input_goButton = reactive(input$goButton),
+    input_maxTerms = reactive(input$maxTerms)
+  )
 
-
-
-  mod_network_server("network", 
+  mod_network_server(
+    "network", 
     significantOverlaps = significantOverlaps,
     input_goButton = reactive(input$goButton),
     input_input_text_b = reactive(input$input_text_b),
@@ -615,8 +614,8 @@ server <- function(input, output, session) {
     input_selectGO = reactive(input$selectGO)
   )
 
-
-  mod_kegg_server("kegg", 
+  mod_kegg_server(
+    "kegg", 
     converted = converted, 
     significantOverlaps = significantOverlaps, 
     input_selectGO = reactive(input$selectGO),
@@ -624,7 +623,8 @@ server <- function(input, output, session) {
     input_selectOrg = reactive(input$selectOrg)
   )
 
-  mod_genes_server("genes", 
+  mod_genes_server(
+    "genes", 
     converted = converted, 
     geneInfoLookup = geneInfoLookup,
     input_goButton = reactive(input$goButton),
@@ -632,7 +632,8 @@ server <- function(input, output, session) {
     significantOverlapsAll = significantOverlapsAll  
   )
 
-  mod_plots_server("plots", 
+  mod_plots_server(
+    "plots", 
     geneInfoLookup = geneInfoLookup, 
     converted = converted, 
     geneInfoLookup_background = geneInfoLookup_background, 
@@ -645,7 +646,8 @@ server <- function(input, output, session) {
     minGenes = 10           
   )
 
-  mod_genome_server("genome",
+  mod_genome_server(
+    "genome",
     geneInfoLookup = geneInfoLookup, 
     converted = converted,
     geneInfoLookup_background = geneInfoLookup_background,
@@ -654,7 +656,8 @@ server <- function(input, output, session) {
     quotes = quotes
   )
 
-  mod_string_server("string", 
+  mod_string_server(
+    "string", 
     converted = converted,
     findTaxonomyID = findTaxonomyID,
     geneInfoLookup = geneInfoLookup,
@@ -662,6 +665,7 @@ server <- function(input, output, session) {
     input_goButton = reactive(input$goButton),
     input_minFDR = reactive(input$minFDR)
   )
+  
   # Call the module server function
   mod_about_server("about")
 }
