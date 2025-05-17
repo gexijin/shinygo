@@ -30,9 +30,9 @@ ui <- fluidPage(
   shinybusy::add_busy_spinner(spin = "fading-circle"), # add spinner
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.82",
+      titlePanel("ShinyGO 0.85",
         tags$head(tags$link(rel = "icon", type = "image/png", href = "favicon.png"),
-             tags$title("ShinyGO 0.82"))
+             tags$title("ShinyGO 0.85"))
       ),
       # use conditional panel to hide the selectOrg input
       conditionalPanel(
