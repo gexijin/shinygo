@@ -26,6 +26,7 @@ source("R/mod_plots.R")
 source("R/mod_string.R") 
 source("R/mod_about.R")
 source("R/mod_download_plot.R")
+source("R/utilities.R")
 
 ############################################################
 # define where database is located
