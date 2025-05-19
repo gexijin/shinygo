@@ -82,7 +82,7 @@ server <- function(input, output, session) {
 
   # connect to species specific database
   observeEvent(input$selectOrg, {
-browser()
+
     # connect to the database, this becomes a global variable
     convert_species <- connect_convert_db_org(datapath, input$selectOrg)
 
