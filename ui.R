@@ -36,8 +36,8 @@ ui <- fluidPage(
           inputId = "selectOrg",
           label = NULL,
           selectize = TRUE,
-          choices = setNames(99, "Human"),
-          selected = setNames(99, "Human")
+          choices = default_species,
+          selected = default_species
         )
       ),
       fluidRow(

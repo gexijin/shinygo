@@ -55,7 +55,7 @@ convert <- connect_convert_db()
 ############################################################
 # Global variables
 ############################################################
-STRING_DB_VERSION <- "11.5" # what version of STRINGdb needs to be used
+STRING_DB_VERSION <- "12.0" # what version of STRINGdb needs to be used
 Min_overlap <- 1
 minSetSize <- 3
 mappingCoverage <- 0.60 # 60% percent genes has to be mapped for confident mapping
@@ -207,10 +207,11 @@ top_choices <- c(
 #org_info <- org_info[order(org_info$group), ]
 ix <- match(orgInfo$name2, top_choices)
 orgInfo <- orgInfo[order(ix), ]
-orgInfo <- orgInfo[order(orgInfo$group == "STRINGv11.5"), ]
+orgInfo <- orgInfo[order(orgInfo$group == paste0("STRINGv", STRING_DB_VERSION)), ]
 
 annotatedSpeciesCounts <- sort(table(orgInfo$group)) # total species, Ensembl, Plants, Metazoa, STRINGv10
 speciesChoice <- setNames(as.list(orgInfo$id), orgInfo$name2)
+browser()
 # add a defult element to list    # new element name       value
 speciesChoice <- append(setNames("BestMatch", "Best matching species"), speciesChoice)
 # move one element to the 2nd place
@@ -251,6 +252,9 @@ i <- which(names(speciesChoice) == "Mouse")
 speciesChoice <- move2(i)
 i <- which(names(speciesChoice) == "Human")
 speciesChoice <- move2(i)
+
+# set the default species to human.
+default_species <- unlist(speciesChoice["Human"])
 
 GO_levels <- dbGetQuery(convert, "select distinct id,level from GO
                                  WHERE GO = 'biological_process'")
