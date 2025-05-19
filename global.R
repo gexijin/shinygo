@@ -69,7 +69,7 @@ connect_convert_db <- function(datapath = datapath) {
 
 
 
-STRING_DB_VERSION <- "11.5" # what version of STRINGdb needs to be used
+STRING_DB_VERSION <- "12.0" # what version of STRINGdb needs to be used
 Min_overlap <- 1
 minSetSize <- 3
 mappingCoverage <- 0.60 # 60% percent genes has to be mapped for confident mapping
@@ -272,7 +272,7 @@ top_choices <- c(
 #org_info <- org_info[order(org_info$group), ]
 ix <- match(orgInfo$name2, top_choices)
 orgInfo <- orgInfo[order(ix), ]
-orgInfo <- orgInfo[order(orgInfo$group == "STRINGv11.5"), ]
+orgInfo <- orgInfo[order(orgInfo$group == paste0("STRINGv", STRING_DB_VERSION)), ]
 
 annotatedSpeciesCounts <- sort(table(orgInfo$group)) # total species, Ensembl, Plants, Metazoa, STRINGv10
 speciesChoice <- setNames(as.list(orgInfo$id), orgInfo$name2)
