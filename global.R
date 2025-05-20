@@ -71,8 +71,48 @@ min_gene_fold <- 10 # minimum number of  genes in pathways, when sorting by fold
 pdf(NULL) # this prevents error Cannot open file 'Rplots.pdf'
 
 mycolors <- sort(rainbow(20))[c(1, 20, 10, 11, 2, 19, 3, 12, 4, 13, 5, 14, 6, 15, 7, 16, 8, 17, 9, 18)] # 20 colors for kNN clusters
+
+
+############################################################
+# Species list for selectInput
+############################################################
+# Create a list for Select Input options
+orgInfo <- dbGetQuery(convert, paste("select distinct * from orgInfo ORDER BY rowid"))
+
+annotatedSpeciesCounts <- sort(table(orgInfo$group)) # total species, Ensembl, Plants, Metazoa, STRINGv10
+speciesChoice <- setNames(as.list(orgInfo$id), orgInfo$name2)
+
+# add a defult element to list    # new element name       value
+speciesChoice <- append(setNames("BestMatch", "Best matching species"), speciesChoice)
+
+# set the default species to human.
+default_species <- unlist(speciesChoice["Human"])
+
+GO_levels <- dbGetQuery(convert, "select distinct id,level from GO
+                                 WHERE GO = 'biological_process'")
+level2Terms <- GO_levels[which(GO_levels$level %in% c(2, 3)), 1] # level 2 and 3
+
+# idIndex <- dbGetQuery(convert, paste("select distinct * from idIndex "))
+
+quotes <- dbGetQuery(convert, " select * from quotes")
+quotes$quotes <- gsub("\\\"", "", quotes$quotes) # remove the quotes \"
+quotes <- paste0(quotes$quotes, " -- ", quotes$author)
+
+columnSelection <- list(
+  "-log10(FDR)" = "EnrichmentFDR",
+  "Fold Enrichment" = "FoldEnrichment",
+  "N. of Genes" = "nGenes",
+  "Category Name" = "Pathway"
+)
+
+
+# List of db files
+gmtFiles <- orgInfo$file
+gmtFiles <- paste(datapath, "/db/", gmtFiles, sep = "")
+
 keggSpeciesID <- orgInfo[, c("ensembl_dataset", "name", "KEGG")]
 colnames(keggSpeciesID)[3] <- "kegg"
+
 
 ExampleGeneList2 <-
   "Hus1 Rad1 Tp63 Tp73 Usp28 Rad9b Fanci Hus1b
@@ -169,119 +209,3 @@ ENSG00000183765
 ENSG00000100296
 ENSG00000184481
 ENSG00000185515"
-
-
-
-
-############################################################
-# Species list for selectInput
-############################################################
-# Create a list for Select Input options
-orgInfo <- dbGetQuery(convert, paste("select distinct * from orgInfo "))
-orgInfo <- orgInfo[order(orgInfo$name), ]
-
-top_choices <- c(
-  #"Best matching species", 
-  #"**NEW SPECIES**", 
-  "Human",
-  "Mouse",
-  "Drosophila melanogaster",
-  "Zebrafish",
-  "Caenorhabditis elegans",
-  "Arabidopsis thaliana",
-  "Saccharomyces cerevisiae",
-  "Escherichia coli",
-  "Rat",
-  "Cow",
-  "Pig", 
-  "Chicken", 
-  "Macaque", 
-  "Dog",
-  "Zea mays", 
-  "Glycine max",
-  "Oryza sativa Indica Group", 
-  "Oryza sativa Japonica Group", 
-  "Vitis vinifera"
-)
-
-#org_info <- org_info[order(org_info$group), ]
-ix <- match(orgInfo$name2, top_choices)
-orgInfo <- orgInfo[order(ix), ]
-orgInfo <- orgInfo[order(orgInfo$group == paste0("STRINGv", STRING_DB_VERSION)), ]
-
-annotatedSpeciesCounts <- sort(table(orgInfo$group)) # total species, Ensembl, Plants, Metazoa, STRINGv10
-speciesChoice <- setNames(as.list(orgInfo$id), orgInfo$name2)
-browser()
-# add a defult element to list    # new element name       value
-speciesChoice <- append(setNames("BestMatch", "Best matching species"), speciesChoice)
-# move one element to the 2nd place
-move2 <- function(i) c(speciesChoice[1], speciesChoice[i], speciesChoice[-c(1, i)])
-i <- which(names(speciesChoice) == "Vitis vinifera")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Oryza sativa Japonica Group")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Oryza sativa Indica Group")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Glycine max")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Zea mays")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Arabidopsis thaliana")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Saccharomyces cerevisiae")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Caenorhabditis elegans")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Drosophila melanogaster")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Dog")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Macaque")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Chicken")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Pig")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Zebrafish")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Cow")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Rat")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Mouse")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Human")
-speciesChoice <- move2(i)
-
-# set the default species to human.
-default_species <- unlist(speciesChoice["Human"])
-
-GO_levels <- dbGetQuery(convert, "select distinct id,level from GO
-                                 WHERE GO = 'biological_process'")
-level2Terms <- GO_levels[which(GO_levels$level %in% c(2, 3)), 1] # level 2 and 3
-
-# idIndex <- dbGetQuery(convert, paste("select distinct * from idIndex "))
-
-quotes <- dbGetQuery(convert, " select * from quotes")
-quotes$quotes <- gsub("\\\"", "", quotes$quotes) # remove the quotes \"
-quotes <- paste0(quotes$quotes, " -- ", quotes$author)
-
-columnSelection <- list(
-  "-log10(FDR)" = "EnrichmentFDR",
-  "Fold Enrichment" = "FoldEnrichment",
-  "N. of Genes" = "nGenes",
-  "Category Name" = "Pathway"
-)
-
-
-# keggSpeciesID = read.csv(paste0(datapath,"data_go/KEGG_Species_ID.csv"))
-# List of GMT files in /gmt sub folder
-gmtFiles <- orgInfo$file
-gmtFiles <- paste(datapath, "/db/", gmtFiles, sep = "")
-# geneInfoFiles <- list.files(path = paste0(datapath, "geneInfo"), pattern = ".*GeneInfo\\.csv")
-# geneInfoFiles <- paste(datapath, "geneInfo/", geneInfoFiles, sep = "")
-
-
-
-
-
