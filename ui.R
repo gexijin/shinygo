@@ -283,10 +283,10 @@ ui <- fluidPage(
                 )
               )
             ),
-            p("2/3/25: v.0.82. Fix issues caused by multiple ENSEMBL IDs for the same gene on patched chromosomes, causing inaccurate enrichment results. Duplicated ENSEMBL IDs are now ignored. "),
+            p("9/5/25: v.0.85. Database updated to Ensembl Release 113. "),
             p("You can still use the old versions using links on the About tab.", 
-              "To support this effort, please cite our paper, like ",
-                a("over 2000 users did.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
+              "To support this effort, please cite our paper like ",
+                a("these 4000+ papers.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
                 "Just including URL is not enough.",
               a("Email Jenny ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
               "(gelabinfo@gmail.com) for questions, suggestions or data contributions.",
@@ -294,12 +294,11 @@ ui <- fluidPage(
               a("LinkedIn", href = "https://www.linkedin.com/in/steven-ge-ab016947/", target = "_blank"),
               " for updates. "
             ),
-            p("Feb. 11, 2022: Like ShinyGO but your genome is not covered?",
-              a("Customized ShinyGO", href = "http://bioinformatics.sdstate.edu/goc/"), " is now available.
-                    Its database includes several custom genomes requested by users. To request to add a new species/genome, fill in this ",
-              a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76")
+            p("To request to add a new species/genome, fill in this ",
+              a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76"), 
+              "We will try to accommodate commonly requested genomes. "
             ),            
-            h3("For-profit organizations: contact us for licensing, local installation, or customization services.", style="color: red;"),
+            h4("For-profit organizations: contact us for licensing, local installation, or customization services.", style="color: red;"),
             br(),
 
             h3("GO Enrichment analysis, plus a lot more!"),
@@ -755,6 +754,11 @@ ui <- fluidPage(
           br(), br(),
           strong("Previous versions are still functional:"),
           br(),
+          a("ShinyGO V0.82, ",
+            href = "http://bioinformatics.sdstate.edu/go82/"
+          ),
+          "based on Ensembl Release 104, archived on Sept 5, 2025",
+          br(),
           a("ShinyGO V0.81, ",
             href = "http://bioinformatics.sdstate.edu/go81/"
           ),
@@ -849,6 +853,8 @@ ui <- fluidPage(
           includeHTML("human_mouse_source.html"),
           br(), 
           h4("Changes:"),
+
+            p("2/3/25: v.0.82. Fix issues caused by multiple ENSEMBL IDs for the same gene on patched chromosomes, causing inaccurate enrichment results. Duplicated ENSEMBL IDs are now ignored. "),
             p("10/26/24: v0.81. Disabled the switch of species during analysis. Fixed errors with STRING tab when STRINGdb species are used. 
             If a gene ID maps multiple Ensembl genes, all are kept for enrichment. "),
             p("10/25/24: Migrated to new server. Upgraded R to 4.4.0."),
