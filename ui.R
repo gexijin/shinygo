@@ -292,21 +292,19 @@ ui <- fluidPage(
               "(gelabinfo@gmail.com) for questions, suggestions or data contributions.",
               "Follow Dr Ge on ", a("Twitter", href = "https://twitter.com/StevenXGe"), " and ",
               a("LinkedIn", href = "https://www.linkedin.com/in/steven-ge-ab016947/", target = "_blank"),
-              " for updates. "
-            ),
-            p("To request to add a new species/genome, fill in this ",
+              " for updates. ",
+              "To request to add a new species/genome, fill in this ",
               a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76"), 
               "We will try to accommodate commonly requested genomes. "
             ),            
-            h4("For-profit organizations: contact us for licensing, local installation, or customization services.", style="color: red;"),
-            br(),
-
+            p("For-profit organizations: contact us for local installation or customization services."),
+            p("Under active delovelopment with support from NIH. Report bugs or request features on our ", 
+               a("GitHub repository.", href = "https://github.com/gexijin/shinygo", target = "_blank")),
+            p("While we strive to provide accurate analyses, results cannot be guaranteed in all cases. 
+              Users should independently verify findings using other tools."),
             h3("GO Enrichment analysis, plus a lot more!"),
-            p("Just paste your gene list to get enriched GO terms and othe pathways for over 14,000 species.
-				    based on annotation from Ensembl and STRING-db. Produce
-				    KEGG pathway diagrams with your genes highlighted, hierarchical clustering trees and networks summarizing
-				    overlapping terms/pathways, protein-protein interaction networks, gene characterristics plots, and enriched promoter motifs.
-            "),
+            p("Just paste your gene list to get enriched GO terms and othe pathways for over 14,000 species,
+				    based on annotation from Ensembl and STRING-db."),
             br(), img(src = "enrich.png", align = "center", width = "660", height = "339"),
             br(), img(src = "enrichmentChart.png", align = "center", width = "700", height = "400"),
             br(), br(), img(src = "KEGG2.png", align = "center", width = "541", height = "360"),
