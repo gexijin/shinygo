@@ -283,7 +283,7 @@ ui <- fluidPage(
                 )
               )
             ),
-            p("9/5/25: v.0.85. Database updated to Ensembl Release 113. "),
+            p("9/5/25: v.0.85. Database updated to Ensembl Release 113 and STRING-db v12. "),
             p("You can still use the old versions using links on the About tab.", 
               "To support this effort, please cite our paper like ",
                 a("these 4000+ papers.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
@@ -300,8 +300,10 @@ ui <- fluidPage(
             p("For-profit organizations: contact us for local installation or customization services."),
             p("Under active delovelopment with support from NIH. Report bugs or request features on our ", 
                a("GitHub repository.", href = "https://github.com/gexijin/shinygo", target = "_blank")),
-            p("While we strive to provide accurate analyses, results cannot be guaranteed in all cases. 
-              Users should independently verify findings using other tools."),
+            p("While we strive to provide accurate analyses, results cannot be guaranteed. 
+            Users should independently verify findings using other tools.
+            Enrichment results can vary due to gene ID mapping, data source, database version, algorithm (especially ranking).
+              "),
             h3("GO Enrichment analysis, plus a lot more!"),
             p("Just paste your gene list to get enriched GO terms and othe pathways for over 14,000 species,
 				    based on annotation from Ensembl and STRING-db."),
