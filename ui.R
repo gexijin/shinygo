@@ -300,9 +300,9 @@ ui <- fluidPage(
             p("For-profit organizations: contact us for local installation or customization services."),
             p("Under active delovelopment with support from NIH. Report bugs or request features on our ", 
                a("GitHub repository.", href = "https://github.com/gexijin/shinygo", target = "_blank")),
-            p("While we strive to provide accurate analyses, results cannot be guaranteed. 
-            Users should independently verify findings using other tools.
-            Enrichment results can vary due to gene ID mapping, data source, database version, algorithm (especially ranking).
+            p("NO WARRANTY. Please verify results using other tools.
+            Enrichment results may vary depending on gene ID mapping, data sources, 
+            database versions, and methods (particularily ranking).
               "),
             h3("GO Enrichment analysis, plus a lot more!"),
             p("Just paste your gene list to get enriched GO terms and othe pathways for over 14,000 species,
