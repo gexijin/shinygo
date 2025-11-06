@@ -30,7 +30,7 @@ ui <- fluidPage(
   shinybusy::add_busy_spinner(spin = "fading-circle"), # add spinner
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.85",
+      titlePanel("ShinyGO 0.85.1",
         tags$head(tags$link(rel = "icon", type = "image/png", href = "favicon.png"),
              tags$title("ShinyGO 0.85"))
       ),
