@@ -987,8 +987,7 @@ Currently only less than 30,000 genes are accepted.",
         plotOutput("genomePlot", width = "100%")
       ) # bsModal 6
     ) # mainPanel
-  ), # sidebarLayout
-  tags$head(includeScript("google_analytics.js")), # tracking usage
-  tags$head(includeHTML(("google_analytics_GA4.html")))
-  #  ,tags$head(includeHTML(("../google_analytics_golem.html")))
+  ) # sidebarLayout
+  #, tags$head(includeScript("google_analytics.js")), # tracking usage
+  #tags$head(includeHTML(("google_analytics_GA4.html")))
 ) # fluidPage
