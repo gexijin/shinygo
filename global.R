@@ -19,6 +19,7 @@ library(visNetwork)
 library(dplyr)
 library(DT, verbose = FALSE) # for renderDataTable
 
+source("utils_kegg_pathview.R")
 
 # define where database is located
 db_ver <<- "data113"
