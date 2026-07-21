@@ -1330,36 +1330,8 @@ server <- function(input, output, session) {
     hover = T
   )
 
-  output$grouping <- renderTable(
-    {
-      if (input$goButton == 0) {
-        return()
-      }
-      myMessage <- "Just a minute. Matching your genes with level 2 and level 3 Gene Ontology biological process terms.
-	       This can take up to 1 minute as we have to glue together a large number of gene names. "
-      withProgress(message = sample(quotes, 1), detail = myMessage, {
-        tem <- significantOverlaps()
-
-        incProgress(1, detail = paste("Done"))
-      })
-      tem$groupings
-    },
-    digits = 1,
-    spacing = "s",
-    striped = TRUE,
-    bordered = TRUE,
-    width = "auto",
-    hover = T
-  )
-
-  output$downloadGrouping <- downloadHandler(
-    filename = function() {
-      "GO_Gropus.csv"
-    },
-    content = function(file) {
-      write.csv(significantOverlaps()$groupings, file, row.names = FALSE)
-    }
-  )
+#---Groups-----------------------------------------------------------
+  mod_07_groups_server("groups", significantOverlaps, reactive(input$goButton), quotes)
 
 
   output$genomePlot <- renderPlot(

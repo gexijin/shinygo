@@ -612,9 +612,7 @@ ui <- fluidPage(
         #---Groups-----------------------------------------------------------
         tabPanel("Groups",
           value = 7,
-          downloadButton("downloadGrouping", "Download"),
-          h5("Your genes are grouped by functional categories defined by high-level GO terms. "),
-          tableOutput("grouping")
+          mod_07_groups_ui("groups")
         ),
         #---Plots-----------------------------------------------------------
         tabPanel("Plots",
