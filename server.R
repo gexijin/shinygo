@@ -808,50 +808,8 @@ server <- function(input, output, session) {
     tem
   })
 
-  output$GOTermsTree <- renderPlot(
-    {
-      if (input$goButton == 0) {
-        return(NULL)
-      }
-      if (is.null(significantOverlaps2())) {
-        return(NULL)
-      }
-      tem <- input$maxTerms
-      # enrichmentPlot(significantOverlaps2(), 56  )
-      tree_plot()
-    },
-    height = function() {
-      round(max(350, min(2500, round(18 * as.numeric(input$maxTerms)))))
-    },
-    width = function() {
-      width1 <- round(max(350, min(1000, round(18 * as.numeric(input$maxTerms)))) * as.numeric(input$treeChartAspectRatio))
-      return(min(width1, 1000)) # max width is 1000
-    }
-  )
-
-
-
-  tree_plot <- reactive({
-    if (input$goButton == 0) {
-      return(NULL)
-    }
-    if (is.null(significantOverlaps2())) {
-      return(NULL)
-    }
-    tem <- input$maxTerms
-    p <- enrichmentPlot(significantOverlaps2(), 45)
-    return(p)
-  })
-
-  download_tree <- mod_download_images_server(
-    "download_tree",
-    filename = "tree_plot",
-    figure = reactive({
-      tree_plot()
-    }),
-    width = 10,
-    height = round(10 / as.numeric(input$treeChartAspectRatio), 1)
-  )
+  #---Tree-----------------------------------------------------------
+  mod_03_tree_server("tree", significantOverlaps2, max_terms = reactive(input$maxTerms), go_button = reactive(input$goButton))
 
 
   output$enrichmentNetworkPlot <- renderPlot(
