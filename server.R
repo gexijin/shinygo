@@ -758,7 +758,15 @@ server <- function(input, output, session) {
   mod_03_tree_server("tree", significantOverlaps2, max_terms = reactive(input$maxTerms), go_button = reactive(input$goButton))
 
   #---Enrichment network-------------------------------------------------------
-  mod_04_network_server("network", significantOverlaps, reactive(input$selectOrg), reactive(input$selectGO), reactive(input$show_pathway_id), reactive(input$goButton), reactive(input$input_text_b))
+  mod_04_network_server(
+    "network",
+    significantOverlaps,
+    select_org = reactive(input$selectOrg),
+    select_go = reactive(input$selectGO),
+    show_pathway_id = reactive(input$show_pathway_id),
+    go_button = reactive(input$goButton),
+    input_text_b = reactive(input$input_text_b)
+  )
 
   output$downloadEnrichment <- downloadHandler(
     filename = function() {
