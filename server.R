@@ -1414,107 +1414,14 @@ server <- function(input, output, session) {
     height = round(8 / as.numeric(input$enrichChartAspectRatio), 1)
   )
 
-
-  output$listSigPathways <- renderUI({
-    tem <- input$selectOrg
-    if (input$goButton == 0 | is.null(significantOverlaps())) {
-      return(NULL)
-    }
-
-    tem <- significantOverlaps()
-
-    if (dim(tem$x)[2] == 1) {
-      return(NULL)
-    }
-    tem$x <- tem$x[tem$x[, 3] < 1000, ] # remove patways with more than 1000 genes.  Very slow.
-    tem$x <- tem$x[order(-tem$x[, 4]), ] # sort by fold-enrichment
-    choices <- tem$x[, 5]
-    selectInput("sigPathways",
-      label = "Select a significant KEGG pathway:",
-      choices = choices
-    )
-  })
-
-
-  output$KeggImage <- renderImage(
-    {
-      req(!is.null(input$sigPathways))
-
-      # First generate a blank image. Otherwise return(NULL) gives us errors.
-      outfile <- tempfile(fileext = ".png")
-      png(outfile, width = 400, height = 300)
-
-      frame()
-      dev.off()
-      blank <- list(
-        src = outfile,
-        contentType = "image/png",
-        width = 400,
-        height = 300,
-        alt = " "
-      )
-      if (input$goButton == 0) {
-        return(blank)
-      }
-      if (is.null(input$selectGO)) {
-        return(blank)
-      }
-      if (input$selectGO != "KEGG") {
-        return(blank)
-      }
-      if (is.null(significantOverlaps())) {
-        return(blank)
-      }
-
-      isolate({
-        withProgress(message = "Rendering KEGG pathway plot", {
-          incProgress(1 / 5, "Downloading KEGG pathway data")
-
-
-          Species <- converted()$species[1, 1]
-          fold <- convertEnsembl2Entrez(converted()$IDs, Species)
-
-          fold <- fold$entrezgene_id
-          keggSpecies <- as.character(keggSpeciesID[which(keggSpeciesID[, 1] == Species), 3])
-
-          if (nchar(keggSpecies) <= 2) {
-            return(blank)
-          } # not in KEGG
-
-          # kegg pathway id
-          incProgress(1 / 2, "Download pathway graph from KEGG.")
-
-          # find pathway id
-          # "Path:hsa04110 Cell cycle" --> "hsa04110"
-          pathID <- gsub(" .*", "", input$sigPathways)
-          pathID <- gsub("Path:", "", pathID)
-          # pathID <- keggPathwayID(input$sigPathways, Species, "KEGG", input$selectOrg)
-          # cat("\nhere5  ",keggSpecies, " ",Species," ",input$sigPathways, "pathID:",pathID,"End", fold[1:5],names(fold)[1:5],"\n")
-          # cat("\npathway:",is.na(input$sigPathways))
-          # cat("\n",fold[1:5],"\n",keggSpecies,"\n",pathID)
-
-          if (nchar(pathID) < 3) {
-            return(blank)
-          }
-          randomString <- gsub(".*file", "", tempfile())
-          tempFolder <- tempdir() # tempFolder = "temp";
-          outfile <- paste(tempFolder, "/", pathID, ".", randomString, ".png", sep = "")
-
-          pv.out <- mypathview(gene.data = fold, pathway.id = pathID, kegg.dir = tempFolder, out.suffix = randomString, species = keggSpecies, kegg.native = TRUE)
-
-
-          # Return a list containing the filename
-          list(
-            src = outfile,
-            contentType = "image/png",
-            width = "100%",
-            height = "100%",
-            alt = "KEGG pathway image."
-          )
-        })
-      })
-    },
-    deleteFile = TRUE
+  #---KEGG-----------------------------------------------------------
+  mod_05_kegg_server(
+    "kegg",
+    significantOverlaps,
+    select_org = reactive(input$selectOrg),
+    select_go = reactive(input$selectGO),
+    go_button = reactive(input$goButton),
+    converted = converted
   )
 
   # visualizing fold change on chrs.
