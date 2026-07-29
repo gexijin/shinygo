@@ -725,20 +725,37 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
 
   # given a pathway id, it finds the overlapped genes, symbol preferred
   sharedGenesPrefered <- function(pathwayID) {
-    tem <- result[which(result[, 2] == pathwayID), 1]
-    ix <- match(tem, converted$conversionTable$ensembl_gene_id) # convert back to original
-    tem2 <- unique(converted$conversionTable$User_input[ix])
+    # result comes from "select distinct gene, pathwayID", so this is already
+    # one row per gene and the output must have exactly one token per gene.
+    # enrichmentPlot() and enrichmentNetwork() rebuild pathway membership by
+    # splitting this string on spaces, so dropping a gene here silently
+    # corrupts the tree and network overlaps as well as the displayed table.
+    ens <- result[which(result[, 2] == pathwayID), 1]
+
+    # Default to the IDs the user pasted, mapped back from Ensembl.
+    out <- converted$conversionTable$User_input[
+      match(ens, converted$conversionTable$ensembl_gene_id)
+    ]
+
     if (!is.null(gInfo)) {
-      if (class(gInfo) == "data.frame") {
-        if (dim(gInfo)[1] > 1) {
-          if (length(unique(gInfo$symbol)) / dim(gInfo)[1] > .7) { # if 70% genes has symbol in geneInfo
-            ix <- match(tem, gInfo$ensembl_gene_id)
-            tem2 <- unique(gInfo$symbol[ix])
+      if (is.data.frame(gInfo)) {
+        if (nrow(gInfo) > 1) {
+          if (length(unique(gInfo$symbol)) / nrow(gInfo) > .7) { # if 70% genes has symbol in geneInfo
+            # Substitute per gene rather than wholesale: species like maize
+            # have symbols for only some genes, and the rest are blank.
+            sym <- gInfo$symbol[match(ens, gInfo$ensembl_gene_id)]
+            has_symbol <- !is.na(sym) & nzchar(sym)
+            out[has_symbol] <- sym[has_symbol]
           }
         }
       }
     }
-    return(paste(tem2, collapse = " ", sep = ""))
+
+    # Last resort, so a gene is never represented by an empty token.
+    unnamed <- is.na(out) | !nzchar(out)
+    out[unnamed] <- ens[unnamed]
+
+    return(paste(out, collapse = " "))
   }
 
   x0 <- table(result$pathwayID)
