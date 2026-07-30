@@ -463,11 +463,7 @@ ui <- fluidPage(
         #---Genes-----------------------------------------------------------
         tabPanel("Genes",
           value = 6,
-          fluidRow(
-            column(3, downloadButton("downloadGeneInfo", "More info")),
-            column(4, checkboxInput("showDetailedGeneInfo", "Detailed Description", value = FALSE))
-          ),
-          tableOutput("conversionTable")
+          mod_06_genes_ui("genes")
         ),
         #---Groups-----------------------------------------------------------
         tabPanel("Groups",
