@@ -257,6 +257,9 @@ server <- function(input, output, session) {
     tem <- input$gene_count_pathwaydb
     tem <- input$minSetSize
     tem <- input$maxSetSize
+    # Must be read outside the isolate() below, or changing it never
+    # invalidates this reactive and the Genes column silently never updates.
+    tem <- input$genesColumnID
 
     isolate({
       withProgress(message = sample(quotes, 1), detail = "enrichment analysis", {
@@ -270,7 +273,8 @@ server <- function(input, output, session) {
         enrichment <- FindOverlap(converted(), tem, input$selectGO, input$selectOrg,
           converted_background(), temb,
           minSetSize = input$minSetSize, maxSetSize = input$maxSetSize,
-          gene_count_pathwaydb = input$gene_count_pathwaydb
+          gene_count_pathwaydb = input$gene_count_pathwaydb,
+          genes_column = input$genesColumnID
         )
         return(enrichment)
       })

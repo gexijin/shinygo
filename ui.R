@@ -336,6 +336,20 @@ ui <- fluidPage(
                 selected = "Select by FDR, sort by Fold Enrichment"
               ),
               style = "algn:right"
+            ),
+            div(
+              style = "display:inline-block; margin-left:12px; vertical-align:top",
+              selectInput(
+                inputId = "genesColumnID",
+                label = NULL,
+                choices = c(
+                  "Genes column: symbols when available" = "symbol",
+                  "Genes column: IDs you pasted" = "input",
+                  "Genes column: Ensembl IDs" = "ensembl"
+                ),
+                selected = "symbol",
+                width = "320px"
+              )
             )
           ),
           tableOutput("EnrichmentTable"),

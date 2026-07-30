@@ -641,7 +641,13 @@ hyperText <- function(textVector, urlVector) {
 
 # Main function. Find a query set of genes enriched with functional category
 # For debug:  converted = converted(); gInfo = tem;  GO=input$selectGO; selectOrg=input$selectOrg;  minFDR=input$minFDR; input_maxTerms=input$maxTerms
-FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInfoB = NULL, minSetSize = 2, maxSetSize = 4000, gene_count_pathwaydb = FALSE) {
+FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInfoB = NULL, minSetSize = 2, maxSetSize = 4000, gene_count_pathwaydb = FALSE, genes_column = "symbol") {
+  # genes_column controls what the Genes column holds: "symbol" (gene symbols
+  # where the database has one, otherwise the pasted ID), "input" (the IDs the
+  # user pasted) or "ensembl". NULL can arrive before the input has rendered.
+  if (is.null(genes_column) || !genes_column %in% c("symbol", "input", "ensembl")) {
+    genes_column <- "symbol"
+  }
   minFDR <- 0.2 # internal cutoff; avoids passing a large number of pathways
   maxTerms <- 1000 # only keep 1000 pathways at the most
 
@@ -732,17 +738,18 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
     # corrupts the tree and network overlaps as well as the displayed table.
     ens <- result[which(result[, 2] == pathwayID), 1]
 
-    # Default to the IDs the user pasted, mapped back from Ensembl.
-    out <- converted$conversionTable$User_input[
+    pasted <- converted$conversionTable$User_input[
       match(ens, converted$conversionTable$ensembl_gene_id)
     ]
 
-    if (!is.null(gInfo)) {
-      if (is.data.frame(gInfo)) {
-        if (nrow(gInfo) > 1) {
-          if (length(unique(gInfo$symbol)) / nrow(gInfo) > .7) { # if 70% genes has symbol in geneInfo
-            # Substitute per gene rather than wholesale: species like maize
-            # have symbols for only some genes, and the rest are blank.
+    out <- if (genes_column == "ensembl") ens else pasted
+
+    if (genes_column == "symbol") {
+      # Substitute per gene rather than wholesale: species like maize have
+      # symbols for only some genes, and the rest are blank.
+      if (!is.null(gInfo)) {
+        if (is.data.frame(gInfo)) {
+          if (nrow(gInfo) > 1) {
             sym <- gInfo$symbol[match(ens, gInfo$ensembl_gene_id)]
             has_symbol <- !is.na(sym) & nzchar(sym)
             out[has_symbol] <- sym[has_symbol]
