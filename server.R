@@ -105,11 +105,30 @@ server <- function(input, output, session) {
     # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
     if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
       gene_info <- geneInfo(converted, input$selectOrg)
-      converted$IDs <- gene_info |>
-        filter(!duplicated) |>
-        filter(ensembl_gene_id %in% converted$IDs) |>
-        pull(ensembl_gene_id)
-      #conversionTable is not changed. Not unique.
+
+      # geneInfo() returns a single-column "ID not recognized!" frame when
+      # nothing maps, most often because the gene list and the selected species
+      # do not match. That frame has no `duplicated` column, so filter(!duplicated)
+      # resolves to base::duplicated and aborts the reactive, taking every
+      # downstream tab with it. Warn and carry on instead.
+      if (is.data.frame(gene_info) && "duplicated" %in% colnames(gene_info)) {
+        converted$IDs <- gene_info |>
+          filter(!duplicated) |>
+          filter(ensembl_gene_id %in% converted$IDs) |>
+          pull(ensembl_gene_id)
+        #conversionTable is not changed. Not unique.
+      } else {
+        showNotification(
+          paste(
+            "No gene information found for these genes in",
+            findSpeciesByIdName(input$selectOrg),
+            "- please check that the selected species is correct. Reset and try again."
+          ),
+          id = "species_mismatch",
+          type = "warning",
+          duration = 15
+        )
+      }
     }
     converted
 
@@ -257,6 +276,9 @@ server <- function(input, output, session) {
     tem <- input$gene_count_pathwaydb
     tem <- input$minSetSize
     tem <- input$maxSetSize
+    # Must be read outside the isolate() below, or changing it never
+    # invalidates this reactive and the Genes column silently never updates.
+    tem <- input$genesColumnID
 
     isolate({
       withProgress(message = sample(quotes, 1), detail = "enrichment analysis", {
@@ -270,7 +292,8 @@ server <- function(input, output, session) {
         enrichment <- FindOverlap(converted(), tem, input$selectGO, input$selectOrg,
           converted_background(), temb,
           minSetSize = input$minSetSize, maxSetSize = input$maxSetSize,
-          gene_count_pathwaydb = input$gene_count_pathwaydb
+          gene_count_pathwaydb = input$gene_count_pathwaydb,
+          genes_column = input$genesColumnID
         )
         return(enrichment)
       })
@@ -983,12 +1006,51 @@ server <- function(input, output, session) {
     }
   )
 
+  # Ask what the Genes column should contain, then hand over the real download
+  # button. The Genes column is not part of the on-screen table, so this is the
+  # only point where the choice is visible to the user.
+  genes_column_dialog <- function(download_id, title) {
+    shiny::modalDialog(
+      title = title,
+      radioButtons(
+        inputId = "genesColumnID",
+        label = "How should genes be listed in the Genes column?",
+        choiceNames = c(
+          "Gene symbols where available, otherwise the ID you pasted",
+          "The gene IDs you pasted",
+          "Ensembl gene IDs"
+        ),
+        choiceValues = c("symbol", "input", "ensembl"),
+        selected = if (is.null(input$genesColumnID)) "symbol" else input$genesColumnID
+      ),
+      helpText(
+        "Some species have gene symbols for only part of the genome. For those,
+         the first option gives a mix of symbols and IDs. Choose one of the other
+         two if you need a single consistent ID type."
+      ),
+      footer = tagList(
+        modalButton("Cancel"),
+        downloadButton(download_id, "Download")
+      ),
+      easyClose = TRUE
+    )
+  }
+
+  observeEvent(input$askDownloadEnrichment, {
+    showModal(genes_column_dialog("downloadEnrichment", "Download top pathways"))
+  })
+
+  observeEvent(input$askDownloadEnrichmentAll, {
+    showModal(genes_column_dialog("downloadEnrichmentAll", "Download all pathways"))
+  })
+
   output$downloadEnrichment <- downloadHandler(
     filename = function() {
       "enrichment.csv"
     },
     content = function(file) {
       write.csv(significantOverlaps()$x, file, row.names = FALSE)
+      removeModal()
     }
   )
 
@@ -998,6 +1060,7 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       write.csv(significantOverlapsAll()$x, file, row.names = FALSE)
+      removeModal()
     }
   )
 

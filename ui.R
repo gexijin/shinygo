@@ -320,6 +320,9 @@ ui <- fluidPage(
           br(),
           conditionalPanel(
             "input.goButton != 0",
+            # The sort input used to carry style= twice ("display:inline-block"
+            # and a typo'd "algn:right"); htmltools joins duplicate attributes,
+            # so the display rule was invalid and the div fell back to block.
             div(
               style = "display:inline-block",
               selectInput(
@@ -334,15 +337,17 @@ ui <- fluidPage(
                   "Sort by Category Name" = "Sort by Category Name"
                 ),
                 selected = "Select by FDR, sort by Fold Enrichment"
-              ),
-              style = "algn:right"
+              )
             )
           ),
           tableOutput("EnrichmentTable"),
           conditionalPanel(
             "input.goButton != 0",
-            downloadButton("downloadEnrichment", "Top Pathways shown above"),
-            downloadButton("downloadEnrichmentAll", "Results on all Pathways"),
+            # These open a dialog to pick what the Genes column should hold,
+            # then offer the real download. The Genes column is not shown in
+            # the table above, so the choice only makes sense at download time.
+            actionButton("askDownloadEnrichment", "Top Pathways shown above", icon = icon("download")),
+            actionButton("askDownloadEnrichmentAll", "Results on all Pathways", icon = icon("download")),
             br(), br(),
             h3("Methods"),
             p("All query genes are converted to ENSEMBL gene IDs or STRING-db protein IDs,
