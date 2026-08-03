@@ -122,7 +122,7 @@ server <- function(input, output, session) {
           paste(
             "No gene information found for these genes in",
             findSpeciesByIdName(input$selectOrg),
-            "- please check that the selected species is correct."
+            "- please check that the selected species is correct. Reset and try again."
           ),
           id = "species_mismatch",
           type = "warning",
@@ -1006,12 +1006,51 @@ server <- function(input, output, session) {
     }
   )
 
+  # Ask what the Genes column should contain, then hand over the real download
+  # button. The Genes column is not part of the on-screen table, so this is the
+  # only point where the choice is visible to the user.
+  genes_column_dialog <- function(download_id, title) {
+    shiny::modalDialog(
+      title = title,
+      radioButtons(
+        inputId = "genesColumnID",
+        label = "How should genes be listed in the Genes column?",
+        choiceNames = c(
+          "Gene symbols where available, otherwise the ID you pasted",
+          "The gene IDs you pasted",
+          "Ensembl gene IDs"
+        ),
+        choiceValues = c("symbol", "input", "ensembl"),
+        selected = if (is.null(input$genesColumnID)) "symbol" else input$genesColumnID
+      ),
+      helpText(
+        "Some species have gene symbols for only part of the genome. For those,
+         the first option gives a mix of symbols and IDs. Choose one of the other
+         two if you need a single consistent ID type."
+      ),
+      footer = tagList(
+        modalButton("Cancel"),
+        downloadButton(download_id, "Download")
+      ),
+      easyClose = TRUE
+    )
+  }
+
+  observeEvent(input$askDownloadEnrichment, {
+    showModal(genes_column_dialog("downloadEnrichment", "Download top pathways"))
+  })
+
+  observeEvent(input$askDownloadEnrichmentAll, {
+    showModal(genes_column_dialog("downloadEnrichmentAll", "Download all pathways"))
+  })
+
   output$downloadEnrichment <- downloadHandler(
     filename = function() {
       "enrichment.csv"
     },
     content = function(file) {
       write.csv(significantOverlaps()$x, file, row.names = FALSE)
+      removeModal()
     }
   )
 
@@ -1021,6 +1060,7 @@ server <- function(input, output, session) {
     },
     content = function(file) {
       write.csv(significantOverlapsAll()$x, file, row.names = FALSE)
+      removeModal()
     }
   )
 

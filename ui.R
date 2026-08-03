@@ -320,49 +320,34 @@ ui <- fluidPage(
           br(),
           conditionalPanel(
             "input.goButton != 0",
-            # Flex row: the two controls belong side by side. The sort input
-            # used to carry style= twice ("display:inline-block" and a typo'd
-            # "algn:right"); htmltools joins duplicate attributes, so the
-            # display rule was invalid and the div fell back to block.
+            # The sort input used to carry style= twice ("display:inline-block"
+            # and a typo'd "algn:right"); htmltools joins duplicate attributes,
+            # so the display rule was invalid and the div fell back to block.
             div(
-              style = "display:flex; flex-wrap:wrap; gap:12px; align-items:center",
-              div(
-                style = "display:inline-block",
-                selectInput(
-                  inputId = "SortPathways",
-                  label = NULL,
-                  choices = c(
-                    "Sort by FDR" = "Sort by FDR",
-                    "Sort by Fold Enrichment" = "Sort by Fold Enrichment",
-                    "Sort by average ranks(FDR & Fold)" = "Sort by FDR & Fold Enrichment",
-                    "Select by FDR, sort by Fold Enrichment" = "Select by FDR, sort by Fold Enrichment",
-                    "Sort by Genes" = "Sort by Genes",
-                    "Sort by Category Name" = "Sort by Category Name"
-                  ),
-                  selected = "Select by FDR, sort by Fold Enrichment"
-                )
-              ),
-              div(
-                style = "display:inline-block",
-                selectInput(
-                  inputId = "genesColumnID",
-                  label = NULL,
-                  choices = c(
-                    "Genes column: symbols when available" = "symbol",
-                    "Genes column: IDs you pasted" = "input",
-                    "Genes column: Ensembl IDs" = "ensembl"
-                  ),
-                  selected = "symbol",
-                  width = "320px"
-                )
+              style = "display:inline-block",
+              selectInput(
+                inputId = "SortPathways",
+                label = NULL,
+                choices = c(
+                  "Sort by FDR" = "Sort by FDR",
+                  "Sort by Fold Enrichment" = "Sort by Fold Enrichment",
+                  "Sort by average ranks(FDR & Fold)" = "Sort by FDR & Fold Enrichment",
+                  "Select by FDR, sort by Fold Enrichment" = "Select by FDR, sort by Fold Enrichment",
+                  "Sort by Genes" = "Sort by Genes",
+                  "Sort by Category Name" = "Sort by Category Name"
+                ),
+                selected = "Select by FDR, sort by Fold Enrichment"
               )
             )
           ),
           tableOutput("EnrichmentTable"),
           conditionalPanel(
             "input.goButton != 0",
-            downloadButton("downloadEnrichment", "Top Pathways shown above"),
-            downloadButton("downloadEnrichmentAll", "Results on all Pathways"),
+            # These open a dialog to pick what the Genes column should hold,
+            # then offer the real download. The Genes column is not shown in
+            # the table above, so the choice only makes sense at download time.
+            actionButton("askDownloadEnrichment", "Top Pathways shown above", icon = icon("download")),
+            actionButton("askDownloadEnrichmentAll", "Results on all Pathways", icon = icon("download")),
             br(), br(),
             h3("Methods"),
             p("All query genes are converted to ENSEMBL gene IDs or STRING-db protein IDs,
