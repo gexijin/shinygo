@@ -105,11 +105,30 @@ server <- function(input, output, session) {
     # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
     if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
       gene_info <- geneInfo(converted, input$selectOrg)
-      converted$IDs <- gene_info |>
-        filter(!duplicated) |>
-        filter(ensembl_gene_id %in% converted$IDs) |>
-        pull(ensembl_gene_id)
-      #conversionTable is not changed. Not unique.
+
+      # geneInfo() returns a single-column "ID not recognized!" frame when
+      # nothing maps, most often because the gene list and the selected species
+      # do not match. That frame has no `duplicated` column, so filter(!duplicated)
+      # resolves to base::duplicated and aborts the reactive, taking every
+      # downstream tab with it. Warn and carry on instead.
+      if (is.data.frame(gene_info) && "duplicated" %in% colnames(gene_info)) {
+        converted$IDs <- gene_info |>
+          filter(!duplicated) |>
+          filter(ensembl_gene_id %in% converted$IDs) |>
+          pull(ensembl_gene_id)
+        #conversionTable is not changed. Not unique.
+      } else {
+        showNotification(
+          paste(
+            "No gene information found for these genes in",
+            findSpeciesByIdName(input$selectOrg),
+            "- please check that the selected species is correct."
+          ),
+          id = "species_mismatch",
+          type = "warning",
+          duration = 15
+        )
+      }
     }
     converted
 

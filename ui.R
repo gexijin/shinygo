@@ -320,35 +320,41 @@ ui <- fluidPage(
           br(),
           conditionalPanel(
             "input.goButton != 0",
+            # Flex row: the two controls belong side by side. The sort input
+            # used to carry style= twice ("display:inline-block" and a typo'd
+            # "algn:right"); htmltools joins duplicate attributes, so the
+            # display rule was invalid and the div fell back to block.
             div(
-              style = "display:inline-block",
-              selectInput(
-                inputId = "SortPathways",
-                label = NULL,
-                choices = c(
-                  "Sort by FDR" = "Sort by FDR",
-                  "Sort by Fold Enrichment" = "Sort by Fold Enrichment",
-                  "Sort by average ranks(FDR & Fold)" = "Sort by FDR & Fold Enrichment",
-                  "Select by FDR, sort by Fold Enrichment" = "Select by FDR, sort by Fold Enrichment",
-                  "Sort by Genes" = "Sort by Genes",
-                  "Sort by Category Name" = "Sort by Category Name"
-                ),
-                selected = "Select by FDR, sort by Fold Enrichment"
+              style = "display:flex; flex-wrap:wrap; gap:12px; align-items:center",
+              div(
+                style = "display:inline-block",
+                selectInput(
+                  inputId = "SortPathways",
+                  label = NULL,
+                  choices = c(
+                    "Sort by FDR" = "Sort by FDR",
+                    "Sort by Fold Enrichment" = "Sort by Fold Enrichment",
+                    "Sort by average ranks(FDR & Fold)" = "Sort by FDR & Fold Enrichment",
+                    "Select by FDR, sort by Fold Enrichment" = "Select by FDR, sort by Fold Enrichment",
+                    "Sort by Genes" = "Sort by Genes",
+                    "Sort by Category Name" = "Sort by Category Name"
+                  ),
+                  selected = "Select by FDR, sort by Fold Enrichment"
+                )
               ),
-              style = "algn:right"
-            ),
-            div(
-              style = "display:inline-block; margin-left:12px; vertical-align:top",
-              selectInput(
-                inputId = "genesColumnID",
-                label = NULL,
-                choices = c(
-                  "Genes column: symbols when available" = "symbol",
-                  "Genes column: IDs you pasted" = "input",
-                  "Genes column: Ensembl IDs" = "ensembl"
-                ),
-                selected = "symbol",
-                width = "320px"
+              div(
+                style = "display:inline-block",
+                selectInput(
+                  inputId = "genesColumnID",
+                  label = NULL,
+                  choices = c(
+                    "Genes column: symbols when available" = "symbol",
+                    "Genes column: IDs you pasted" = "input",
+                    "Genes column: Ensembl IDs" = "ensembl"
+                  ),
+                  selected = "symbol",
+                  width = "320px"
+                )
               )
             )
           ),
