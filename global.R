@@ -750,7 +750,10 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
       if (!is.null(gInfo)) {
         if (is.data.frame(gInfo)) {
           if (nrow(gInfo) > 1) {
-            sym <- gInfo$symbol[match(ens, gInfo$ensembl_gene_id)]
+            # geneInfo pads every symbol with a leading space (" A1BG"), so a
+            # gene with no symbol is stored as " ", not "". Trim it, or nzchar()
+            # below treats that space as a real symbol.
+            sym <- trimws(gInfo$symbol[match(ens, gInfo$ensembl_gene_id)])
             has_symbol <- !is.na(sym) & nzchar(sym)
             out[has_symbol] <- sym[has_symbol]
           }
@@ -758,7 +761,10 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
       }
     }
 
-    # Last resort, so a gene is never represented by an empty token.
+    # Last resort, so a gene is never represented by an empty token. Trim here
+    # too: pasted ids and Ensembl ids are clean, but a whitespace-only value
+    # from any source would otherwise slip through as a blank token.
+    out <- trimws(out)
     unnamed <- is.na(out) | !nzchar(out)
     out[unnamed] <- ens[unnamed]
 
