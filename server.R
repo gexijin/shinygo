@@ -383,11 +383,10 @@ server <- function(input, output, session) {
         if (reduced != FALSE && dim(enrichment$x)[1] > 5) {
           n <- nrow(enrichment$x)
           flag1 <- rep(TRUE, n)
-          # note that it has to be two space characters for splitting
-          geneLists <- lapply(
-            enrichment$x$Genes,
-            function(y) unlist(strsplit(as.character(y), " |  |   "))
-          )
+          # Membership as Ensembl ids, straight from FindOverlap(). The old
+          # split on " |  |   " was a workaround for parsing the display
+          # string; there is nothing to parse now.
+          geneLists <- lapply(enrichment$x$Membership, as.character)
           pathways <- lapply(
             enrichment$x$Pathway,
             function(y) unlist(strsplit(as.character(y), " |  |   "))
@@ -731,6 +730,7 @@ server <- function(input, output, session) {
         }
         pathways$Pathway <- hyperText(pathways$Pathway, pathways$URL)
 
+        pathways$Membership <- NULL # internal, never displayed
         pathways <- pathways[, -7]
         # rownames(pathways) <- NULL
         # pathways[, 1] <- as.numeric( format(pathways[, 1], scientific = TRUE, digits = 3 ) )
@@ -770,7 +770,7 @@ server <- function(input, output, session) {
       return(NULL)
     }
     tem <- tem$x
-    colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes")
+    colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes", "Membership")
     tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
     tem$Direction <- "Diff"
     # remove pathway ID  only in Ensembl species
@@ -792,7 +792,7 @@ server <- function(input, output, session) {
       return(NULL)
     }
     tem <- tem$x
-    colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes")
+    colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes", "Membership")
     tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
 
     # remove pathway ID  only in Ensembl species
@@ -819,7 +819,7 @@ server <- function(input, output, session) {
       return(NULL)
     }
     tem <- tem$x
-    colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes")
+    colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes", "Membership")
     tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
 
     # remove pathway ID  only in Ensembl species
@@ -1047,12 +1047,19 @@ server <- function(input, output, session) {
     showModal(genes_column_dialog("downloadEnrichmentAll", "Download all pathways"))
   })
 
+  # Membership is a list column carried for the tree, network and redundancy
+  # filter. It is internal, and write.csv cannot serialise it.
+  drop_membership <- function(df) {
+    if (is.data.frame(df) && "Membership" %in% colnames(df)) df$Membership <- NULL
+    df
+  }
+
   output$downloadEnrichment <- downloadHandler(
     filename = function() {
       "enrichment.csv"
     },
     content = function(file) {
-      write.csv(significantOverlaps()$x, file, row.names = FALSE)
+      write.csv(drop_membership(significantOverlaps()$x), file, row.names = FALSE)
       removeModal()
     }
   )
@@ -1062,7 +1069,7 @@ server <- function(input, output, session) {
       "enrichment_all.csv"
     },
     content = function(file) {
-      write.csv(significantOverlapsAll()$x, file, row.names = FALSE)
+      write.csv(drop_membership(significantOverlapsAll()$x), file, row.names = FALSE)
       removeModal()
     }
   )
