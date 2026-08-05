@@ -584,7 +584,10 @@ server <- function(input, output, session) {
         incProgress(0.3)
         incProgress(0.6)
         if (is.null(tem)) {
-          as.data.frame("ID not recognized.")
+          # Must be assigned: the function ends in return(merged), so leaving
+          # this unassigned falls through to "object 'merged' not found" and
+          # the user gets a stack trace instead of the message.
+          merged <- as.data.frame("ID not recognized.")
         } else {
           # some STRINGdb species has geneInfo, alought incomplete.
           if (dim(tem2)[1] <= 1 | grepl("STRINGdb", converted()$species$name2)) {
