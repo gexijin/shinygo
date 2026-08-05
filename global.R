@@ -219,9 +219,14 @@ densMode <- function(x) {
 }
 
 cleanGeneSet <- function(x) {
-  # remove duplicate; upper case; remove special characters
-  x <- unique(toupper(gsub("\n| ", "", x)))
+  # upper case; remove special characters; strip version suffix; then dedupe.
+  # Order matters: ENSG00000211459.2 and ENSG00000211459.3 are distinct strings,
+  # so deduping first leaves both, and stripping the version afterwards turns
+  # them into the same gene listed twice. That inflates the query size used in
+  # the hypergeometric test.
+  x <- toupper(gsub("\n| ", "", x))
   x <- remove_gene_version(x)
+  x <- unique(x)
   x <- x[which(nchar(x) > 1)] # genes should have at least two characters
   return(x)
 }
