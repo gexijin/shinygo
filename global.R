@@ -735,6 +735,14 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
 
 
   # given a pathway id, it finds the overlapped genes, symbol preferred
+  # Actual pathway membership, as Ensembl ids. This is what the tree, the
+  # network and the redundancy filter need. sharedGenesPrefered() below formats
+  # the same thing for display; nothing should parse that string to recover
+  # membership, because then display formatting changes the analysis.
+  pathwayMembers <- function(pathwayID) {
+    result[which(result[, 2] == pathwayID), 1]
+  }
+
   sharedGenesPrefered <- function(pathwayID) {
     # result comes from "select distinct gene, pathwayID", so this is already
     # one row per gene and the output must have exactly one token per gene.
@@ -956,11 +964,14 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
     x <- cbind(x, sapply(x$pathwayID, sharedGenesPrefered))
 
     colnames(x)[9] <- "Genes"
+    # I() keeps this an AsIs list column so it survives ordering and subsetting
+    # below and stays aligned with its row.
+    x$Membership <- I(lapply(x$pathwayID, pathwayMembers))
     x$n <- as.numeric(x$n) # convert total genes from character to numeric 10/21/19
-    x <- subset(x, select = c(FDR, overlap, n, fold, description, memo, Genes))
+    x <- subset(x, select = c(FDR, overlap, n, fold, description, memo, Genes, Membership))
     x <- x[order(x$FDR), ] # sort by FDR   4/1/2022 related to issue 23
     x <- x[!duplicated(x$description), ] # remove duplicates   4/1/2022
-    colnames(x) <- c("Enrichment FDR", "nGenes", "Pathway Genes", "Fold Enrichment", "Pathway", "URL", "Genes")
+    colnames(x) <- c("Enrichment FDR", "nGenes", "Pathway Genes", "Fold Enrichment", "Pathway", "URL", "Genes", "Membership")
 
 
 
@@ -1070,7 +1081,10 @@ enrichmentPlot <- function(enrichedTerms, rightMargin = 33) {
   } # only one term or less
   library(dendextend) # customizing tree
 
-  geneLists <- lapply(enrichedTerms$Genes, function(x) unlist(strsplit(as.character(x), " ")))
+  # Membership comes from FindOverlap() as Ensembl ids. Do not go back to
+  # splitting enrichedTerms$Genes: that column is formatted for display, and
+  # parsing it makes formatting changes move these numbers.
+  geneLists <- lapply(enrichedTerms$Membership, as.character)
   names(geneLists) <- enrichedTerms$Pathways
 
   # compute overlaps percentage--------------------
@@ -1286,7 +1300,10 @@ enrich.net2 <- function(x, gene.set, node.id, node.name = node.id, pvalue,
 }
 
 enrichmentNetwork <- function(enrichedTerms, layoutButton = 0, edge.cutoff = 5) {
-  geneLists <- lapply(enrichedTerms$Genes, function(x) unlist(strsplit(as.character(x), " ")))
+  # Membership comes from FindOverlap() as Ensembl ids. Do not go back to
+  # splitting enrichedTerms$Genes: that column is formatted for display, and
+  # parsing it makes formatting changes move these numbers.
+  geneLists <- lapply(enrichedTerms$Membership, as.character)
   names(geneLists) <- enrichedTerms$Pathways
   enrichedTerms$Direction <- gsub(" .*", "", enrichedTerms$Direction)
 
