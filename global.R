@@ -418,44 +418,6 @@ matchedSpeciesInfo <- function(x) {
   return(a)
 }
 
-geneInfo <- function(converted, selectOrg) {
-  if (is.null(converted)) {
-    return(as.data.frame("ID not recognized!"))
-  } # no ID
-  querySet <- converted$IDs
-
-  if (length(querySet) == 0) {
-    return(as.data.frame("ID not recognized!"))
-  }
-
-  querySTMT <- paste0(
-    "select * from geneInfo;"
-  )
-
-  # connect to the database, this becomes a global variable
-  convert_species <- connect_convert_db_org(datapath, selectOrg)
-  x <- dbGetQuery(convert_species, querySTMT)
-  dbDisconnect(convert_species)
-
-  # mark duplicated genes; mostly the same genes on pached chromosomes.
-  if(as.numeric(selectOrg) > 0) { # if it is a ENSEMBL species
-    x <- x |>
-      mutate(coding_status = if_else(gene_biotype == "protein_coding", TRUE, FALSE)) |> # TRUE for coding
-      mutate(chr_name_length = nchar(chromosome_name)) |>    # chr 20 --> 2
-      mutate(entrez_symbol = paste(entrezgene_id, symbol)) |>  # "7105 TSPAN6"
-      arrange(entrez_symbol, entrezgene_id, -coding_status, chr_name_length) |>
-      mutate(duplicated = duplicated(entrez_symbol)) |> # both entrez and symbol the same?
-      #if entrez is missing, does not count
-      mutate(duplicated = if_else(is.na(entrezgene_id), FALSE, duplicated)) |>
-      select(-c(coding_status, chr_name_length, entrez_symbol)) # clean up
-  }
-  Set <- match(x$ensembl_gene_id, querySet)
-  Set[which(is.na(Set))] <- "Genome"
-  Set[which(Set != "Genome")] <- "List"
-  # x = cbind(x,Set) } # just for debuging
-  return(cbind(x, Set))
-}
-
 hyperText <- function(textVector, urlVector) {
   # for generating pathway lists that can be clicked.
   # Function that takes a vector of strings and a vector of URLs
