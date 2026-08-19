@@ -30,7 +30,7 @@ ui <- fluidPage(
   shinybusy::add_busy_spinner(spin = "fading-circle"), # add spinner
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.85.1",
+      titlePanel("ShinyGO 0.85.2",
         tags$head(tags$link(rel = "icon", type = "image/png", href = "favicon.png"),
              tags$title("ShinyGO 0.85"))
       ),
@@ -994,5 +994,5 @@ Currently only less than 30,000 genes are accepted.",
     ) # mainPanel
   ) # sidebarLayout
   #, tags$head(includeScript("google_analytics.js")), # tracking usage
-  #tags$head(includeHTML(("google_analytics_GA4.html")))
+  , tags$head(includeHTML(("google_analytics_GA4.html")))
 ) # fluidPage
