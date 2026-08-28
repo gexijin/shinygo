@@ -30,9 +30,9 @@ ui <- fluidPage(
   shinybusy::add_busy_spinner(spin = "fading-circle"), # add spinner
   sidebarLayout(
     sidebarPanel(
-      titlePanel("ShinyGO 0.85.2",
+      titlePanel("ShinyGO 0.86.0",
         tags$head(tags$link(rel = "icon", type = "image/png", href = "favicon.png"),
-             tags$title("ShinyGO 0.85"))
+             tags$title("ShinyGO 0.86"))
       ),
       # use conditional panel to hide the selectOrg input
       conditionalPanel(
@@ -283,7 +283,7 @@ ui <- fluidPage(
                 )
               )
             ),
-            p("9/5/25: v.0.85. Database updated to Ensembl Release 113 and STRING-db v12. "),
+            p("8/28/26: v.0.86.0 Ensembl Release 115 (925 species), STRING-db 12.0 (12,535 species), NCBI (v.6/15/2026, 2342 species), and 39 custom genomes. "),
             p("You can still use the old versions using links on the About tab.", 
               "To support this effort, please cite our paper like ",
                 a("these 4000+ papers.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
@@ -858,7 +858,7 @@ ui <- fluidPage(
           includeHTML("human_mouse_source.html"),
           br(), 
           h4("Changes:"),
-
+            p("9/5/25: v.0.85. Database updated to Ensembl Release 113 and STRING-db v12. "),
             p("2/3/25: v.0.82. Fix issues caused by multiple ENSEMBL IDs for the same gene on patched chromosomes, causing inaccurate enrichment results. Duplicated ENSEMBL IDs are now ignored. "),
             p("10/26/24: v0.81. Disabled the switch of species during analysis. Fixed errors with STRING tab when STRINGdb species are used. 
             If a gene ID maps multiple Ensembl genes, all are kept for enrichment. "),

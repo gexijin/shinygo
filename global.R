@@ -21,7 +21,7 @@ library(DT, verbose = FALSE) # for renderDataTable
 
 
 # define where database is located
-db_ver <<- "data113"
+db_ver <<- "data115"
 db_url <<- "http://bioinformatics.sdstate.edu/data/"
 
 # if environmental variable is not set, use relative path
