@@ -264,418 +264,58 @@ ui <- fluidPage(
     mainPanel(
       tabsetPanel(
         id = "tabs", type = "tabs",
+
+        #---Enrichment-----------------------------------------------------------
         tabPanel("Enrichment",
           value = 1,
-          conditionalPanel(
-            "input.goButton == 0 ", # welcome screen
-            br(),
-            fluidRow(
-              column(
-                width = 9,
-                h4("ShinyGO: a graphical gene-set enrichment tool for animals and plants")
-              ),
-              column(
-                width = 3,
-                img(
-                  src = "shinygo_logo.png",
-                  width = "43",
-                  height = "50"
-                )
-              )
-            ),
-            p("9/5/25: v.0.85. Database updated to Ensembl Release 113 and STRING-db v12. "),
-            p("You can still use the old versions using links on the About tab.", 
-              "To support this effort, please cite our paper like ",
-                a("these 4000+ papers.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
-                "Just including URL is not enough.",
-              a("Email Jenny ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
-              "(gelabinfo@gmail.com) for questions, suggestions or data contributions.",
-              "Follow Dr Ge on ", a("Twitter", href = "https://twitter.com/StevenXGe"), " and ",
-              a("LinkedIn", href = "https://www.linkedin.com/in/steven-ge-ab016947/", target = "_blank"),
-              " for updates. ",
-              "To request to add a new species/genome, fill in this ",
-              a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76"), 
-              "We will try to accommodate commonly requested genomes. "
-            ),            
-            p("For-profit organizations: contact us for local installation or customization services."),
-            p("Under active delovelopment with support from NIH. Report bugs or request features on our ", 
-               a("GitHub repository.", href = "https://github.com/gexijin/shinygo", target = "_blank")),
-            p("NO WARRANTY. Please verify results using other tools.
-            Enrichment results may vary depending on gene ID mapping, data sources, 
-            database versions, and methods (particularily ranking).
-              "),
-            h3("GO Enrichment analysis, plus a lot more!"),
-            p("Just paste your gene list to get enriched GO terms and othe pathways for over 14,000 species,
-				    based on annotation from Ensembl and STRING-db."),
-            br(), img(src = "enrich.png", align = "center", width = "660", height = "339"),
-            br(), img(src = "enrichmentChart.png", align = "center", width = "700", height = "400"),
-            br(), br(), img(src = "KEGG2.png", align = "center", width = "541", height = "360"),
-            br(), br(), img(src = "GOtree3.png", align = "center", width = "500", height = "258"),
-            br(), br(), img(src = "GOnetwork2.png", align = "center", width = "500", height = "248"),
-            br(), br(), img(src = "PPInetwork2.png", align = "center", width = "500", height = "391"),
-            br(), br(), img(src = "chr.png", align = "center", width = "444", height = "338"),
-            br(), br(), img(src = "downSyndrome.png", align = "center", width = "371", height = "276"),
-            #br(), br(), img(src = "promoter.png", align = "center", width = "717", height = "288")
-          ),
-          br(),
-          conditionalPanel(
-            "input.goButton != 0",
-            div(
-              style = "display:inline-block",
-              selectInput(
-                inputId = "SortPathways",
-                label = NULL,
-                choices = c(
-                  "Sort by FDR" = "Sort by FDR",
-                  "Sort by Fold Enrichment" = "Sort by Fold Enrichment",
-                  "Sort by average ranks(FDR & Fold)" = "Sort by FDR & Fold Enrichment",
-                  "Select by FDR, sort by Fold Enrichment" = "Select by FDR, sort by Fold Enrichment",
-                  "Sort by Genes" = "Sort by Genes",
-                  "Sort by Category Name" = "Sort by Category Name"
-                ),
-                selected = "Select by FDR, sort by Fold Enrichment"
-              ),
-              style = "algn:right"
-            )
-          ),
-          tableOutput("EnrichmentTable"),
-          conditionalPanel(
-            "input.goButton != 0",
-            downloadButton("downloadEnrichment", "Top Pathways shown above"),
-            downloadButton("downloadEnrichmentAll", "Results on all Pathways"),
-            br(), br(),
-            h3("Methods"),
-            p("All query genes are converted to ENSEMBL gene IDs or STRING-db protein IDs,
-              as our gene ID mapping and pathway data primarily come from these sources. 
-              For model organisms, we manually compile extensive pathway lists from various
-              public databases."),
-
-            p("P-values are calculated using the hypergeometric test, and false discovery 
-              rates (FDRs) are computed via the Benjamini-Hochberg method to correct for 
-              multiple testing. Fold enrichment is defined as the percentage of genes in 
-              your list that are in a pathway divided by the corresponding percentage in 
-              the background genes. While FDR measures statistical significance, fold 
-              enrichment indicates effect size."),
-
-            p("We recommend that users provide their own list of background genes, which 
-              could include all genes detected in an experiment, such as genes with probes 
-              on a DNA microarray, passed a minimal filter in RNA-seq analysis, or detected 
-              in a proteomics experiment. If no background genes are uploaded, the default
-              is to use all protein-coding genes. Alternatively, you may select the option
-              'Use pathway DB for gene counts,' which calculates the background based on
-              the total number of unique genes in the chosen pathway database, limited
-              between 5,000 and 30,000 genes. When this option is selected, any genes in 
-              the user's original list that are not in the pathway database are excluded."),
-
-            p("Only pathways within specified size limits, as defined by the 
-            'Pathway size: (Min, Max)' settings, are considered. Results for smaller
-            pathways can be noisy, but some pathways or GO terms have only a few genes. 
-            After analysis, pathways are filtered by a user-defined FDR cutoff. Significant 
-            pathways are then sorted in different ways, and only the top-ranked are shown 
-            in the table above.
-
-            By default, 'Select by FDR, then by Fold Enrichment' is used, where pathways
-            are first filtered and sorted by FDR, and then the top 20 are sorted by fold 
-            enrichment. In other words, the default setting shows the top 20 most 
-            significant pathways ranked by fold enrichment. When the 'Sort by average 
-            ranks (FDR & fold enrichment)' option is selected, pathways are sorted by 
-            the average of their ranks based on both FDR and fold enrichment. When 
-            'Sort by FDR' is selected, pathways are ranked by FDR and only the top 20 are shown.
-
-            The 'Remove redundancy' option eliminates similar pathways that share 95% of 
-              their genes and 50% of the words in their names, representing them with the
-              pathway that has the highest significance."),
-
-            h3("Interpreting GO Enrichment Results"),
-
-            p("The Gene Ontology (GO) includes tens of thousands of terms (functional 
-              categories), each tested individually for enrichment. Hundreds or even 
-              thousands of GO terms can be statistically significant. These terms are 
-              filtered, ranked, and only the top ones are displayed. Understanding this
-              process is crucial for interpreting GO enrichment results."),
-
-            tags$ul(
-              tags$li("P-value: Reflects the statistical significance of the enrichment.
-                      Lower values suggest a lower likelihood of the result occurring by
-                      chance under the null hypothesis. FDR q-values adjust P-values for
-                      multiple testing to control the proportion of type I errors."),
-              tags$li("Fold Enrichment: Measures the magnitude of enrichment. Higher values
-                      indicate stronger enrichment and are an important metric of effect size."),
-              tags$li("Pathway Genes: The total number of genes in a pathway or GO term."),
-              tags$li("nGenes: The number of genes in the pathway that overlap with your gene list.")
-            ),
-
-            tags$p("Exercise caution when interpreting FDR values of 0.01 or 0.001 for GO 
-                  terms, as these levels often represent noise due to the vast number of 
-                  terms tested. For a gene list of reasonable size, more significant results 
-                  (FDR < 1E-5) are expected."),
-
-            tags$p("Large pathways, such as the cell cycle, often show smaller FDRs due to 
-                  increased statistical power, while smaller pathways might have higher 
-                  FDRs despite their biological relevance. Enrichment analysis tends to 
-                  favor larger pathways."),
-
-            tags$p("With a default cutoff of FDR < 0.05, thousands of significant GO terms
-                  may be detected, though only a subset is shown. Therefore, the method of
-                  filtering and ranking these terms is crucial."),
-
-            tags$p("With large sample sizes, small differences can appear extremely 
-                  significant. In addition to FDR, fold enrichment should also be 
-                  considered when prioritizing pathways, as it reflects the strength 
-                  of the enrichment. We offer several methods that consider both FDR 
-                  q-values and fold enrichment."),
-
-            tags$p("Many GO terms are closely related (e.g., 'Cell Cycle', 'Regulation of 
-                  Cell Cycle') and can dominate the top 20, obscuring other pathways. To 
-                  avoid this, consider examining the top 50 terms. Additionally, use tree
-                  plots and network plots to identify clusters of related GO terms and 
-                  uncover overarching themes."),
-
-            tags$p("Discuss the most significant pathways first, even if they do not fit 
-                  your initial expectations."),
-          )
-        ), # enrichment tab
+          mod_01_enrichment_ui("enrichment")
+        ), 
 
         #---Enrichment Chart-----------------------------------------------------------
         tabPanel("Chart",
           value = 3,
-          plotOutput("enrichChart", width = "100%", height = "100%"),
-          fluidRow(
-            column(3, selectInput(
-              inputId = "SortPathwaysPlot",
-              label = h5("Sort Pathway by"),
-              choices = columnSelection,
-              selected = columnSelection[2]
-            )),
-            column(3, selectInput(
-              inputId = "SortPathwaysPlotX",
-              label = h5("x-axis"),
-              choices = columnSelection[1:3],
-              selected = columnSelection[2]
-            )),
-            column(3, selectInput(
-              inputId = "SortPathwaysPlotColor",
-              label = h5("Color"),
-              choices = columnSelection[1:3],
-              selected = columnSelection[1]
-            )),
-            column(3, selectInput(
-              inputId = "SortPathwaysPlotSize",
-              label = h5("Size"),
-              choices = columnSelection[1:3],
-              selected = columnSelection[3]
-            ))
-          ), # first row
-
-          fluidRow(
-            column(3, numericInput(
-              inputId = "SortPathwaysPlotFontSize",
-              label = h5("Font Size"),
-              value = 12,
-              min = 3,
-              max = 18,
-              step = 1
-            )),
-            column(3, numericInput(
-              inputId = "SortPathwaysPlotMarkerSize",
-              label = h5("Circle Size"),
-              value = 4,
-              min = 0,
-              max = 10,
-              step = 1
-            )),
-            column(3, selectInput(
-              inputId = "SortPathwaysPlotHighColor",
-              label = h5("Color:High"),
-              choices = c("red", "orange", "yellow", "green", "blue", "purple"),
-              selected = "red"
-            )),
-            column(3, selectInput(
-              inputId = "SortPathwaysPlotLowColor",
-              label = h5("Color:Low"),
-              choices = c("red", "orange", "yellow", "green", "blue", "purple"),
-              selected = "blue"
-            ))
-          ), # 2nd row
-
-          fluidRow(
-            column(width = 3, selectInput(
-              inputId = "enrichChartType",
-              label = h5("Chart type"),
-              choices = c("lollipop", "dotplot", "barplot", "barplot_inside"),
-              selected = "lollipop"
-            )),
-            column(3, selectInput(
-              inputId = "enrichChartAspectRatio",
-              label = h5("Aspect Ratio"),
-              choices = .1 * (5:30),
-              selected = 2
-            )),
-            column(
-              width = 3,
-              selectInput(
-                inputId = "ggplot2_theme",
-                label = h5("Plot theme:"),
-                choices = c(
-                  "default", # no change
-                  "gray",
-                  "bw",
-                  "light",
-                  "dark",
-                  "classic",
-                  "minimal",
-                  "linedraw",
-                  "Add grid"
-                ),
-                selected = "default",
-                selectize = FALSE
-              ),
-              tippy::tippy_this(
-                "ggplot2_theme",
-                "Changes the ggplot2 theme for all plots, including those in the Plots tab.",
-                theme = "light-border"
-              )
-            ),
-            column(3, style = "margin-top: 25px;", mod_download_images_ui("download_barplot"))
-          ) # 3rd row
+          mod_02_chart_ui("chart")
         ),
 
         #---Tree-----------------------------------------------------------
         tabPanel("Tree",
           value = 4,
-          h5("A hierarchical clustering tree summarizes the correlation among significant pathways
-                      listed in the Enrichment tab. Pathways with many shared genes are clustered together.
-                        Bigger dots indicate more significant P-values. The width of the plot can be
-                        changed by adjusting the width of your browser window."),
-          fluidRow(
-            column(width = 3, selectInput(
-              inputId = "treeChartAspectRatio",
-              label = h5("Aspect Ratio"),
-              choices = .1 * (5:40),
-              selected = 2
-            )),
-            column(3, style = "margin-top: 25px;", mod_download_images_ui("download_tree", label = "Download"))
-          ),
-          plotOutput("GOTermsTree")
+          mod_03_tree_ui("tree")
         ),
 
         #---Enrichment network-------------------------------------------------------
         tabPanel("Network",
           value = 5,
-          fluidRow(
-            column(2, actionButton("layoutButton", "Change layout")),
-            column(2, actionButton("GONetwork", "Static plot")),
-            column(2, h5("Edge cutoff:"), align = "left"),
-            column(2, numericInput("edgeCutoff", label = NULL, value = 0.30, min = 0, max = 1, step = .1), align = "right"),
-            column(2, checkboxInput("wrapTextNetwork", "Wrap text", value = TRUE))
-          ),
-          visNetworkOutput("enrichmentNetworkPlotInteractive", height = "800px", width = "800px"),
-          downloadButton("enrichmentNetworkPlotInteractiveDownload", "Download HTML"),
-          downloadButton("downloadEdges", "Edges"),
-          downloadButton("downloadNodes", "Nodes"),
-          h5("Similar to the Tree tab, this interactive plot also shows the relationship between enriched pathways.
-       Two pathways (nodes) are connected if they share 20% (default) or more genes.
-       You can move the nodes by dragging them, zoom in and out by scrolling,
-       and shift the entire network by click on an empty point and drag.
-       Darker nodes are more significantly enriched gene sets.
-       Bigger nodes represent larger gene sets.
-       Thicker edges represent more overlapped genes.")
+          mod_04_network_ui("network")
         ),
 
         #---KEGG-----------------------------------------------------------
         tabPanel("KEGG",
           value = 2,
-          conditionalPanel(
-            "input.selectGO != 'KEGG' ",
-            br(), br(),
-            h5("Please select KEGG from the pathway databases to conduct enrichment analysis first.
-            Then you can visualize your genes on any of the significant pathways. Only for some species.")
-          ),
-          conditionalPanel(
-            "input.selectGO == 'KEGG' ",
-            br(),
-            uiOutput("listSigPathways"),
-            br(), imageOutput("KeggImage", width = "100%", height = "100%"),
-            h5("Your genes are highlighted in red. Downloading pathway diagram from KEGG can take 3 minutes. ")
-          )
+          mod_05_kegg_ui("kegg")
         ),
 
         #---Genes-----------------------------------------------------------
         tabPanel("Genes",
           value = 6,
-          fluidRow(
-            column(3, downloadButton("downloadGeneInfo", "More info")),
-            column(4, checkboxInput("showDetailedGeneInfo", "Detailed Description", value = FALSE))
-          ),
-          tableOutput("conversionTable")
+          mod_06_genes_ui("genes")
         ),
         #---Groups-----------------------------------------------------------
         tabPanel("Groups",
           value = 7,
-          downloadButton("downloadGrouping", "Download"),
-          h5("Your genes are grouped by functional categories defined by high-level GO terms. "),
-          tableOutput("grouping")
+          mod_07_groups_ui("groups")
         ),
         #---Plots-----------------------------------------------------------
         tabPanel("Plots",
           value = 8,
-          h5("The characteristics of your genes are compared with the rest in the genome. Chi-squared and Student's
-              t-tests are run to see if your genes have special characteristics when compared with all the other genes or, if uploaded, a customized background."),
-          fluidRow(
-            column(
-              width = 4,
-              mod_download_images_ui("download_gene_plot_dist", "Download density plots")
-            ),
-            column(
-              width = 4,
-              mod_download_images_ui("download_gene_barplot", "Download barplots")
-            )
+          mod_08_plots_ui("plots")
           ),
-          br(),
-          plotOutput("genePlot2", inline = TRUE, width = "auto", height = "auto"),
-          plotOutput("gene_barplot", inline = TRUE, width = "auto", height = "auto")
-        ),
 
         #---Genome-----------------------------------------------------------
         tabPanel("Genome",
           value = 9,
-          plotlyOutput("genomePlotly", height = "900px"),
-          fluidRow(
-            column(3, checkboxInput("labelGeneSymbol", "Label genes", value = FALSE)),
-            column(3, checkboxInput("ignoreNonCoding", "Coding genes only", value = TRUE)),
-            column(3, checkboxInput("show_all_chr", "All chr.", value = FALSE)),
-            column(3, actionButton("gPlotstatic", "Static plot"))
-          ),
-          fluidRow(
-            column(3, selectInput(
-              inputId = "MAwindowSize",
-              label = h5("Window Size(Mb)"),
-              selected = 6,
-              choices = c(1, 2, 4, 6, 8, 10, 15, 20)
-            )),
-            column(3, selectInput(
-              inputId = "MAwindowSteps",
-              label = h5("Steps in a window"),
-              choices = unique(1:4),
-              selected = c(2)
-            )),
-            column(3, selectInput(
-              inputId = "chRegionPval",
-              label = h5("FDR cutoff for windows"),
-              selected = 0.00001,
-              choices = c(0.1, 0.05, 0.01, 0.001, 0.0001, 0.00001, 0.000001)
-            ))
-          ),
-          h5("The genes are represented by red dots. The purple lines indicate regions where
-                        these genes are statistically enriched, compared to the density of genes in the background.
-                        We scanned the genome with a sliding window. Each window is further divided into several
-                        equal-sized steps for sliding. Within each window we used the hypergeometric test to
-                        determine if your genes are significantly overrepresented. Essentially, the genes in
-                        each window define a gene set/pathway, and we carried out enrichment analysis. The
-                        chromosomes may be only partly shown as we use the last gene's location to draw the line.
-                        Mouse over to see gene symbols. Zoom in regions of interest.")
+          mod_09_genome_ui("genome")
         ),
-
         #---Genome-----------------------------------------------------------
 #        tabPanel("Promoter",
 #          value = 10,
@@ -693,259 +333,16 @@ ui <- fluidPage(
         #---STRING-----------------------------------------------------------
         tabPanel("STRING",
           value = 11,
-
-          textOutput("STRINGDB_mapping_stat"),
-          tags$head(tags$style("#STRINGDB_mapping_stat{color: blue;font-size: 15px;}")),
-          br(),
-          actionButton("ModalPPI", "PPI network of DEGs"), br(), br(),
-          selectInput("STRINGdbGO",
-            label = "Functional Enrichment",
-            choices = list(
-              "GO Biological Process" = "Process",
-              "GO Cellular Component" = "Component",
-              "GO Molecular Function" = "Function",
-              "KEGG" = "KEGG",
-              "Pfam" = "Pfam",
-              "InterPro" = "InterPro"
-            ),
-            selected = "Process"
-          ),
-          downloadButton("STRING_enrichmentDownload"),
-          tableOutput("stringDB_GO_enrichment"),
-          br(),br(),
-          h5(
-            "To validate your results independent of our algorithm and database, 
-            your genes are sent to STRING-db website for enrichment analysis. 
-            This also enables the
-             retrieval of a protein-protein network. If it is running, 
-             please wait until it finishes. The second time it is faster."
-          ),
+          mod_10_string_ui("string")
         ),
 
         #---?-----------------------------------------------------------
         tabPanel("About",
           value = 12,
-          p(
-            "ShinyGO is developed and maintained by a small team at ",
-            a(
-              "South Dakota State University (SDSU). ",
-              href = "https://www.sdstate.edu/"
-            ),
-            "Our team consists of ",
-            a(" Xijin Ge (PI), ", href = "https://www.sdstate.edu/directory/xijin-ge", target = "_blank"),
-            "Jianli Qi (research associate), and
-        a few graduate students."
-          ),
-          " For feedbacks, ",
-          a("email us, ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
-          "or file a bug report or feature request on our",
-          a(" GitHub repository, ", href = "https://github.com/gexijin/shinygo", target = "_blank"),
-          " where you can also find the source code.",
-          "For details, please see our", a("paper", href = "https://doi.org/10.1093/bioinformatics/btz931", target = "_blank"),
-          "and a detailed", a("demo.", href = "https://www.biorxiv.org/content/biorxiv/suppl/2018/05/04/315150.DC1/315150-1.pdf", target = "_blank"),
-          "ShinyGO shares many functionalities and databases with ", a("iDEP.", href = "http://bioinformatics.sdstate.edu/idep/", target = "_blank"),
-          br(), br(),
-          strong("Citation (Just including URL is not enough!):"),
-          br(),
-          "Ge SX, Jung D & Yao R,", a(" Bioinformatics 36:2628–2629, 2020.", href = "https://doi.org/10.1093/bioinformatics/btz931", target = "_blank"),
-          " If you use the KEGG diagram, please also cite ",
-          a("KEGG.", href = "https://doi.org/10.1093/nar/gkaa970"),
-          br(), br(),
-          strong("Previous versions are still functional:"),
-          br(),
-          a("ShinyGO V0.82, ",
-            href = "http://bioinformatics.sdstate.edu/go82/"
-          ),
-          "based on Ensembl Release 104, archived on Sept 5, 2025",
-          br(),
-          a("ShinyGO V0.81, ",
-            href = "http://bioinformatics.sdstate.edu/go81/"
-          ),
-          "based on Ensembl Release 104, archived on Feb. 3, 2025",
-          br(),
-          a("ShinyGO V0.80, ",
-            href = "http://bioinformatics.sdstate.edu/go80/"
-          ),
-          "based on Ensembl Release 104, archived on Oct 25, 2024",
-          br(),
-          a("ShinyGO V0.77, ",
-            href = "http://bioinformatics.sdstate.edu/go77/"
-          ),
-          "based on Ensembl Release 104, archived on Jan. 5, 2024",
-          br(),
-          a("ShinyGO V0.76, ",
-            href = "http://bioinformatics.sdstate.edu/go76/"
-          ),
-          "based on Ensembl Release 104 with revision, archived on September 2, 2022",
-          br(),
-          a("ShinyGO V0.75, ",
-            href = "http://bioinformatics.sdstate.edu/go75/"
-          ),
-          "based on Ensembl Release 104 with revision, archived on April 4, 2022",
-          br(),
-          a("ShinyGO V0.74, ",
-            href = "http://bioinformatics.sdstate.edu/go74/"
-          ),
-          "based on Ensembl Release 104, archived on Feb. 8, 2022",
-          br(),
-          a("ShinyGO V0.65, ",
-            href = "http://bioinformatics.sdstate.edu/go65/"
-          ),
-          "based on Ensembl Release 103, archived on Oct. 15, 2021",
-          br(),
-          a("ShinyGO V0.61, ",
-            href = "http://bioinformatics.sdstate.edu/go61/"
-          ),
-          "based on Ensembl Release 96, archived on May 23, 2020",
-          br(),
-          a("ShinyGO V0.60, ",
-            href = "http://bioinformatics.sdstate.edu/go60/"
-          ),
-          "based on Ensembl Release version 96, archived on Nov 6, 2019",
-          br(),
-          a("ShinyGO V0.51, ",
-            href = "http://bioinformatics.sdstate.edu/go51/"
-          ),
-          "based on Ensembl Release version 95, archived on May 20, 2019",
-          br(),
-          a("ShinyGO V0.50, ",
-            href = "http://bioinformatics.sdstate.edu/go50/"
-          ),
-          "based on Ensembl Release version 92, archived on March 29, 2019",
-          br(),
-          a("ShinyGO V0.41, ",
-            href = "http://bioinformatics.sdstate.edu/go41/"
-          ),
-          "based on Ensembl Release version 91, archived on July 11, 2018",
-          br(),
-          h5("Genomes based on STRING-db is marked as STRING-db. If the same genome is included in both Ensembl and STRING-db, users should
-            use Ensembl annotation, as it is more updated and is supported in more functional modules. ")
-
-          # ,includeHTML("help.htm")
-          , h4("Input:"),
-          "A list of gene ids, separated by tab, space, comma or the newline characters.
-		   Ensembl gene IDs are used internally to identify genes. Other types of IDs will be mapped to Ensembl
-		   gene IDs using ID mapping information available in Ensembl BioMart. ",
-          h4("Output:"),
-          "Enriched GO terms and pathways:",
-          br(),
-          img(src = "enrich.png", align = "center", width = "660", height = "339"),
-          br(), br(),
-          "In addition to the enrichment table, a set of plots are produced. If KEGG database is choosen, then enriched pathway diagrams are shown, with user's genes highlighted, like this one below:",
-          br(),
-          img(src = "KEGG.png", align = "center", width = "696", height = "494"),
-          br(), br(),
-          "Many GO terms are related. Some are even redundant, like \"cell cycle\" and \"cell cycle process\".
-		 To visualize such relatedness in enrichment results, we use a hierarchical clustering tree and network.
-		 In this hierarchical clustering tree, related GO terms are grouped together based on how many genes they share. The size of the solid circle corresponds to the enrichment FDR.",
-          br(),
-          img(src = "GOtree.png", align = "center", width = "700", height = "361"),
-          br(), br(),
-          "In this network below, each node represents an enriched GO term. Related GO terms are connected by a line, whose thickness reflects percent of overlapping genes. The size of the node corresponds to number of genes.",
-          br(), img(src = "GOnetwork.png", align = "center", width = "500", height = "248"),
-          br(), br(),
-          "Through API access to STRING-db, we also retrieve a protein-protein interaction (PPI) network. In addition to a static network image, users can also get access to interactive graphics at the www.string-db.org web server.",
-          br(), img(src = "PPInetwork.png", align = "center", width = "700", height = "547"),
-          br(), br(),
-          "ShinyGO also detects transcription factor (TF) binding motifs enriched in the promoters of user's genes.",
-          br(), br(), img(src = "promoter.png", align = "center", width = "717", height = "288"),
-          includeHTML("human_mouse_source.html"),
-          br(), 
-          h4("Changes:"),
-
-            p("2/3/25: v.0.82. Fix issues caused by multiple ENSEMBL IDs for the same gene on patched chromosomes, causing inaccurate enrichment results. Duplicated ENSEMBL IDs are now ignored. "),
-            p("10/26/24: v0.81. Disabled the switch of species during analysis. Fixed errors with STRING tab when STRINGdb species are used. 
-            If a gene ID maps multiple Ensembl genes, all are kept for enrichment. "),
-            p("10/25/24: Migrated to new server. Upgraded R to 4.4.0."),
-
-            p("4/21/2024: New barchart with GO terms on the bars."),
-            p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),        
-            p("4/21/2024: New barchart with GO terms on the bars."),
-            p("4/20/2024: UI adjustment"),
-            p("4/12/2024: Max set size is increased to 5000 from 2000. Some meaningful GO terms (RNA biosynthetic proc.) contains 4000+ genes. "),
-            p("1/5/2024: ShinyGO 0.80 becomes default. You have to select your species first. Database is updated to Ensembl release
-             107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
-            We also included 14,094 species from STRING-DB 11.5."
-            ), 
-            p("5/1/2023: ShinyGO 0.80 release in testing mode. Thanks to Jenny's hardwork, we update to Ensembl release
-             107 which includes 620 species: 215 main, 177 metazoa, 124 plants, 33 protists and 1 bacteria. 
-            We also included 14,094 species from STRING-DB 11.5.",
-              style = "color:red"
-            ),
-            p(
-              "Jan. 19, 2023: Thanks to a user's feedback, we found a serious bug
-              in ShinyGO 0.76.
-              As some genes are represented by multiple gene IDs in Ensebml, they are counted more
-              than once in calculating enrichment. We believe this is fixed. If you
-              pasted Ensembl gene IDs to ShinyGO 0.76 between April 4, 2022 and Jan. 19, 2023,
-              please rerun your analysis. ShinyGO has not been throughly tested.
-              Please always double check your results with other tools
-              such as G:profiler, Enrichr, STRING-db, and DAVID."
-            ),
-            p("Oct 26, 2022: V. 0.76.3 Add hover text. Change plot styles.
-             When users select \"Sort by Fold Enrichment\",
-             the minimum pathway size is raised to 10 to
-             filter out noise from tiny gene sets."),
-            p("Sept 28, 2022: In ShinyGO 0.76.2, KEGG is now the default pathway database. More importantly,
-                    we reverted to 0.76 for default gene counting method, namely
-                    all protein-coding genes are used as the background by default.
-                    The new feature introduced in 0.76.1, which uses the pathway database
-                    to determine total number of genes in the background, can be turned on as an option
-                    ('Use pathway database for gene counts').
-                    This is based on feedback from some users that
-                     when using smaller pathway databases, such as KEGG, the new method changes
-                     the P values substantially."),
-            p("Sept 3, 2022: ShinyGO 0.76.1. In this small improvement, we improved how we count the number of genes for
-                    calculating P value. A gene must match at least one pathway in the selected pathway database. Otherwise this gene
-                    is ignored in the calculation of P values based on hypergeometric distribution. This applies to both query and background genes. "),
-            p("April 19, 2022: ShinyGO 0.76 released. Improved pathway filtering, pathway sorting, figure downloading.
-                       Version 0.75 is available", a("here.", href = "http://bioinformatics.sdstate.edu/go75")),
-          p("April 17, 2022: Add more flexiblity for download figures in PDF, SVG and high-res PNG."),
-          p("April 8, 2022: Add features to remove redundant pathways. Add filter to remove extrmely large or small pathways. Changed interface to always show KEGG tab."),
-          p("Mar. 7, 2022: Fixed an R library issue affected KEGG diagrams for some organisms."),
-          p("Feb. 26, 2022: Fixed a bug regarding the Plot tab when background genes are used. Background genes were not correctly
-                    used to calculate the distributions of various gene characteristics. If these plots are important in your study, please re-analyze your genes."),
-          p("Feb. 19, 2022: R upgraded from 4.05 to 4.1.2. This solved the STRING API issues. Some Bioconductor packages are also upgraded.", style = "color:red"),
-          p("Feb. 8, 2022: ShinyGO v0.75 officially released. Old versions are still available. See the last tab.", style = "color:red"),
-          p("Nov. 15, 2021: Database update. ShinyGO v0.75 available in testing mode. It includes Ensembl database update, new species from Ensembl Fungi and Ensembl Protists, and STRINGdb (5090 species) update to 11.5."),
-          p("Oct25, 2021: Interactive genome plot. Identificantion of genomic regions signficantly enriched with user genes."),
-          p("Oct.23, 2021: Version 0.741 A fully customizable enrichment chart! Switch between bar, dot or lollipop plots.  Detailed gene informations with links on the Genes tab."),
-          p("Oct. 15, 2021: Version 0.74. Database updated to Ensembl Release 104 and STRING v11. We now recommends the use of background genes in enrichment analysis. V.0.74 is much faster with even large set of background genes."),
-          h5("6/6/2021: V0.66 Adjusted interface. "),
-          h5("6/2/2021: V0.66 add customized background genes."),
-          h5("5/23/2021: V0.65 Database update to Ensembl 103 and STRING-db v11."),
-          h5("11/3/2019: V 0.61 Improved visualization based on suggestions from reviewers. Interactive networks."),
-          h5("5/20/2019: V0.60 Upgraded to Ensembl Biomart 96. Add annotation from STRING-db v10"),
-          h5("3/29/2019: V0.51 Update annotation to Ensembl release 95. Interface change. Demo gene lists. Error messages."),
-          h5("9/10/2018: V0.5 Upgraded to Ensembl Biomart 92"),
-          h5("4/30/2018: V0.42 changed figure configurations for tree."),
-          h5("4/27/2018: V0.41 Change to ggplot2, add grid and gridExtra packages"),
-          h5("4/24/2018: V0.4 Add STRING API, KEGG diagram, tree display and network.")
-
+          mod_11_about_ui("about")
         )
         
       ), # tabsetPanel
-      bsModal("ModalExamplePPI", "Protein-protein interaction networks ", "ModalPPI",
-        size = "large",
-        h5("By sending your genes to the STRING website,
-			shinyGO is retrieving a sub-network, calculating PPI enrichment,
-		  and generating custom URLs to the STRING website containing your genes. This can take 5 minutes. Patience will pay off! "),
-        sliderInput("nGenesPPI", label = h5("Genes to include:"), min = 0, max = 400, value = 20, step = 10),
-        # ,htmlOutput("stringDB_network_link")
-        # ,tags$head(tags$style("#stringDB_network_link{color: blue; font-size: 15px;}"))
-
-        plotOutput("stringDB_network1")
-      ), # bsModal 1
-
-      bsModal("InteractiveNetwork", "Interactive enrichment networks ", "GONetwork",
-        size = "large",
-        fluidRow(
-          column(2, actionButton("layoutButtonStatic", "Change layout")),
-          column(2, downloadButton("enrichmentNetworkPlotDownload", "Download")),
-          column(2, checkboxInput("wrapTextNetworkStatic", "Wrap text", value = FALSE))
-        ),
-        plotOutput("enrichmentNetworkPlot")
-      ), # bsModal 2
 
       bsModal("BackgroundGenes", "Customized background genes (recommended)", "backgroundGenes",
         size = "large",
@@ -979,12 +376,6 @@ Currently only less than 30,000 genes are accepted.",
         tableOutput("showGeneIDs4Species")
       ), # bsModal 4
 
-      bsModal("genomePlotStaticButton", "Static genome plot", "gPlotstatic",
-        size = "large",
-        h5("Your genes are marked in each of the chromosomes.
-                Note that the scale for each chromosomes are different."),
-        plotOutput("genomePlot", width = "100%")
-      ) # bsModal 6
     ) # mainPanel
   ) # sidebarLayout
   #, tags$head(includeScript("google_analytics.js")), # tracking usage
