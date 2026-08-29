@@ -41,8 +41,8 @@ ui <- fluidPage(
           inputId = "selectOrg",
           label = NULL,
           selectize = TRUE,
-          choices = setNames(96, "Human"), # Human is selected by default
-          selected = setNames(96, "Human")
+          choices = setNames(95, "Human"), # Human is selected by default
+          selected = setNames(95, "Human")
         )
       ),
       fluidRow(
