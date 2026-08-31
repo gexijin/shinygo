@@ -1884,12 +1884,12 @@ server <- function(input, output, session) {
             incProgress(5 / 8)
 
             # GC content ------------
+            # add this filter here to avoid, errors in t.test
+            x2 <-  x2[which(!is.na(x2$percentage_gc_content) & x2$percentage_gc_content > 0), ]
             if (sum(!is.na(x2$percentage_gc_content)) >= minGenes &&
               length(unique(x2$percentage_gc_content)) > 2 &&
               length(which(x2$Set == "List")) > minGenes) {
-              Pval <- t.test(percentage_gc_content ~ Set,
-                data = x2[which(!is.na(x2$percentage_gc_content) & x2$percentage_gc_content > 0), ]
-              )$p.value
+              Pval <- t.test(percentage_gc_content ~ Set, data = x2)$p.value
               sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
 
               p6 <- ggplot(x2, aes(percentage_gc_content, fill = Set, colour = Set)) +
