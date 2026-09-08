@@ -286,15 +286,15 @@ ui <- fluidPage(
             p("8/28/26: v.0.86.0 Ensembl Release 115 (925 species), STRING-db 12.0 (12,535 species), NCBI (v.6/15/2026, 2342 species), and 39 custom genomes. "),
             p("You can still use the old versions using links on the About tab.", 
               "To support this effort, please cite our paper like ",
-                a("these 4000+ papers.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5"),
+                a("these 4000+ papers.", href = "https://scholar.google.com/scholar?oi=bibs&hl=en&cites=4205886424733220184&as_sdt=5", target = "_blank"),
                 "Just including URL is not enough.",
-              a("Email Jenny ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
+              a("Email Jenny ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO", target = "_blank"),
               "(gelabinfo@gmail.com) for questions, suggestions or data contributions.",
-              "Follow Dr Ge on ", a("Twitter", href = "https://twitter.com/StevenXGe"), " and ",
+              "Follow Dr Ge on ", a("Twitter", href = "https://twitter.com/StevenXGe", target = "_blank"), " and ",
               a("LinkedIn", href = "https://www.linkedin.com/in/steven-ge-ab016947/", target = "_blank"),
               " for updates. ",
               "To request to add a new species/genome, fill in this ",
-              a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76"), 
+              a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76", target = "_blank"), 
               "We will try to accommodate commonly requested genomes. "
             ),            
             p("For-profit organizations: contact us for local installation or customization services."),
@@ -734,7 +734,7 @@ ui <- fluidPage(
             "ShinyGO is developed and maintained by a small team at ",
             a(
               "South Dakota State University (SDSU). ",
-              href = "https://www.sdstate.edu/"
+              href = "https://www.sdstate.edu/", target = "_blank"
             ),
             "Our team consists of ",
             a(" Xijin Ge (PI), ", href = "https://www.sdstate.edu/directory/xijin-ge", target = "_blank"),
@@ -742,7 +742,7 @@ ui <- fluidPage(
         a few graduate students."
           ),
           " For feedbacks, ",
-          a("email us, ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO"),
+          a("email us, ", href = "mailto:gelabinfo@gmail.com?Subject=ShinyGO", target = "_blank"),
           "or file a bug report or feature request on our",
           a(" GitHub repository, ", href = "https://github.com/gexijin/shinygo", target = "_blank"),
           " where you can also find the source code.",
@@ -754,77 +754,77 @@ ui <- fluidPage(
           br(),
           "Ge SX, Jung D & Yao R,", a(" Bioinformatics 36:2628–2629, 2020.", href = "https://doi.org/10.1093/bioinformatics/btz931", target = "_blank"),
           " If you use the KEGG diagram, please also cite ",
-          a("KEGG.", href = "https://doi.org/10.1093/nar/gkaa970"),
+          a("KEGG.", href = "https://doi.org/10.1093/nar/gkaa970", target = "_blank"),
           br(), br(),
           strong("Previous versions are still functional:"),
           br(),
           a("ShinyGO V0.85.2, ",
-            href = "http://bioinformatics.sdstate.edu/go85/"
+            href = "http://bioinformatics.sdstate.edu/go85/", target = "_blank"
           ),
           "based on Ensembl Release 113, archived on Aug 28, 2026",
           br(),
           a("ShinyGO V0.82, ",
-            href = "http://bioinformatics.sdstate.edu/go82/"
+            href = "http://bioinformatics.sdstate.edu/go82/", target = "_blank"
           ),
           "based on Ensembl Release 104, archived on Sept 5, 2025",
           br(),
           a("ShinyGO V0.81, ",
-            href = "http://bioinformatics.sdstate.edu/go81/"
+            href = "http://bioinformatics.sdstate.edu/go81/", target = "_blank"
           ),
           "based on Ensembl Release 104, archived on Feb. 3, 2025",
           br(),
           a("ShinyGO V0.80, ",
-            href = "http://bioinformatics.sdstate.edu/go80/"
+            href = "http://bioinformatics.sdstate.edu/go80/", target = "_blank"
           ),
           "based on Ensembl Release 104, archived on Oct 25, 2024",
           br(),
           a("ShinyGO V0.77, ",
-            href = "http://bioinformatics.sdstate.edu/go77/"
+            href = "http://bioinformatics.sdstate.edu/go77/", target = "_blank"
           ),
           "based on Ensembl Release 104, archived on Jan. 5, 2024",
           br(),
           a("ShinyGO V0.76, ",
-            href = "http://bioinformatics.sdstate.edu/go76/"
+            href = "http://bioinformatics.sdstate.edu/go76/", target = "_blank"
           ),
           "based on Ensembl Release 104 with revision, archived on September 2, 2022",
           br(),
           a("ShinyGO V0.75, ",
-            href = "http://bioinformatics.sdstate.edu/go75/"
+            href = "http://bioinformatics.sdstate.edu/go75/", target = "_blank"
           ),
           "based on Ensembl Release 104 with revision, archived on April 4, 2022",
           br(),
           a("ShinyGO V0.74, ",
-            href = "http://bioinformatics.sdstate.edu/go74/"
+            href = "http://bioinformatics.sdstate.edu/go74/", target = "_blank"
           ),
           "based on Ensembl Release 104, archived on Feb. 8, 2022",
           br(),
           a("ShinyGO V0.65, ",
-            href = "http://bioinformatics.sdstate.edu/go65/"
+            href = "http://bioinformatics.sdstate.edu/go65/", target = "_blank"
           ),
           "based on Ensembl Release 103, archived on Oct. 15, 2021",
           br(),
           a("ShinyGO V0.61, ",
-            href = "http://bioinformatics.sdstate.edu/go61/"
+            href = "http://bioinformatics.sdstate.edu/go61/", target = "_blank"
           ),
           "based on Ensembl Release 96, archived on May 23, 2020",
           br(),
           a("ShinyGO V0.60, ",
-            href = "http://bioinformatics.sdstate.edu/go60/"
+            href = "http://bioinformatics.sdstate.edu/go60/", target = "_blank"
           ),
           "based on Ensembl Release version 96, archived on Nov 6, 2019",
           br(),
           a("ShinyGO V0.51, ",
-            href = "http://bioinformatics.sdstate.edu/go51/"
+            href = "http://bioinformatics.sdstate.edu/go51/", target = "_blank"
           ),
           "based on Ensembl Release version 95, archived on May 20, 2019",
           br(),
           a("ShinyGO V0.50, ",
-            href = "http://bioinformatics.sdstate.edu/go50/"
+            href = "http://bioinformatics.sdstate.edu/go50/", target = "_blank"
           ),
           "based on Ensembl Release version 92, archived on March 29, 2019",
           br(),
           a("ShinyGO V0.41, ",
-            href = "http://bioinformatics.sdstate.edu/go41/"
+            href = "http://bioinformatics.sdstate.edu/go41/", target = "_blank"
           ),
           "based on Ensembl Release version 91, archived on July 11, 2018",
           br(),
@@ -909,7 +909,7 @@ ui <- fluidPage(
                     calculating P value. A gene must match at least one pathway in the selected pathway database. Otherwise this gene
                     is ignored in the calculation of P values based on hypergeometric distribution. This applies to both query and background genes. "),
             p("April 19, 2022: ShinyGO 0.76 released. Improved pathway filtering, pathway sorting, figure downloading.
-                       Version 0.75 is available", a("here.", href = "http://bioinformatics.sdstate.edu/go75")),
+                       Version 0.75 is available", a("here.", href = "http://bioinformatics.sdstate.edu/go75", target = "_blank")),
           p("April 17, 2022: Add more flexiblity for download figures in PDF, SVG and high-res PNG."),
           p("April 8, 2022: Add features to remove redundant pathways. Add filter to remove extrmely large or small pathways. Changed interface to always show KEGG tab."),
           p("Mar. 7, 2022: Fixed an R library issue affected KEGG diagrams for some organisms."),
