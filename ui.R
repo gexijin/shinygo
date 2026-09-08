@@ -297,6 +297,9 @@ ui <- fluidPage(
               a("Form.", href = "https://forms.gle/zLtLnqxkW187AgT76", target = "_blank"), 
               "We will try to accommodate commonly requested genomes. "
             ),            
+            p("Try our mirror site at ",
+              a("https://orditus.ai/go/", href = "https://orditus.ai/go/", target = "_blank"),
+              "if this site is slow or unavailable."),
             p("For-profit organizations: contact us for local installation or customization services."),
             p("Under active delovelopment with support from NIH. Report bugs or request features on our ", 
                a("GitHub repository.", href = "https://github.com/gexijin/shinygo", target = "_blank")),
