@@ -41,20 +41,20 @@ if (!file.exists(org_info_file)) {
 
 connect_convert_db <- function(datapath = datapath) {
   if (!file.exists(org_info_file)) {
-    # download org_info and demo files to current folder
-    withProgress(message = "Download demo data and species database", {
-      incProgress(0.2)
-      file_name <- paste0(db_ver, ".tar.gz")
-      options(timeout = 300)
-      download.file(
-        url = paste0(db_url, db_ver, "/", file_name),
-        destfile = file_name,
-        mode = "wb",
-        quiet = FALSE
-      )
-      untar(file_name) # untar and unzip the files
-      file.remove(file_name) # delete the tar file to save storage
-    })
+    # download org_info and demo files to current folder. This runs while
+    # global.R is being sourced, before any Shiny session exists, so we cannot
+    # use withProgress()/incProgress() here (they require a ShinySession).
+    message("Downloading demo data and species database (this may take a while)...")
+    file_name <- paste0(db_ver, ".tar.gz")
+    options(timeout = 300)
+    download.file(
+      url = paste0(db_url, db_ver, "/", file_name),
+      destfile = file_name,
+      mode = "wb",
+      quiet = FALSE
+    )
+    untar(file_name) # untar and unzip the files
+    file.remove(file_name) # delete the tar file to save storage
   }
 
   return(DBI::dbConnect(

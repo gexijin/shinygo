@@ -31,3 +31,5 @@ The app needs species databases (SQLite) that are **not** in this repo. Location
 - No test suite or build step — verify changes by running the app.
 - Global config uses `<<-` in `global.R` (intentional).
 - Dependencies are listed in `install_pckages.R`, not a DESCRIPTION file.
+
+## To start the app using shiny::runApp() from an R session.
