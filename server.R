@@ -2532,4 +2532,13 @@ server <- function(input, output, session) {
       }) # progress
     }) # isolate
   })
+
+  # Test-only hook (ignored outside shinytest2): the Chart, Tree and Plots tabs
+  # render as images, so tests/testthat/test-app.R reads the plot objects (and
+  # the tree's input) instead.
+  exportTestValues(
+    enrich_chart = enrichChartObject(),
+    gene_density_plot = gene_density_plot(),
+    tree_input = significantOverlaps2()
+  )
 }
