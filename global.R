@@ -1,14 +1,23 @@
-###################################################
-# Author: Steven Ge Xijin.Ge@sdstate.edu
-# Lab: Ge Lab
-# R version 4.0.5
-# Project: ShinyGO v65
-# File: global.R
-# Purpose of file:global file for app (need more info here)
-# Start data: NA (mm-dd-yyyy)
-# Data last modified: 06-16-2021, 11:46 PM CST (mm-dd-yyyy,TIME)
-# to help with github merge
-#######################################################
+# Global settings
+#
+# Shiny runs this file first, before R/, ui.R and server.R. It loads the
+# packages and sets plain constants that never change while the app runs.
+# Data from the database is not loaded here: see load_app_data() in
+# R/app_data.R. Originally by Steven Ge (Xijin.Ge@sdstate.edu), Ge Lab.
+#
+#   STRING_DB_VERSION      STRING-db version, used to place STRING genomes
+#   Min_overlap            minimum query genes for a pathway to be tested
+#   PvalGeneInfo, 1, 2     P value cutoffs for *, **, *** on the Plots tab
+#   minGenes               minimum genes needed to draw a Plots-tab chart
+#   maxGenesBackground     background genes above this are sampled down
+#   redudantGeneSetsRatio  gene overlap at which pathways count as redundant
+#   min_gene_fold          minimum pathway size when sorting by fold
+#   ExampleGeneList1       the "Demo genes" list (human Ensembl IDs)
+#   mycolors               20 colours, used for the tree leaves
+#   sqlite                 SQLite driver for the pathway databases
+#   columnSelection        Chart tab menu choices
+# ----------------------------------------------------------------------------
+
 library(shiny)
 library(RSQLite)
 library(ggplot2)
@@ -19,38 +28,27 @@ library(visNetwork)
 library(dplyr)
 library(DT, verbose = FALSE) # for renderDataTable
 
-# Plain constants and settings. Data from the database (species table, menus,
-# file paths, ...) is loaded once at app start by load_app_data() in
-# R/app_data.R, which Shiny loads after this file.
 
-STRING_DB_VERSION <- "12.0" # what version of STRINGdb needs to be used
+# Settings ---------------------------------------------------------------------
+
+STRING_DB_VERSION <- "12.0"
 Min_overlap <- 1
-minSetSize <- 3
-mappingCoverage <- 0.60 # 60% percent genes has to be mapped for confident mapping
-mappingEdge <- 0.5 # Top species has 50% more genes mapped
-maxTerms <- 30 # max number of enriched terms; no longer used
 PvalGeneInfo <- 0.05
-minGenes <- 10 # min number of genes for plotting
+minGenes <- 10
 PvalGeneInfo1 <- 0.01
 PvalGeneInfo2 <- 0.001
 maxGenesBackground <- 100000
-redudantGeneSetsRatio <- 0.95 # remove redundant pathways if they share 90% of genes.
-min_gene_fold <- 10 # minimum number of  genes in pathways, when sorting by fold.
-pdf(NULL) # this prevents error Cannot open file 'Rplots.pdf'
-ExampleGeneList2 <-
-  "Hus1 Rad1 Tp63 Tp73 Usp28 Rad9b Fanci Hus1b
-Cdk1 Cry1 D7Ertd443e Chek1 Foxo4 Zak Pea15a
-Mapkapk2 Brca1 Taok1 Cdk5rap3 Ddx39b Mdm2 Fzr1
-Rad17 Prkdc Cdkn1a Cdc5l Wac Thoc1 Prpf19 Rad9a
-Pidd1 Atrip Uimc1Nek6 Atf2 E2f1 Nbn Rpa2 Rint1
-Clock Chek2 Casp2 Blm Plk1 Brcc3 Hinfp Fem1b
-Tipin Atr Cdc14b Rfwd3 Ccar2 Foxn3 Atm Thoc5
-Rps27l Ints7 Dtl Tiprl Rbbp8 Clspn Cradd Rhno1
-Sox4 Msh2 Xpc Rad9a Rnaseh2b Fbxo4 Syf2 Cul4a
-Gigyf2 Mapk14 Bcat1 Fbxo31 Babam1 Cep63 Ccnd1
-Nek11 Fam175a Brsk1 Plk5 Bre Tp53 Taok2 Taok3
-Nek1 Mre11a Pml Ptpn11 Zfp830
-"
+redudantGeneSetsRatio <- 0.95 # share of genes; the name's typo is kept as is
+min_gene_fold <- 10
+
+# Send stray base-graphics output nowhere, instead of an Rplots.pdf file that
+# the server may not be allowed to write.
+pdf(NULL)
+
+
+# Demo gene list ----------------------------------------------------------------
+
+# Human Ensembl IDs, pasted in by the "Demo genes" button.
 ExampleGeneList1 <- "ENSG00000078900
 ENSG00000117614
 ENSG00000117748
@@ -133,10 +131,15 @@ ENSG00000100296
 ENSG00000184481
 ENSG00000185515"
 
-mycolors <- sort(rainbow(20))[c(1, 20, 10, 11, 2, 19, 3, 12, 4, 13, 5, 14, 6, 15, 7, 16, 8, 17, 9, 18)] # 20 colors for kNN clusters
+
+# Plotting and database helpers ------------------------------------------------
+
+# 20 rainbow colours, reordered so neighbours contrast.
+mycolors <- sort(rainbow(20))[c(1, 20, 10, 11, 2, 19, 3, 12, 4, 13, 5, 14, 6, 15, 7, 16, 8, 17, 9, 18)]
 
 sqlite <- dbDriver("SQLite")
 
+# Chart tab menus: label -> column of the enrichment table.
 columnSelection <- list(
   "-log10(FDR)" = "EnrichmentFDR",
   "Fold Enrichment" = "FoldEnrichment",

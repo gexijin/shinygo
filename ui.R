@@ -13,12 +13,6 @@ library(shinyBS, verbose = FALSE) # for popup figures
 library(plotly) # interactive network plot
 library(visNetwork)
 library("reactable", verbose = FALSE)
-columnSelection <- list(
-  "-log10(FDR)" = "EnrichmentFDR",
-  "Fold Enrichment" = "FoldEnrichment",
-  "Genes" = "nGenes",
-  "Category Name" = "Pathway"
-)
 
 ui <- fluidPage(
   # reduce the space between label and widgets, globally

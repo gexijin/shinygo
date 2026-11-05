@@ -19,6 +19,7 @@
 # ----------------------------------------------------------------------------
 
 
+# Shared by every session and treated as read-only once filled.
 .app <- new.env()
 
 
