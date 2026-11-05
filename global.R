@@ -18,15 +18,21 @@
 #   columnSelection        Chart tab menu choices
 # ----------------------------------------------------------------------------
 
+# All packages are loaded here. The order matters: a package loaded later
+# replaces same-named functions from earlier ones (igraph's union() and
+# groups() win over dplyr's). STRINGdb is not loaded here, as it is slow to
+# load; server.R calls it as STRINGdb::STRINGdb$new().
 library(shiny)
+library(shinyBS, verbose = FALSE) # pop-up windows (bsModal)
 library(RSQLite)
 library(ggplot2)
 library(gridExtra)
 library(plotly)
-library(reshape2)
 library(visNetwork)
 library(dplyr)
 library(DT, verbose = FALSE) # for renderDataTable
+library(dendextend) # Tree tab
+library(igraph) # Network tab
 
 
 # Settings ---------------------------------------------------------------------

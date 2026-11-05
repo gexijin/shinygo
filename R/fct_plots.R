@@ -35,7 +35,6 @@ enrichmentPlot <- function(enrichedTerms, rightMargin = 33) {
   if (nrow(enrichedTerms) <= 1) {
     return(NULL)
   }
-  library(dendextend) # customizing tree
 
   # Membership comes from FindOverlap() as Ensembl ids. Do not go back to
   # splitting enrichedTerms$Genes: that column is formatted for display, and
@@ -154,7 +153,6 @@ enrich.net2 <- function(x, gene.set, node.id, node.name = node.id, pvalue,
                           "square"
                         ), legend.parameter = list("topright"), show.legend = TRUE, plotting = TRUE,
                         layoutButton = 0, ...) {
-  library(igraph)
   set.seed(layoutButton)
 
   # Keep the n most significant sets.

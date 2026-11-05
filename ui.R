@@ -8,11 +8,6 @@
 # Start data: NA (mm-dd-yyyy)
 # Data last modified: 04-8-2022
 #######################################################
-library(shiny, verbose = FALSE)
-library(shinyBS, verbose = FALSE) # for popup figures
-library(plotly) # interactive network plot
-library(visNetwork)
-library("reactable", verbose = FALSE)
 
 ui <- fluidPage(
   # reduce the space between label and widgets, globally

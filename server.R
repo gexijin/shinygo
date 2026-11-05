@@ -1024,7 +1024,6 @@ server <- function(input, output, session) {
     if (input$goButton == 0) {
       return(NULL)
     }
-    library(STRINGdb, verbose = FALSE)
     tem <- input$selectOrg
 
     ####################################
@@ -1044,7 +1043,7 @@ server <- function(input, output, session) {
       withProgress(message = sample(.app$quotes, 1), detail = "Mapping gene ids (5 minutes)", {
 
         # Intialization
-        string_db <- STRINGdb$new(
+        string_db <- STRINGdb::STRINGdb$new(
           version = STRING_DB_VERSION, species = taxonomyID,
           score_threshold = 0, input_directory = ""
         )
@@ -1099,11 +1098,10 @@ server <- function(input, output, session) {
     if (is.null(taxonomyID)) {
       return(NULL)
     }
-    library(STRINGdb, verbose = FALSE)
     withProgress(message = sample(.app$quotes, 1), detail = "Enrichment analysis", {
       tem <- input$STRINGdbGO
       # Intialization
-      string_db <- STRINGdb$new(
+      string_db <- STRINGdb::STRINGdb$new(
         version = STRING_DB_VERSION, species = taxonomyID,
         score_threshold = 0, input_directory = ""
       )
@@ -1200,7 +1198,6 @@ server <- function(input, output, session) {
 
   output$stringDB_network1 <- renderPlot(
     {
-      library(STRINGdb)
       if (input$goButton == 0) {
         return(NULL)
       }
@@ -1221,7 +1218,7 @@ server <- function(input, output, session) {
       isolate({
         withProgress(message = sample(.app$quotes, 1), detail = "Enrichment analysis", {
           # Intialization
-          string_db <- STRINGdb$new(
+          string_db <- STRINGdb::STRINGdb$new(
             version = STRING_DB_VERSION, species = taxonomyID,
             score_threshold = 0, input_directory = ""
           )
@@ -1247,7 +1244,6 @@ server <- function(input, output, session) {
   )
 
   output$stringDB_network_link <- renderUI({
-    library(STRINGdb, verbose = FALSE)
 
     tem <- input$STRINGdbGO
     tem <- input$nGenesPPI
@@ -1264,7 +1260,7 @@ server <- function(input, output, session) {
     isolate({
       withProgress(message = sample(.app$quotes, 1), detail = "PPI Enrichment and link", {
         # Intialization
-        string_db <- STRINGdb$new(
+        string_db <- STRINGdb::STRINGdb$new(
           version = STRING_DB_VERSION, species = taxonomyID,
           score_threshold = 0, input_directory = ""
         )
@@ -2217,7 +2213,6 @@ server <- function(input, output, session) {
     tem <- input$chRegionPval
     tem <- input$labelGeneSymbol
     tem <- input$show_all_chr
-    library(dplyr)
     ####################################
 
     isolate({
