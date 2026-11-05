@@ -1,154 +1,48 @@
-
-# read GMT files, does NO cleaning. Assumes the GMT files are created with cleanGeneSet()
-readGMT <- function(fileName) {
-  x <- scan(fileName, what = "", sep = "\n")
-  x <- strsplit(x, "\t")
-  # Extract the first vector element and set it as the list element name
-  names(x) <- sapply(x, `[[`, 1)
-  x <- lapply(x, `[`, -c(1, 2)) # 2nd element is comment, ignored
-  x <- x[which(sapply(x, length) > 1)] # gene sets smaller than 1 is ignored!!!
-  return(x)
-}
-
-
-# This function convert gene set names
-# x="GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA"
-# chromatin silencing at rDNA
-proper <- function(x) paste0(toupper(substr(x, 1, 1)), substring(x, 2))
-
-extract1 <- function(x) {
-  words <- unlist(strsplit(x, "_"))
-  if (length(words) <= 4) {
-    return(gsub("_", " ", x))
-  } else {
-    words <- words[-c(1:4)]
-    return(proper(paste(words, collapse = " ")))
-  }
-}
+# Enrichment analysis functions
+#
+# Find the pathways (GO terms, KEGG, ...) that are enriched in the user's
+# genes, and prepare pathway names for display.
+#
+#   FindOverlap()        the enrichment analysis
+#   gmtCategory()        pathway databases available for a species (the menu)
+#   hyperText()          pathway names -> clickable links
+#   remove_pathway_id()  "Path:hsa00270 Cysteine ..." -> "Cysteine ..."
+#   proper()             capitalise the first letter
+#   mark_duplicates()    c("aa", "aa") -> c("aa 1", "aa 2")
+#
+# Not used anywhere: readGMT(), extract1() and keggPathwayID().
+#
+# Each species has its own pathway database (an SQLite file listed in
+# gmtFiles), with tables pathway (gene -> pathway), pathwayInfo (name, size,
+# URL, GO level) and categories (GOBP, KEGG, ...).
+# ----------------------------------------------------------------------------
 
 
-hyperText <- function(textVector, urlVector) {
-  # for generating pathway lists that can be clicked.
-  # Function that takes a vector of strings and a vector of URLs
-  # and generate hyper text
-  # add URL to Description
-  # see https://stackoverflow.com/questions/30901027/convert-a-column-of-text-urls-into-active-hyperlinks-in-shiny
-  # see https://stackoverflow.com/questions/21909826/r-shiny-open-the-urls-from-rendertable-in-a-new-tab
-  if (sum(is.null(urlVector)) == length(urlVector)) {
-    return(textVector)
-  }
-
-  if (length(textVector) != length(urlVector)) {
-    return(textVector)
-  }
-
-  #------------------URL correction
-  # URL changed from http://amigo.geneontology.org/cgi-bin/amigo/term_details?term=GO:0000077
-  #                  http://amigo.geneontology.org/amigo/term/GO:0000077
-  urlVector <- gsub("cgi-bin/amigo/term_details\\?term=", "amigo/term/", urlVector)
-  urlVector <- gsub(" ", "", urlVector)
-
-
-  # first see if URL is contained in memo
-  ix <- grepl("http:|https:", urlVector, ignore.case = TRUE)
-  if (sum(ix) > 0) { # at least one has http?
-    tem <- paste0(
-      "<a href='",
-      urlVector, "' target='_blank'>",
-      textVector,
-      "</a>"
-    )
-    # only change the ones with URL
-    textVector[ix] <- tem[ix]
-  }
-  return(textVector)
-}
-
-
-# Given a KEGG pathway description, found pathway ids
-keggPathwayID <- function(pathwayDescription, Species, GO, selectOrg) {
-  ix <- grep(Species, gmtFiles)
-
-  if (length(ix) == 0) {
-    return(NULL)
-  }
-
-  # If selected species is not the default "bestMatch", use that species directly
-  if (selectOrg != speciesChoice[[1]]) {
-    ix <- grep(findSpeciesById(selectOrg)[1, 1], gmtFiles)
-    if (length(ix) == 0) {
-      return(NULL)
-    }
-    totalGenes <- orgInfo[which(orgInfo$id == as.numeric(selectOrg)), 7]
-  }
-  pathway <- dbConnect(sqlite, gmtFiles[ix], flags = SQLITE_RO)
-
-  # change Parkinson's disease to Parkinson\'s disease    otherwise SQL
-  pathwayDescription <- gsub("\'", "\'\'", pathwayDescription)
-
-  pathwayInfo <- dbGetQuery(pathway, paste(" select * from pathwayInfo where description =  '",
-    pathwayDescription, "' AND name LIKE '", GO, "%'",
-    sep = ""
-  ))
-  dbDisconnect(pathway)
-  if (dim(pathwayInfo)[1] != 1) {
-    return(NULL)
-  }
-  tem <- gsub(".*:", "", pathwayInfo[1, 2])
-  return(gsub("_.*", "", tem))
-}
-
-# not working, for updating GO cateory choices
-gmtCategory <- function(converted, selectOrg) {
-  idNotRecognized <- as.data.frame("ID not recognized!")
-  if (is.null(converted)) {
-    return(idNotRecognized)
-  } # no ID
-  querySet <- converted$IDs
-  if (length(querySet) == 0) {
-    return(idNotRecognized)
-  }
-  ix <- grep(converted$species[1, 1], gmtFiles)
-  if (length(ix) == 0) {
-    return(idNotRecognized)
-  }
-
-  # If selected species is not the default "bestMatch", use that species directly
-  if (selectOrg != speciesChoice[[1]]) {
-    ix <- grep(findSpeciesById(selectOrg)[1, 1], gmtFiles)
-    if (length(ix) == 0) {
-      return(idNotRecognized)
-    }
-  }
-  pathway <- dbConnect(sqlite, gmtFiles[ix], flags = SQLITE_RO)
-  # cat(paste("selectOrg:",selectOrg) )
-  # Generate a list of geneset categories such as "GOBP", "KEGG" from file
-  geneSetCategory <- dbGetQuery(pathway, "select distinct * from categories ")
-  geneSetCategory <- sort(geneSetCategory[, 1])
-  categoryChoices <- setNames(as.list(geneSetCategory), geneSetCategory)
-  categoryChoices <- append(setNames("All", "All available gene sets"), categoryChoices)
-
-  # move one element to the 2nd place
-  move1 <- function(i) c(categoryChoices[1], categoryChoices[i], categoryChoices[-c(1, i)])
-  i <- which(names(categoryChoices) == "KEGG")
-  categoryChoices <- move1(i)
-  i <- which(names(categoryChoices) == "GOMF")
-  categoryChoices <- move1(i)
-  i <- which(names(categoryChoices) == "GOCC")
-  categoryChoices <- move1(i)
-  i <- which(names(categoryChoices) == "GOBP")
-  categoryChoices <- move1(i)
-  # change GOBP to the full description for display
-  names(categoryChoices)[match("GOBP", categoryChoices)] <- "GO Biological Process"
-  names(categoryChoices)[match("GOCC", categoryChoices)] <- "GO Cellular Component"
-  names(categoryChoices)[match("GOMF", categoryChoices)] <- "GO Molecular Function"
-
-  dbDisconnect(pathway)
-  return(categoryChoices)
-}
-
-# Main function. Find a query set of genes enriched with functional category
-# For debug:  converted = converted(); gInfo = tem;  GO=input$selectGO; selectOrg=input$selectOrg;  minFDR=input$minFDR; input_maxTerms=input$maxTerms
+# Enrichment analysis: which pathways contain more of the user's genes than
+# expected by chance (hypergeometric test, FDR-corrected).
+#
+# converted, gInfo:   the user's genes, from convertID() and geneInfo().
+# GO:                 pathway database ("GOBP", "KEGG", ...) or "All".
+# selectOrg:          species ID, or "BestMatch" to use the species convertID()
+#                     found.
+# convertedB, gInfoB: optional background genes, in the same form. Without
+#                     them, all genes in the genome are the background.
+# minSetSize, maxSetSize: keep pathways with more than minSetSize and fewer
+#                     than maxSetSize genes.
+# gene_count_pathwaydb: count only genes that are in at least one pathway of
+#                     the chosen database ("Use pathway DB for gene counts").
+# genes_column:       what the Genes column shows: "symbol", "input" (the
+#                     pasted IDs) or "ensembl".
+#
+# Returns a list:
+#   x               pathways with FDR < 0.2 (at most 1000), sorted by FDR:
+#                   Enrichment FDR, nGenes, Pathway Genes, Fold Enrichment,
+#                   Pathway, URL, Genes, Membership (Ensembl IDs, for the
+#                   tree and network)
+#   groupings       the user's genes grouped by high-level GO terms (Groups tab)
+#   categoryChoices the species' pathway databases (not used by the app)
+# If something goes wrong, x (and sometimes groupings) is instead a one-cell
+# data frame holding a message such as "ID not recognized!".
 FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInfoB = NULL, minSetSize = 2, maxSetSize = 4000, gene_count_pathwaydb = FALSE, genes_column = "symbol") {
   # genes_column controls what the Genes column holds: "symbol" (gene symbols
   # where the database has one, otherwise the pasted ID), "input" (the IDs the
@@ -165,15 +59,16 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
   )
   if (is.null(converted)) {
     return(idNotRecognized)
-  } # no ID
+  }
 
+  # The query: the user's genes, protein-coding only. STRING-db species have
+  # no gene info, so they keep all genes.
   querySet <- converted$IDs
 
   if (!gene_count_pathwaydb) {
     if (!is.null(gInfo)) {
       if (class(gInfo) == "data.frame") {
-        if (dim(gInfo)[1] > 1) { # some species does not have geneInfo. STRING
-          # only coding
+        if (dim(gInfo)[1] > 1) {
           querySet <- intersect(
             querySet,
             gInfo[which(gInfo$gene_biotype == "protein_coding"), 1]
@@ -186,6 +81,8 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
     return(idNotRecognized)
   }
 
+  # Find the species' pathway database; totalGenes (orgInfo's 7th column) is
+  # its number of genes, the default background size.
   ix <- grep(converted$species[1, 1], gmtFiles)
   totalGenes <- converted$species[1, 7]
 
@@ -197,7 +94,7 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
     return(errorMessage)
   }
 
-  # If selected species is not the default "bestMatch", use that species directly
+  # If a species was selected (not "BestMatch"), use it directly.
   if (selectOrg != speciesChoice[[1]]) {
     ix <- grep(findSpeciesById(selectOrg)[1, 1], gmtFiles)
     if (length(ix) == 0) {
@@ -207,16 +104,16 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
   }
   pathway <- dbConnect(sqlite, gmtFiles[ix], flags = SQLITE_RO)
 
-  # Generate a list of geneset categories such as "GOBP", "KEGG" from file
+  # The species' pathway databases ("GOBP", "KEGG", ...), with display names.
   geneSetCategory <- dbGetQuery(pathway, "select distinct * from categories ")
   geneSetCategory <- geneSetCategory[, 1]
   categoryChoices <- setNames(as.list(geneSetCategory), geneSetCategory)
   categoryChoices <- append(setNames("All", "All available gene sets"), categoryChoices)
-  # change GOBO to the full description for display
   names(categoryChoices)[match("GOBP", categoryChoices)] <- "GO Biological Process"
   names(categoryChoices)[match("GOCC", categoryChoices)] <- "GO Cellular Component"
   names(categoryChoices)[match("GOMF", categoryChoices)] <- "GO Molecular Function"
 
+  # Every (gene, pathway) pair for the query genes, in the chosen database.
   if (GO != "All") {
     sqlQuery <- paste(" select distinct gene,pathwayID from pathway where category='", GO, "'",
       " AND gene IN ('", paste(querySet, collapse = "', '"), "')",
@@ -235,23 +132,19 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
     return(list(x = as.data.frame("No matching pathway data find!")))
   }
 
-
-
-  # given a pathway id, it finds the overlapped genes, symbol preferred
-  # Actual pathway membership, as Ensembl ids. This is what the tree, the
-  # network and the redundancy filter need. sharedGenesPrefered() below formats
-  # the same thing for display; nothing should parse that string to recover
-  # membership, because then display formatting changes the analysis.
+  # A pathway's query genes, as Ensembl IDs. This is the real membership, used
+  # by the tree, the network and the redundancy filter. sharedGenesPrefered()
+  # below formats the same genes for display; nothing should parse that string
+  # to recover membership, or display formatting would change the analysis.
   pathwayMembers <- function(pathwayID) {
     result[which(result[, 2] == pathwayID), 1]
   }
 
+  # A pathway's query genes as display text (the Genes column), in the form
+  # chosen by genes_column, separated by spaces.
   sharedGenesPrefered <- function(pathwayID) {
     # result comes from "select distinct gene, pathwayID", so this is already
-    # one row per gene and the output must have exactly one token per gene.
-    # enrichmentPlot() and enrichmentNetwork() rebuild pathway membership by
-    # splitting this string on spaces, so dropping a gene here silently
-    # corrupts the tree and network overlaps as well as the displayed table.
+    # one row per gene; keep exactly one token per gene.
     ens <- result[which(result[, 2] == pathwayID), 1]
 
     pasted <- converted$conversionTable$User_input[
@@ -287,9 +180,10 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
     return(paste(out, collapse = " "))
   }
 
+  # Query genes per pathway (Min_overlap is set in global.R).
   x0 <- table(result$pathwayID)
 
-  x0 <- as.data.frame(x0[which(x0 >= Min_overlap)]) # remove low overlaps
+  x0 <- as.data.frame(x0[which(x0 >= Min_overlap)])
 
   errorMessage <- list(
     x = as.data.frame("Too few genes."),
@@ -297,26 +191,23 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
   )
   if (dim(x0)[1] <= 2) {
     return(errorMessage)
-  } # no data
+  }
   colnames(x0) <- c("pathwayID", "overlap")
 
+  # Add each pathway's size (n), name and URL (memo).
   pathwayInfo <- dbGetQuery(pathway, paste(" select distinct id,n,description,memo from pathwayInfo where id IN ('",
     paste(x0$pathwayID, collapse = "', '"), "') ",
     sep = ""
   ))
 
-
-  #  pathwayInfo$description <- hyperText( pathwayInfo$description, pathwayInfo$memo)
-  #  pathwayInfo <- pathwayInfo[, -4] # remove memo/URL
-
   x <- merge(x0, pathwayInfo, by.x = "pathwayID", by.y = "id")
 
+  # "Use pathway DB for gene counts": count only genes that are in at least
+  # one pathway, for both the query and (without background genes) the total,
+  # which is kept between 5,000 and 30,000.
   if (gene_count_pathwaydb) {
-    # only keep the query genes that have one pathway match
-    # this is for more accurate size of query in P value
     querySet <- unique(result$gene)
 
-    # if not using background genes, calculate total genes using pathwayDB
     if (is.null(convertedB) || is.null(gInfoB)) {
       sql_query <- "SELECT COUNT ( DISTINCT gene ) FROM pathway "
 
@@ -330,7 +221,6 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
       totalGenes <- DBI::dbGetQuery(pathway, sql_query)
       totalGenes <- as.integer(totalGenes)
 
-      # totalGenes within the range of 5k to 30k.
       if (totalGenes > 30000) {
         totalGenes <- 30000
       }
@@ -340,8 +230,9 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
     }
   }
 
-  # filtered pathways with enrichment ratio less than one
-  # x <- x[ which( x$overlap/ length(querySet) / (as.numeric(x$n) / totalGenes ) > 1)  ,]
+  # P value and fold enrichment against the whole genome: the chance of
+  # drawing at least `overlap` pathway genes when picking length(querySet)
+  # genes from totalGenes.
   x$Pval <- phyper(x$overlap - 1,
     length(querySet),
     totalGenes - length(querySet),
@@ -349,17 +240,17 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
     lower.tail = FALSE
   )
   x$fold <- x$overlap / length(querySet) / (as.numeric(x$n) / totalGenes)
-  # further filter by nominal P value
-  # x <- subset(x, Pval < 0.2)
 
 
-  # Background genes----------------------------------------------------
+  # Background genes ----------------------------------------------------------
+  # With background genes, redo the P value and fold enrichment against them
+  # instead of the whole genome.
   if (!is.null(convertedB) &&
-    !is.null(gInfoB)) { # if more than 30k genes, ignore background genes.
+    !is.null(gInfoB)) {
+    # Protein-coding background genes (all of them for STRING-db species).
     querySetB <- convertedB$IDs
     if (!is.null(gInfoB)) {
-      if (dim(gInfoB)[1] > 1) { # some species does not have geneInfo. STRING
-        # only coding
+      if (dim(gInfoB)[1] > 1) {
         querySetB <- intersect(
           querySetB,
           gInfoB[which(gInfoB$gene_biotype == "protein_coding"), 1]
@@ -367,13 +258,14 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
       }
     }
 
-    # if background and selected genes matches to different organisms, error
-    if (length(intersect(querySetB, querySet)) == 0) { # if none of the selected genes are in background genes
+    # No overlap at all usually means the two lists are from different species.
+    if (length(intersect(querySetB, querySet)) == 0) {
       return(list(x = as.data.frame("None of the selected genes are in the background genes!")))
     }
 
-    querySetB <- unique(c(querySetB, querySet)) # just to make sure the background set includes the query set
+    querySetB <- unique(c(querySetB, querySet)) # the background must include the query genes
 
+    # Background genes per pathway, for the pathways found above.
     sqlQueryB <- paste(" select distinct gene,pathwayID from pathway where gene IN ('",
       paste(querySetB, collapse = "', '"), "')",
       sep = ""
@@ -382,24 +274,13 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
 
     if (GO != "All") sqlQueryB <- paste0(sqlQueryB, " AND category ='", GO, "'")
 
-
-    # alternative query. Same order as query genes.
-    #   if( GO != "All") {
-    #     sqlQueryB = paste( " select distinct gene,pathwayID from pathway where category='", GO, "'",
-    #                          " AND gene IN ('", paste(querySetB, collapse="', '"),"')" ,sep="")
-    #   } else {
-    #     sqlQueryB = paste( " select distinct gene,pathwayID from pathway where gene IN ('",
-    #                        paste(querySetB, collapse="', '"),"')" ,sep="")
-    #   }
-    #       sqlQueryB = paste0(sqlQueryB, " AND pathwayID IN ('", paste(x$pathwayID, collapse="', '"),"')"  )
-
     resultB <- dbGetQuery(pathway, sqlQueryB)
     if (dim(resultB)[1] == 0) {
       return(list(x = as.data.frame("No matching species or gene ID file!")))
     }
     xB <- table(resultB$pathwayID)
     if (gene_count_pathwaydb) {
-      # update querySet, only keep genes with one pathway mapping
+      # count only background genes that are in at least one pathway
       querySetB <- unique(resultB$gene)
     }
     rm(resultB)
@@ -407,39 +288,37 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
     colnames(xB) <- c("pathwayID", "overlapB")
     x2 <- merge(x, xB, by = "pathwayID", all.x = TRUE)
 
-
+    # The pathway's size is now its number of background genes (overlapB).
     x$Pval <- phyper(x2$overlap - 1,
       length(querySet),
       length(querySetB) - length(querySet),
-      as.numeric(x2$overlapB), # use the number of genes in background set
+      as.numeric(x2$overlapB),
       lower.tail = FALSE
     )
-
-    # calculate fold enrichment compared to background
 
     x$fold <- (x$overlap / length(querySet)) / # ratio in query
       (as.numeric(x2$overlapB) / length(querySetB)) # ratio in background
     if (gene_count_pathwaydb) {
-      # number of genes in pathways in background genes
       x$n <- as.numeric(x2$overlapB)
     }
-    # write.csv(x2, "pathway_table_bg_go.csv", row.names = F)
   }
+  # End of background genes --------------------------------------------------
 
-  # end background genes------------------------------------------------------------
-  x <- x[as.integer(x$n) > minSetSize, ] # filter out smaller geneset
-  x <- x[as.integer(x$n) < maxSetSize, ] # filter out big genesets
+  # Pathway size limits, then FDR.
+  x <- x[as.integer(x$n) > minSetSize, ]
+  x <- x[as.integer(x$n) < maxSetSize, ]
   if (nrow(x) == 0) {
     return(list(x = as.data.frame("None of the selected genes are in the background genes!")))
   }
 
   x$FDR <- p.adjust(x$Pval, method = "fdr")
 
-  x <- x[order(x$FDR), ] # sort according to FDR
+  x <- x[order(x$FDR), ]
 
-
-
-  # Gene groups for high level GOBP terms
+  # Groups tab: the user's genes in high-level GO terms (GO levels 2 and 3),
+  # the 100 terms with the most genes. Uses x0, the counts before any
+  # filtering. Note: the `groupings` variable set here is never used; the
+  # function returns `groups`.
   groups <- dbGetQuery(pathway, paste(" select distinct id, description from pathwayInfo
                        where golevel IN ( '2','3') ", sep = ""))
 
@@ -451,7 +330,7 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
   if (max(groups$ngenes) <= 2) {
     groups <- as.data.frame("Too few genes")
   } else {
-    groupings <- subset(groups, ngenes > 2) # at least 10 genes
+    groupings <- subset(groups, ngenes > 2)
     if (dim(groups)[1] > 100) groups <- groups[1:100, ]
     groups <- cbind(groups, sapply(groups$id, sharedGenesPrefered))
     groups <- groups[, -1]
@@ -459,6 +338,7 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
     colnames(groups) <- c("N", "High level GO category", "Genes")
   }
 
+  # The results table: pathways with FDR < minFDR, with their genes.
   if (min(x$FDR, na.rm = TRUE) > minFDR) {
     x <- as.data.frame("No significant enrichment found!")
   } else {
@@ -470,15 +350,12 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
     # I() keeps this an AsIs list column so it survives ordering and subsetting
     # below and stays aligned with its row.
     x$Membership <- I(lapply(x$pathwayID, pathwayMembers))
-    x$n <- as.numeric(x$n) # convert total genes from character to numeric 10/21/19
+    x$n <- as.numeric(x$n) # stored as text in the database
     x <- subset(x, select = c(FDR, overlap, n, fold, description, memo, Genes, Membership))
-    x <- x[order(x$FDR), ] # sort by FDR   4/1/2022 related to issue 23
-    x <- x[!duplicated(x$description), ] # remove duplicates   4/1/2022
+    x <- x[order(x$FDR), ]
+    x <- x[!duplicated(x$description), ] # same pathway name twice: keep the most significant (issue #23)
     colnames(x) <- c("Enrichment FDR", "nGenes", "Pathway Genes", "Fold Enrichment", "Pathway", "URL", "Genes", "Membership")
 
-
-
-    # only keep 1000 pathways at the most
     if (dim(x)[1] > maxTerms) x <- x[1:maxTerms, ]
   }
 
@@ -487,19 +364,98 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
 }
 
 
-#' Remove Pathway ID from pathway name
-#' Only for GO and KEGG pathways
-#'
-#' Path:hsa00270 Cysteine and methionine metabolism
-#'           --> Cysteine and methionine metabolism
-#'
-#' @param strings a vector of strings
-#' @param select_go   GOBP, GOCC, GOMP or KEGG or something else
-#'
-#' @export
-#' @return a vector of strings
-#'
-#' @family pathway functions
+# The pathway databases available for the user's species, for the database
+# menu: "All", then GO Biological Process, Cellular Component, Molecular
+# Function and KEGG, then the rest. Returns a named list (display name ->
+# database code), or a one-cell "ID not recognized!" data frame.
+gmtCategory <- function(converted, selectOrg) {
+  idNotRecognized <- as.data.frame("ID not recognized!")
+  if (is.null(converted)) {
+    return(idNotRecognized)
+  }
+  querySet <- converted$IDs
+  if (length(querySet) == 0) {
+    return(idNotRecognized)
+  }
+  ix <- grep(converted$species[1, 1], gmtFiles)
+  if (length(ix) == 0) {
+    return(idNotRecognized)
+  }
+
+  # If a species was selected (not "BestMatch"), use it directly.
+  if (selectOrg != speciesChoice[[1]]) {
+    ix <- grep(findSpeciesById(selectOrg)[1, 1], gmtFiles)
+    if (length(ix) == 0) {
+      return(idNotRecognized)
+    }
+  }
+  pathway <- dbConnect(sqlite, gmtFiles[ix], flags = SQLITE_RO)
+  geneSetCategory <- dbGetQuery(pathway, "select distinct * from categories ")
+  geneSetCategory <- sort(geneSetCategory[, 1])
+  categoryChoices <- setNames(as.list(geneSetCategory), geneSetCategory)
+  categoryChoices <- append(setNames("All", "All available gene sets"), categoryChoices)
+
+  # Move element i to second place, after "All". Moving KEGG, GOMF, GOCC, then
+  # GOBP leaves them in the order GOBP, GOCC, GOMF, KEGG.
+  move1 <- function(i) c(categoryChoices[1], categoryChoices[i], categoryChoices[-c(1, i)])
+  i <- which(names(categoryChoices) == "KEGG")
+  categoryChoices <- move1(i)
+  i <- which(names(categoryChoices) == "GOMF")
+  categoryChoices <- move1(i)
+  i <- which(names(categoryChoices) == "GOCC")
+  categoryChoices <- move1(i)
+  i <- which(names(categoryChoices) == "GOBP")
+  categoryChoices <- move1(i)
+  # Display names for the GO databases.
+  names(categoryChoices)[match("GOBP", categoryChoices)] <- "GO Biological Process"
+  names(categoryChoices)[match("GOCC", categoryChoices)] <- "GO Cellular Component"
+  names(categoryChoices)[match("GOMF", categoryChoices)] <- "GO Molecular Function"
+
+  dbDisconnect(pathway)
+  return(categoryChoices)
+}
+
+
+# Display helpers -------------------------------------------------------------
+
+# Turn pathway names into links that open in a new tab, for the ones whose URL
+# starts with http: or https:. Returns textVector unchanged if the URLs are
+# missing or don't line up with the names.
+# See https://stackoverflow.com/questions/30901027/convert-a-column-of-text-urls-into-active-hyperlinks-in-shiny
+# and https://stackoverflow.com/questions/21909826/r-shiny-open-the-urls-from-rendertable-in-a-new-tab
+hyperText <- function(textVector, urlVector) {
+  if (sum(is.null(urlVector)) == length(urlVector)) {
+    return(textVector)
+  }
+
+  if (length(textVector) != length(urlVector)) {
+    return(textVector)
+  }
+
+  # Update old AmiGO links:
+  #   http://amigo.geneontology.org/cgi-bin/amigo/term_details?term=GO:0000077
+  #   -> http://amigo.geneontology.org/amigo/term/GO:0000077
+  urlVector <- gsub("cgi-bin/amigo/term_details\\?term=", "amigo/term/", urlVector)
+  urlVector <- gsub(" ", "", urlVector)
+
+  ix <- grepl("http:|https:", urlVector, ignore.case = TRUE)
+  if (sum(ix) > 0) {
+    tem <- paste0(
+      "<a href='",
+      urlVector, "' target='_blank'>",
+      textVector,
+      "</a>"
+    )
+    textVector[ix] <- tem[ix]
+  }
+  return(textVector)
+}
+
+# Remove the leading pathway ID from GO and KEGG pathway names, then
+# capitalise:
+#   "Path:hsa00270 Cysteine and methionine metabolism"
+#   -> "Cysteine and methionine metabolism"
+# Other databases (select_go not GOBP, GOCC, GOMF or KEGG) are unchanged.
 remove_pathway_id <- function(strings, select_go) {
   if (is.null(strings)) {
     return(NULL)
@@ -516,38 +472,84 @@ remove_pathway_id <- function(strings, select_go) {
   }
 }
 
-#' Mark Duplicate Strings with Occurrence Index
-#'
-#' This function takes a character vector and appends an occurrence index
-#' to each duplicated string, starting from 1 for the first occurrence. 
-#' Strings that only appear once are left unchanged.
-#'
-#' If the input is not a character vector with at least two elements,
-#' the function returns the input object unchanged.
-#'
-#' @param strings A character vector of strings.
-#' 
-#' @return A character vector where each duplicated string has an occurrence index
-#' appended (e.g., "aa 1", "aa 2"), while unique strings remain unchanged.
-#' If the input is not a valid character vector, the same input object is returned.
-#' 
-#' @examples
-#' strings <- c("aa", "bb", "aa", "cc", "aa")
-#' mark_duplicates(strings)
-#' # Expected output: "aa 1" "bb" "aa 2" "cc" "aa 3"
-#'
-#' @export
+# Capitalise the first letter: "chromatin silencing" -> "Chromatin silencing"
+proper <- function(x) paste0(toupper(substr(x, 1, 1)), substring(x, 2))
+
+# Number repeated strings so each is unique; strings that appear once are
+# unchanged:
+#   mark_duplicates(c("aa", "bb", "aa", "cc", "aa"))
+#   # "aa 1" "bb" "aa 2" "cc" "aa 3"
+# Anything that isn't a character vector of length 2 or more is returned as is.
 mark_duplicates <- function(strings) {
-  # Check if input is a character vector with at least two elements
   if (!is.character(strings) || length(strings) < 2) {
     return(strings)
   }
-  
-  # Create an index for each occurrence within unique string groups
+
+  # Occurrence number of each string: 1 for its first appearance, 2 for its second, ...
   counts <- ave(seq_along(strings), strings, FUN = seq_along)
-  
-  # Check if a string appears more than once, and append the count if so
+
   result <- ifelse(table(strings)[strings] > 1, paste(strings, counts), strings)
-  
+
   return(result)
+}
+
+
+# Unused -----------------------------------------------------------------------
+
+# Read a GMT gene set file into a named list of gene IDs. Does no cleaning: the
+# files are expected to be made with cleanGeneSet(). The second field of each
+# line (a comment) is skipped, and sets with fewer than 2 genes are dropped.
+readGMT <- function(fileName) {
+  x <- scan(fileName, what = "", sep = "\n")
+  x <- strsplit(x, "\t")
+  names(x) <- sapply(x, `[[`, 1)
+  x <- lapply(x, `[`, -c(1, 2))
+  x <- x[which(sapply(x, length) > 1)]
+  return(x)
+}
+
+# Readable name from a gene set ID:
+#   "GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA"
+#   -> "Chromatin silencing at rDNA"
+extract1 <- function(x) {
+  words <- unlist(strsplit(x, "_"))
+  if (length(words) <= 4) {
+    return(gsub("_", " ", x))
+  } else {
+    words <- words[-c(1:4)]
+    return(proper(paste(words, collapse = " ")))
+  }
+}
+
+# The KEGG pathway ID (e.g. "hsa04110") for a pathway name, or NULL.
+keggPathwayID <- function(pathwayDescription, Species, GO, selectOrg) {
+  ix <- grep(Species, gmtFiles)
+
+  if (length(ix) == 0) {
+    return(NULL)
+  }
+
+  # If a species was selected (not "BestMatch"), use it directly.
+  if (selectOrg != speciesChoice[[1]]) {
+    ix <- grep(findSpeciesById(selectOrg)[1, 1], gmtFiles)
+    if (length(ix) == 0) {
+      return(NULL)
+    }
+    totalGenes <- orgInfo[which(orgInfo$id == as.numeric(selectOrg)), 7]
+  }
+  pathway <- dbConnect(sqlite, gmtFiles[ix], flags = SQLITE_RO)
+
+  # Double single quotes for SQL: Parkinson's -> Parkinson''s
+  pathwayDescription <- gsub("\'", "\'\'", pathwayDescription)
+
+  pathwayInfo <- dbGetQuery(pathway, paste(" select * from pathwayInfo where description =  '",
+    pathwayDescription, "' AND name LIKE '", GO, "%'",
+    sep = ""
+  ))
+  dbDisconnect(pathway)
+  if (dim(pathwayInfo)[1] != 1) {
+    return(NULL)
+  }
+  tem <- gsub(".*:", "", pathwayInfo[1, 2])
+  return(gsub("_.*", "", tem))
 }

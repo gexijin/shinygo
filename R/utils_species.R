@@ -1,42 +1,55 @@
+# Species lookup functions
+#
+# Look up species details in orgInfo (the species table loaded in global.R),
+# and fetch example gene IDs for a species.
+#
+#   findSpeciesById()            species ID -> its orgInfo row
+#   findSpeciesByIdName()        species ID -> display name
+#   find_species_by_id_name()    the same, with orgInfo passed in
+#   find_species_id_by_ensembl() Ensembl dataset name -> species ID
+#   find_taxon_by_id()           species ID -> NCBI taxonomy ID
+#   showGeneIDs()                example gene IDs of each ID type
+#
+# Not used anywhere: shortSpeciesNames(), matchedSpeciesInfo() and
+# findIDtypeById(). findIDtypeById() would also fail, as the idIndex table it
+# reads is no longer loaded.
+# ----------------------------------------------------------------------------
 
-# find idType based on index
-findIDtypeById <- function(x) { # find
-  return(idIndex$idType[as.numeric(x)])
-}
 
-findSpeciesById <- function(speciesID) { # find species name use id
+# The species' row in orgInfo.
+findSpeciesById <- function(speciesID) {
   return(orgInfo[which(orgInfo$id == speciesID), ])
 }
 
-# just return name
-findSpeciesByIdName <- function(speciesID) { # find species name use id
+# The species' display name (orgInfo's third column, name2), e.g. "Human".
+findSpeciesByIdName <- function(speciesID) {
   return(orgInfo[which(orgInfo$id == speciesID), 3])
 }
 
-# Homo sapies --> hsapiens
-shortSpeciesNames <- function(tem) {
-  tem2 <- strsplit(as.character(tem), " ")
-  return(tolower(paste0(substr(tem2[[1]][1], 1, 1), tem2[[1]][2])))
+# Same as findSpeciesByIdName(), but with orgInfo passed in.
+find_species_by_id_name <- function(species_id, org_info) {
+  return(org_info[which(org_info$id == species_id), 3])
 }
 
-# convert sorted species:idType combs into a list for repopulate species choice
-matchedSpeciesInfo <- function(x) {
-  a <- c()
-  for (i in 1:length(x)) {
-    a <- c(a, paste(gsub("genes.*", "", findSpeciesByIdName(as.numeric(gsub(" .*", "", names(x[i]))))), " (",
-      x[i], " mapped from ", findIDtypeById(gsub(".* ", "", names(x[i]))), ")",
-      sep = ""
-    ))
-  }
-  return(a)
+# The species ID for an Ensembl dataset name, e.g. "hsapiens_gene_ensembl".
+# The species table sends this name when a user clicks a species.
+find_species_id_by_ensembl <- function(ensembl_dataset, org_info) {
+  return(org_info[which(org_info$ensembl_dataset == ensembl_dataset), "id"])
 }
 
+# The species' NCBI taxonomy ID, used for STRING-db.
+find_taxon_by_id <- function(species_id, org_info) {
+  return(org_info[which(org_info$id == species_id), "taxon_id"])
+}
+
+
+# Example gene IDs for each ID type in a species' database, for the "Gene IDs
+# examples" pop-up. Returns a data frame with one row per ID type: symbols
+# first, then RefSeq, then Ensembl, with descriptions (long gene names) last.
 showGeneIDs <- function(species, nGenes = 10) {
-  # Given a species ID, this function returns 10 gene ids for each idType
   if (species == "BestMatch") {
     return(as.data.frame("Select a species above."))
   }
-  # connect to the database, this becomes a global variable
   convert_species <- connect_convert_db_org(datapath, species)
 
   idTypes <- dbGetQuery(
@@ -48,9 +61,9 @@ showGeneIDs <- function(species, nGenes = 10) {
 
   if (nGenes > 100) nGenes <- 100 # upper limit
 
-  # for each id Type
+  # For each ID type, fetch 50 times as many IDs as needed and pick nGenes at
+  # random (500 IDs for the default 10).
   for (k in 1:length(idTypes)) {
-    # retrieve 500 gene ids and then random choose 10
     result <- dbGetQuery(
       convert_species,
       paste0(" select  id,idType from mapping where idType ='", idTypes[k], "'
@@ -64,7 +77,7 @@ showGeneIDs <- function(species, nGenes = 10) {
     }
   }
 
-  # Names of idTypes
+  # Replace ID type numbers with their names.
   idNames <- dbGetQuery(
     convert_species,
     paste0(
@@ -75,16 +88,15 @@ showGeneIDs <- function(species, nGenes = 10) {
   dbDisconnect(convert_species)
   resultAll <- merge(resultAll, idNames, by.x = "idType", by.y = "id")
 
-
-
-  # library(dplyr)
+  # One row per ID type, with its examples joined by "; ".
   resultAll <- resultAll %>%
     select(id, idType.y) %>%
     group_by(idType.y) %>%
     summarise(Examples = paste0(id, collapse = "; "))
 
   colnames(resultAll)[1] <- "ID Type"
-  # put symbols first, refseq next, followed by ensembls. Descriptions (long gnee names) last
+  # Each sort moves one kind to the top, so the last sort wins: symbols first,
+  # then RefSeq, then Ensembl. Descriptions go to the bottom.
   resultAll <- resultAll[order(grepl("ensembl", resultAll$"ID Type"), decreasing = TRUE), ]
   resultAll <- resultAll[order(grepl("refseq", resultAll$"ID Type"), decreasing = TRUE), ]
   resultAll <- resultAll[order(grepl("symbol", resultAll$"ID Type"), decreasing = TRUE), ]
@@ -94,48 +106,28 @@ showGeneIDs <- function(species, nGenes = 10) {
 }
 
 
-#' Find a species by ID
-#'
-#' Find a species in the iDEP database with an
-#' ID.
-#'
-#' @param species_id Species ID to search the database with
-#' @param org_info iDEP data org_info file
-#'
-#' @export
-#' @return Only return the species name with this function.
-find_species_by_id_name <- function(species_id, org_info) {
-  # find species name use id
-  return(org_info[which(org_info$id == species_id), 3])
+# Unused Functions -----------------------------------------------------------
+
+# "Homo sapiens" -> "hsapiens"
+shortSpeciesNames <- function(tem) {
+  tem2 <- strsplit(as.character(tem), " ")
+  return(tolower(paste0(substr(tem2[[1]][1], 1, 1), tem2[[1]][2])))
 }
 
-#' Find a species id by ensembl dataset name
-#'
-#' Find a species in the iDEP database with an
-#' ID.
-#'
-#' @param species_id Species ID to search the database with
-#' @param org_info iDEP data org_info file
-#'
-#' @export
-#' @return Only return the species name with this function.
-find_species_id_by_ensembl <- function(ensembl_dataset, org_info) {
-  # find species name use id
-  return(org_info[which(org_info$ensembl_dataset == ensembl_dataset), "id"])
+# Turns species/ID-type match counts into labels such as
+# "Human (40 mapped from symbol)".
+matchedSpeciesInfo <- function(x) {
+  a <- c()
+  for (i in 1:length(x)) {
+    a <- c(a, paste(gsub("genes.*", "", findSpeciesByIdName(as.numeric(gsub(" .*", "", names(x[i]))))), " (",
+      x[i], " mapped from ", findIDtypeById(gsub(".* ", "", names(x[i]))), ")",
+      sep = ""
+    ))
+  }
+  return(a)
 }
 
-#' Find taxon ID by species ID
-#'
-#' Find a species in the iDEP database with an
-#' ID.
-#'
-#' @param species_id Species ID to search the database with
-#' @param org_info iDEP data org_info file
-#'
-#' @export
-#' @return Only return the species name with this function.
-find_taxon_by_id <- function(species_id, org_info) {
-  # find species name use id
-  return(org_info[which(org_info$id == species_id), "taxon_id"])
+# ID type name for an ID type number. Reads idIndex, which is no longer loaded.
+findIDtypeById <- function(x) {
+  return(idIndex$idType[as.numeric(x)])
 }
-

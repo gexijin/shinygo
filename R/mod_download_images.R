@@ -1,18 +1,20 @@
-#' download_images UI Function
-#'
-#' @description A shiny Module to enable downloading figures. Main idea is to
-#' create the plot in a reactive function, which returns a plot object.
-#' Call this function to print to render for shiny app,
-#' or export as PDF, png, or SVG files.
-#' This module can be reused throughout a Shiny app.
-#' By Emma Spors, Ben Derenge
-#'
-#' @param id,input,output,session Internal parameters for {shiny}.
-#' @param label is the label for the download button
-#' @noRd
-#'
-#' @importFrom shiny NS tagList
-#'
+# Figure download module
+#
+# A "Download" button that opens a pop-up where the user sets the figure size
+# and downloads it as PDF, PNG or SVG. Reused by the Chart, Tree and Plots
+# tabs. Written by Emma Spors and Ben Derenge.
+#
+#   mod_download_images_ui()      the button
+#   mod_download_images_server()  the pop-up and the three downloads
+#
+# Usage, with the same id in both:
+#   UI:     mod_download_images_ui("download_tree", label = "Download")
+#   server: mod_download_images_server("download_tree", filename = "tree_plot",
+#                                      figure = reactive(tree_plot()))
+# ----------------------------------------------------------------------------
+
+
+# The button that opens the download pop-up.
 mod_download_images_ui <- function(id, label = "Download Plot") {
   ns <- NS(id)
   tagList(
@@ -24,60 +26,51 @@ mod_download_images_ui <- function(id, label = "Download Plot") {
 }
 
 
-#' download_images Server Functions
-#'
-#' @noRd
-#' @param id is module id
-#' @param filename is a name of the output file without extensions
-#' @param figure is a graphics object. Note that ggplot2 objects can
-#' be directly used, while base R graphics, we need to use
-#' the savePlot() function.
-#'
-#' @param width specifies a default width in inches
-#' @param height specifies default height in inches
-#'
+# id:       the module id, the same as in mod_download_images_ui().
+# filename: file name without extension.
+# figure:   a reactive that returns the plot; it is drawn with print(), so a
+#           ggplot object works directly.
+# width, height: default size in inches.
 mod_download_images_server <- function(id, filename, figure, width = 8, height = 6) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     min_size <- 2 # min for width or height
     max_size <- 30 # max for width or height
-    # Check width
+
+    # Shiny doesn't enforce numericInput's min and max, so clamp the size here.
+    # Anything that isn't a number falls back to the default.
     figure_width <- reactive({
       if (is.numeric(input$width)) {
-        # cutoff the input value to a range as shiny does not enforce
         return(max(min_size, min(max_size, input$width, na.rm = TRUE)))
       } else {
-        # use default value when entered text
         return(width)
       }
     })
 
-    # Check height
+    # BUG NOTE: this checks input$width, not input$height, before using the height.
     figure_height <- reactive({
       if (is.numeric(input$width)) {
-        # cutoff the input value to a range as shiny does not enforce
         return(max(min_size, min(max_size, input$height, na.rm = TRUE)))
       } else {
-        # use default value when entered text
         return(height)
       }
     })
 
-    # Generate a popup UI when clicked. You can do this in server function?
+    # The pop-up: size inputs and one button per file format.
     observeEvent(
       input$download_popup,
       {
         showModal(
           modalDialog(
-            numericInput( # Figure width
+            numericInput(
               inputId = ns("width"),
               label = "Width (in)",
               value = width,
               min = min_size,
               max = max_size
             ),
-            numericInput( # Figure Height
+            numericInput(
               inputId = ns("height"),
               label = "Height (in)",
               value = height,
@@ -86,7 +79,7 @@ mod_download_images_server <- function(id, filename, figure, width = 8, height =
             ),
             h5("The plot will be rendered differently depending on size. When the dimensions are too small,
             error or blank plot will be generated."),
-            downloadButton( # buttons
+            downloadButton(
               outputId = ns("dl_pdf"),
               label = "PDF"
             ),
@@ -98,18 +91,15 @@ mod_download_images_server <- function(id, filename, figure, width = 8, height =
               outputId = ns("dl_svg"),
               label = "SVG"
             ),
-            size = "s" # small dialog modal
+            size = "s" # small dialog
           )
         )
       }
     )
 
-    # Download PDF
     output$dl_pdf <- downloadHandler(
       filename = paste0(filename, ".pdf"),
       content = function(file) {
-        # remove popup when downloaded
-        # on.exit(removeModal())
         pdf(
           file,
           width = figure_width(),
@@ -120,12 +110,10 @@ mod_download_images_server <- function(id, filename, figure, width = 8, height =
       }
     )
 
-    # Download PNG
+    # PNG at 360 dpi.
     output$dl_png <- downloadHandler(
       filename = paste0(filename, ".png"),
       content = function(file) {
-        # remove popup when downloaded
-        # on.exit(removeModal())
         png(
           file,
           res = 360,
@@ -138,12 +126,9 @@ mod_download_images_server <- function(id, filename, figure, width = 8, height =
       }
     )
 
-    # download SVG
     output$dl_svg <- downloadHandler(
       filename = paste0(filename, ".svg"),
       content = function(file) {
-        # remove popup when downloaded
-        # on.exit(removeModal())
         svg(
           file,
           width = figure_width(),
@@ -155,9 +140,3 @@ mod_download_images_server <- function(id, filename, figure, width = 8, height =
     )
   })
 }
-
-## To be copied in the UI
-# mod_download_images_ui("download_images_ui_1")
-
-## To be copied in the server
-# mod_download_images_server("download_images_ui_1")
