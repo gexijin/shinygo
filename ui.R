@@ -33,7 +33,7 @@ ui <- fluidPage(
         mod_plots_ui(), # plots tab
         mod_genome_ui(), # genome tab
 
-        mod_string_ui(), # STRING tab
+        mod_string_ui("string"), # STRING tab
         mod_about_ui() # about tab
         
       ) # tabsetPanel
