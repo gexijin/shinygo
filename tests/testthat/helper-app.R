@@ -30,11 +30,18 @@ app_env <- local({
   env <- NULL
   function() {
     if (is.null(env)) {
-      env <<- new.env(parent = globalenv())
+      # Same layout as a running app: global.R in one environment, R/ in a
+      # child of it. Code in R/ can see global.R, but global.R can't see R/.
+      # Loading both into one environment would hide that.
+      app_global <- new.env(parent = globalenv())
+      app_r <- new.env(parent = app_global)
       suppressMessages(shinytest2::load_app_env(
         testthat::test_path("..", ".."),
-        renv = env, globalrenv = env
+        renv = app_r, globalrenv = app_global
       ))
+      # One list of everything, so tests can use env$FindOverlap. Each
+      # function keeps its own environment, so the rule above still holds.
+      env <<- c(as.list(app_global, all.names = TRUE), as.list(app_r, all.names = TRUE))
     }
     env
   }
