@@ -60,34 +60,6 @@ enrichmentPlot <- function(enrichedTerms, rightMargin = 33) {
     }
   }
 
-  # Never runs (if (0)): an older alternative that scored overlaps with a
-  # hypergeometric P value instead of the share of genes.
-  if (0) {
-    total_elements <- 30000
-    n <- length(geneLists)
-    w <- matrix(rep(0, n * n), nrow = n, ncol = n)
-    for (i in 1:n) {
-      for (j in (i + 1):n) {
-        u <- unlist(geneLists[i])
-        v <- unlist(geneLists[j])
-        xx <- length(intersect(u, v))
-        if (xx == 0) {
-          next
-        }
-        mm <- length(u)
-        nn <- total_elements - mm
-        kk <- length(v)
-        w[i, j] <- -sqrt(-phyper(xx - 1, mm, nn, kk, lower.tail = FALSE, log.p = TRUE))
-      }
-    }
-
-    for (i in 1:n) {
-      for (j in 1:(i - 1)) {
-        w[i, j] <- w[j, i]
-      }
-    }
-  }
-
   # Leaf labels: "<FDR> <pathway name>".
   Terms <- paste(
     sprintf("%-2.1e", as.numeric(enrichedTerms$adj.Pval)),

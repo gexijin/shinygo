@@ -80,20 +80,6 @@ server <- function(input, output, session) {
     }
   })
 
-  # connect to species specific database
-  observeEvent(input$selectOrg, {
-
-    # connect to the database, this becomes a global variable
-    convert_species <- connect_convert_db_org(datapath, input$selectOrg)
-
-    # idIndex
-    idIndex <- dbGetQuery(
-      convert_species,
-      "select * from idIndex;"
-    )
-    dbDisconnect(convert_species)
-  })
-
   # this defines an reactive object that can be accessed from other rendering functions
   converted <- reactive({
     if (input$goButton == 0 | nchar(input$input_text) < 20) {
@@ -222,12 +208,6 @@ server <- function(input, output, session) {
     geneInfo(converted(), input$selectOrg) # uses converted gene ids thru converted() call
   })
 
-  detailedGeneInfoLookup <- reactive({
-    if (input$goButton == 0) {
-      return()
-    }
-    geneInfoDetails(converted(), input$selectOrg) # uses converted gene ids thru converted() call
-  })
   # this defines an reactive object that can be accessed from other rendering functions
   converted_background <- reactive({
     if (input$goButton == 0 | is.null(input$input_text_b)) {
@@ -2241,7 +2221,6 @@ server <- function(input, output, session) {
           # "Path:hsa04110 Cell cycle" --> "hsa04110"
           pathID <- gsub(" .*", "", input$sigPathways)
           pathID <- gsub("Path:", "", pathID)
-          # pathID <- keggPathwayID(input$sigPathways, Species, "KEGG", input$selectOrg)
           # cat("\nhere5  ",keggSpecies, " ",Species," ",input$sigPathways, "pathID:",pathID,"End", fold[1:5],names(fold)[1:5],"\n")
           # cat("\npathway:",is.na(input$sigPathways))
           # cat("\n",fold[1:5],"\n",keggSpecies,"\n",pathID)

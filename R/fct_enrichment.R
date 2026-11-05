@@ -10,8 +10,6 @@
 #   proper()             capitalise the first letter
 #   mark_duplicates()    c("aa", "aa") -> c("aa 1", "aa 2")
 #
-# Not used anywhere: readGMT(), extract1() and keggPathwayID().
-#
 # Each species has its own pathway database (an SQLite file listed in
 # gmtFiles), with tables pathway (gene -> pathway), pathwayInfo (name, size,
 # URL, GO level) and categories (GOBP, KEGG, ...).
@@ -40,7 +38,6 @@
 #                   Pathway, URL, Genes, Membership (Ensembl IDs, for the
 #                   tree and network)
 #   groupings       the user's genes grouped by high-level GO terms (Groups tab)
-#   categoryChoices the species' pathway databases (not used by the app)
 # If something goes wrong, x (and sometimes groupings) is instead a one-cell
 # data frame holding a message such as "ID not recognized!".
 FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInfoB = NULL, minSetSize = 2, maxSetSize = 4000, gene_count_pathwaydb = FALSE, genes_column = "symbol") {
@@ -103,15 +100,6 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
     totalGenes <- orgInfo[which(orgInfo$id == as.numeric(selectOrg)), 7]
   }
   pathway <- dbConnect(sqlite, gmtFiles[ix], flags = SQLITE_RO)
-
-  # The species' pathway databases ("GOBP", "KEGG", ...), with display names.
-  geneSetCategory <- dbGetQuery(pathway, "select distinct * from categories ")
-  geneSetCategory <- geneSetCategory[, 1]
-  categoryChoices <- setNames(as.list(geneSetCategory), geneSetCategory)
-  categoryChoices <- append(setNames("All", "All available gene sets"), categoryChoices)
-  names(categoryChoices)[match("GOBP", categoryChoices)] <- "GO Biological Process"
-  names(categoryChoices)[match("GOCC", categoryChoices)] <- "GO Cellular Component"
-  names(categoryChoices)[match("GOMF", categoryChoices)] <- "GO Molecular Function"
 
   # Every (gene, pathway) pair for the query genes, in the chosen database.
   if (GO != "All") {
@@ -317,20 +305,17 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
 
   # Groups tab: the user's genes in high-level GO terms (GO levels 2 and 3),
   # the 100 terms with the most genes. Uses x0, the counts before any
-  # filtering. Note: the `groupings` variable set here is never used; the
-  # function returns `groups`.
+  # filtering.
   groups <- dbGetQuery(pathway, paste(" select distinct id, description from pathwayInfo
                        where golevel IN ( '2','3') ", sep = ""))
 
   ix <- match(groups$id, x0$pathwayID)
-  if (length(groups) > 0 && length(ix) > 0) groupings <- as.data.frame("No grouping.")
   groups$ngenes <- x0$overlap[ix]
   groups <- groups[which(!is.na(ix)), ]
   groups <- groups[order(-groups$ngenes), ]
   if (max(groups$ngenes) <= 2) {
     groups <- as.data.frame("Too few genes")
   } else {
-    groupings <- subset(groups, ngenes > 2)
     if (dim(groups)[1] > 100) groups <- groups[1:100, ]
     groups <- cbind(groups, sapply(groups$id, sharedGenesPrefered))
     groups <- groups[, -1]
@@ -360,7 +345,7 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
   }
 
   dbDisconnect(pathway)
-  return(list(x = x, groupings = groups, categoryChoices = categoryChoices))
+  return(list(x = x, groupings = groups))
 }
 
 
@@ -491,65 +476,4 @@ mark_duplicates <- function(strings) {
   result <- ifelse(table(strings)[strings] > 1, paste(strings, counts), strings)
 
   return(result)
-}
-
-
-# Unused -----------------------------------------------------------------------
-
-# Read a GMT gene set file into a named list of gene IDs. Does no cleaning: the
-# files are expected to be made with cleanGeneSet(). The second field of each
-# line (a comment) is skipped, and sets with fewer than 2 genes are dropped.
-readGMT <- function(fileName) {
-  x <- scan(fileName, what = "", sep = "\n")
-  x <- strsplit(x, "\t")
-  names(x) <- sapply(x, `[[`, 1)
-  x <- lapply(x, `[`, -c(1, 2))
-  x <- x[which(sapply(x, length) > 1)]
-  return(x)
-}
-
-# Readable name from a gene set ID:
-#   "GOBP_mmu_mgi_GO:0000183_chromatin_silencing_at_rDNA"
-#   -> "Chromatin silencing at rDNA"
-extract1 <- function(x) {
-  words <- unlist(strsplit(x, "_"))
-  if (length(words) <= 4) {
-    return(gsub("_", " ", x))
-  } else {
-    words <- words[-c(1:4)]
-    return(proper(paste(words, collapse = " ")))
-  }
-}
-
-# The KEGG pathway ID (e.g. "hsa04110") for a pathway name, or NULL.
-keggPathwayID <- function(pathwayDescription, Species, GO, selectOrg) {
-  ix <- grep(Species, gmtFiles)
-
-  if (length(ix) == 0) {
-    return(NULL)
-  }
-
-  # If a species was selected (not "BestMatch"), use it directly.
-  if (selectOrg != speciesChoice[[1]]) {
-    ix <- grep(findSpeciesById(selectOrg)[1, 1], gmtFiles)
-    if (length(ix) == 0) {
-      return(NULL)
-    }
-    totalGenes <- orgInfo[which(orgInfo$id == as.numeric(selectOrg)), 7]
-  }
-  pathway <- dbConnect(sqlite, gmtFiles[ix], flags = SQLITE_RO)
-
-  # Double single quotes for SQL: Parkinson's -> Parkinson''s
-  pathwayDescription <- gsub("\'", "\'\'", pathwayDescription)
-
-  pathwayInfo <- dbGetQuery(pathway, paste(" select * from pathwayInfo where description =  '",
-    pathwayDescription, "' AND name LIKE '", GO, "%'",
-    sep = ""
-  ))
-  dbDisconnect(pathway)
-  if (dim(pathwayInfo)[1] != 1) {
-    return(NULL)
-  }
-  tem <- gsub(".*:", "", pathwayInfo[1, 2])
-  return(gsub("_.*", "", tem))
 }

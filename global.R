@@ -317,7 +317,6 @@ connect_convert_db_org <- function(datapath = datapath, select_org) {
 }
 
 
-# , categoryChoices = categoryChoices
 promoter <- function(converted, selectOrg, radio) {
   idNotRecognized <- as.data.frame("ID not recognized!")
 

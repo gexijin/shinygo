@@ -9,10 +9,6 @@
 #   find_species_id_by_ensembl() Ensembl dataset name -> species ID
 #   find_taxon_by_id()           species ID -> NCBI taxonomy ID
 #   showGeneIDs()                example gene IDs of each ID type
-#
-# Not used anywhere: shortSpeciesNames(), matchedSpeciesInfo() and
-# findIDtypeById(). findIDtypeById() would also fail, as the idIndex table it
-# reads is no longer loaded.
 # ----------------------------------------------------------------------------
 
 
@@ -103,31 +99,4 @@ showGeneIDs <- function(species, nGenes = 10) {
   resultAll <- resultAll[order(grepl("description", resultAll$"ID Type"), decreasing = FALSE), ]
 
   return(resultAll)
-}
-
-
-# Unused Functions -----------------------------------------------------------
-
-# "Homo sapiens" -> "hsapiens"
-shortSpeciesNames <- function(tem) {
-  tem2 <- strsplit(as.character(tem), " ")
-  return(tolower(paste0(substr(tem2[[1]][1], 1, 1), tem2[[1]][2])))
-}
-
-# Turns species/ID-type match counts into labels such as
-# "Human (40 mapped from symbol)".
-matchedSpeciesInfo <- function(x) {
-  a <- c()
-  for (i in 1:length(x)) {
-    a <- c(a, paste(gsub("genes.*", "", findSpeciesByIdName(as.numeric(gsub(" .*", "", names(x[i]))))), " (",
-      x[i], " mapped from ", findIDtypeById(gsub(".* ", "", names(x[i]))), ")",
-      sep = ""
-    ))
-  }
-  return(a)
-}
-
-# ID type name for an ID type number. Reads idIndex, which is no longer loaded.
-findIDtypeById <- function(x) {
-  return(idIndex$idType[as.numeric(x)])
 }
