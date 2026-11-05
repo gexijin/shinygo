@@ -262,8 +262,6 @@ GO_levels <- dbGetQuery(convert, "select distinct id,level from GO
                                  WHERE GO = 'biological_process'")
 level2Terms <- GO_levels[which(GO_levels$level %in% c(2, 3)), 1] # level 2 and 3
 
-# idIndex <- dbGetQuery(convert, paste("select distinct * from idIndex "))
-
 quotes <- dbGetQuery(convert, " select * from quotes")
 quotes$quotes <- gsub("\\\"", "", quotes$quotes) # remove the quotes \"
 quotes <- paste0(quotes$quotes, " -- ", quotes$author)
@@ -284,8 +282,6 @@ gmtFiles <- orgInfo$file
 gmtFiles <- paste(datapath, "/db/", gmtFiles, sep = "")
 # geneInfoFiles <- list.files(path = paste0(datapath, "geneInfo"), pattern = ".*GeneInfo\\.csv")
 # geneInfoFiles <- paste(datapath, "geneInfo/", geneInfoFiles, sep = "")
-# motifFiles <- list.files(path = paste0(datapath, "motif"), pattern = ".*\\.db")
-# motifFiles <- paste(datapath, "motif/", motifFiles, sep = "")
 
 
 
@@ -314,84 +310,4 @@ connect_convert_db_org <- function(datapath = datapath, select_org) {
       flags = RSQLite::SQLITE_RO
     )
   ))
-}
-
-
-promoter <- function(converted, selectOrg, radio) {
-  idNotRecognized <- as.data.frame("ID not recognized!")
-
-  if (is.null(converted)) {
-    return(idNotRecognized)
-  } # no ID
-
-  querySet <- converted$IDs
-
-  if (length(querySet) == 0) {
-    return(idNotRecognized)
-  }
-  ix <- grep(converted$species[1, 1], motifFiles)
-
-  # If selected species is not the default "bestMatch", use that species directly
-  if (selectOrg != speciesChoice[[1]]) {
-    ix <- grep(findSpeciesById(selectOrg)[1, 1], motifFiles)
-  }
-
-  ix1 <- grep(as.character(radio), motifFiles[ix]) # match 300bp or 600bp
-  if (length(ix1) > 0) ix <- ix[ix1] # if 600 is not found, use 300bp
-  if (length(ix) == 0) {
-    return(as.data.frame("No matching motif file found"))
-  } else {
-    if (length(ix) > 1) { # if only one file
-      return(as.data.frame("Multiple geneInfo file found!"))
-    }
-
-    motifs <- dbConnect(sqlite, motifFiles[ix]) # makes a new file
-
-    sqlQuery <- paste(" select * from scores where row_names IN ('", paste(querySet, collapse = "', '"), "')", sep = "")
-    result <- dbGetQuery(motifs, sqlQuery)
-    if (dim(result)[1] == 0) {
-      return(list(x = as.data.frame("No matching species or gene ID file!")))
-    }
-    row.names(result) <- result$row_names
-    result <- result[, -1]
-    TFstat <- as.data.frame(cbind(apply(result, 2, mean), apply(result, 2, sd)))
-    colnames(TFstat) <- c("scoreMean1", "scoreSD1")
-    rownames(TFstat) <- toupper(colnames(result))
-
-    TFs <- dbGetQuery(motifs, "select ID,TF_Name,Family_Name,DBID,Motif_ID,coreMotif,memo,nGenes,scoreSD,scoreMean from  TF_Information ")
-    dbDisconnect(motifs)
-    TFs$ID <- toupper(TFs$ID)
-
-    TFs <- merge(TFs, TFstat, by.x = "ID", by.y = "row.names")
-    TFs <- TFs[!is.na(TFs$scoreSD), ] # some TFs return NA -Inf
-    n1 <- dim(result)[1] # number of genes in query set
-    TFs$scoreMean2 <- (TFs$scoreMean * TFs$nGenes - TFs$scoreMean1 * n1) / (TFs$nGenes - n1)
-    # SD2 needs to be adjusted too, but ignored for now. use overall SD2
-    # t test unequal variance statistic
-    TFs$t <- (TFs$scoreMean1 - TFs$scoreMean2) / sqrt(TFs$scoreSD1^2 / n1 + TFs$scoreSD^2 / TFs$nGenes)
-    # degree of freedom
-    TFs$df <- (TFs$scoreSD1^2 / n1 + TFs$scoreSD^2 / TFs$nGenes)^2 / ((TFs$scoreSD1^2 / n1)^2 / (n1 - 1) + (TFs$scoreSD^2 / TFs$nGenes)^2 / (TFs$nGenes - 1))
-    TFs$pVal <- 1 - pt(TFs$t, df = TFs$df) # t distribution
-    TFs$FDR <- p.adjust(TFs$pVal, method = "fdr")
-    TFs <- TFs[order(TFs$pVal), ]
-    TFs$scoreDiff <- round(TFs$scoreMean1 - TFs$scoreMean2, 0)
-    # TFs <- TFs[order(-TFs$scoreDiff) ,]
-
-    # does this transcription factor gene in this cluster?
-    ix <- match(toupper(TFs$DBID), querySet) # assuming the DBID column in cisbp are ensembl gene ids
-    TFs$note <- ""
-    if (sum(!is.na(ix)) > 0) {
-      TFs$note[which(!is.na(ix))] <- "* Query Gene"
-    }
-    TFs <- subset(TFs, FDR < 0.25, select = c(coreMotif, TF_Name, Family_Name, pVal, FDR, scoreDiff, note))
-    colnames(TFs) <- c("Enriched motif in promoter", "TF", "TF family", "P val.", "FDR", "Score", "Note")
-    if (dim(TFs)[1] > 30) {
-      TFs <- TFs[1:30, ]
-    }
-    if (dim(TFs)[1] == 0) {
-      return(as.data.frame("No significant TF binding motif detected."))
-    } else {
-      return(TFs)
-    }
-  }
 }

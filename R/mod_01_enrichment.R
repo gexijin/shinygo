@@ -53,7 +53,6 @@ mod_enrichment_ui <- function() {
         br(), br(), img(src = "PPInetwork2.png", align = "center", width = "500", height = "391"),
         br(), br(), img(src = "chr.png", align = "center", width = "444", height = "338"),
         br(), br(), img(src = "downSyndrome.png", align = "center", width = "371", height = "276"),
-        #br(), br(), img(src = "promoter.png", align = "center", width = "717", height = "288")
       ),
       br(),
       conditionalPanel(

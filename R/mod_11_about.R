@@ -129,9 +129,6 @@ mod_about_ui <- function() {
     "Through API access to STRING-db, we also retrieve a protein-protein interaction (PPI) network. In addition to a static network image, users can also get access to interactive graphics at the www.string-db.org web server.",
     br(), img(src = "PPInetwork.png", align = "center", width = "700", height = "547"),
     br(), br(),
-    # Promoter/TF-motif feature is disabled.
-    # "ShinyGO also detects transcription factor (TF) binding motifs enriched in the promoters of user's genes.",
-    # br(), br(), img(src = "promoter.png", align = "center", width = "717", height = "288"),
     includeHTML("human_mouse_source.html"),
     br(), 
     h4("Changes:"),
