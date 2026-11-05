@@ -1,11 +1,10 @@
 # Species lookup functions
 #
-# Look up species details in orgInfo (the species table loaded in global.R),
+# Look up species details in orgInfo (the species table loaded by load_app_data()),
 # and fetch example gene IDs for a species.
 #
 #   findSpeciesById()            species ID -> its orgInfo row
 #   findSpeciesByIdName()        species ID -> display name
-#   find_species_by_id_name()    the same, with orgInfo passed in
 #   find_species_id_by_ensembl() Ensembl dataset name -> species ID
 #   find_taxon_by_id()           species ID -> NCBI taxonomy ID
 #   showGeneIDs()                example gene IDs of each ID type
@@ -14,17 +13,12 @@
 
 # The species' row in orgInfo.
 findSpeciesById <- function(speciesID) {
-  return(orgInfo[which(orgInfo$id == speciesID), ])
+  return(.app$orgInfo[which(.app$orgInfo$id == speciesID), ])
 }
 
 # The species' display name (orgInfo's third column, name2), e.g. "Human".
 findSpeciesByIdName <- function(speciesID) {
-  return(orgInfo[which(orgInfo$id == speciesID), 3])
-}
-
-# Same as findSpeciesByIdName(), but with orgInfo passed in.
-find_species_by_id_name <- function(species_id, org_info) {
-  return(org_info[which(org_info$id == species_id), 3])
+  return(.app$orgInfo[which(.app$orgInfo$id == speciesID), 3])
 }
 
 # The species ID for an Ensembl dataset name, e.g. "hsapiens_gene_ensembl".
@@ -46,7 +40,7 @@ showGeneIDs <- function(species, nGenes = 10) {
   if (species == "BestMatch") {
     return(as.data.frame("Select a species above."))
   }
-  convert_species <- connect_convert_db_org(datapath, species)
+  convert_species <- connect_convert_db_org(.app$datapath, species)
 
   idTypes <- dbGetQuery(
     convert_species,

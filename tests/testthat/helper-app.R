@@ -42,6 +42,7 @@ app_env <- local({
       # One list of everything, so tests can use env$FindOverlap. Each
       # function keeps its own environment, so the rule above still holds.
       env <<- c(as.list(app_global, all.names = TRUE), as.list(app_r, all.names = TRUE))
+      env$load_app_data() # as the server does at the start of each session
     }
     env
   }

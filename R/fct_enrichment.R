@@ -80,7 +80,7 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
 
   # Find the species' pathway database; totalGenes (orgInfo's 7th column) is
   # its number of genes, the default background size.
-  ix <- grep(converted$species[1, 1], gmtFiles)
+  ix <- grep(converted$species[1, 1], .app$gmtFiles)
   totalGenes <- converted$species[1, 7]
 
   errorMessage <- list(
@@ -92,14 +92,14 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
   }
 
   # If a species was selected (not "BestMatch"), use it directly.
-  if (selectOrg != speciesChoice[[1]]) {
-    ix <- grep(findSpeciesById(selectOrg)[1, 1], gmtFiles)
+  if (selectOrg != .app$speciesChoice[[1]]) {
+    ix <- grep(findSpeciesById(selectOrg)[1, 1], .app$gmtFiles)
     if (length(ix) == 0) {
       return(idNotRecognized)
     }
-    totalGenes <- orgInfo[which(orgInfo$id == as.numeric(selectOrg)), 7]
+    totalGenes <- .app$orgInfo[which(.app$orgInfo$id == as.numeric(selectOrg)), 7]
   }
-  pathway <- dbConnect(sqlite, gmtFiles[ix], flags = SQLITE_RO)
+  pathway <- dbConnect(sqlite, .app$gmtFiles[ix], flags = SQLITE_RO)
 
   # Every (gene, pathway) pair for the query genes, in the chosen database.
   if (GO != "All") {
@@ -362,19 +362,19 @@ gmtCategory <- function(converted, selectOrg) {
   if (length(querySet) == 0) {
     return(idNotRecognized)
   }
-  ix <- grep(converted$species[1, 1], gmtFiles)
+  ix <- grep(converted$species[1, 1], .app$gmtFiles)
   if (length(ix) == 0) {
     return(idNotRecognized)
   }
 
   # If a species was selected (not "BestMatch"), use it directly.
-  if (selectOrg != speciesChoice[[1]]) {
-    ix <- grep(findSpeciesById(selectOrg)[1, 1], gmtFiles)
+  if (selectOrg != .app$speciesChoice[[1]]) {
+    ix <- grep(findSpeciesById(selectOrg)[1, 1], .app$gmtFiles)
     if (length(ix) == 0) {
       return(idNotRecognized)
     }
   }
-  pathway <- dbConnect(sqlite, gmtFiles[ix], flags = SQLITE_RO)
+  pathway <- dbConnect(sqlite, .app$gmtFiles[ix], flags = SQLITE_RO)
   geneSetCategory <- dbGetQuery(pathway, "select distinct * from categories ")
   geneSetCategory <- sort(geneSetCategory[, 1])
   categoryChoices <- setNames(as.list(geneSetCategory), geneSetCategory)

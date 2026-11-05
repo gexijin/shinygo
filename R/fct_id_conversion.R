@@ -49,7 +49,7 @@ convertID <- function(query, selectOrg) {
     testQueriesString <- paste0("('", paste(testQueries, collapse = "', '"), "')")
   }
 
-  if (selectOrg == speciesChoice[[1]]) { # "BestMatch": guess the species
+  if (selectOrg == .app$speciesChoice[[1]]) { # "BestMatch": guess the species
 
     # Count matching IDs per species and ID type.
     query_species <- paste0(
@@ -61,7 +61,7 @@ convertID <- function(query, selectOrg) {
       ")  GROUP BY species,idType"
     )
 
-    species_ranked <- dbGetQuery(convert, query_species)
+    species_ranked <- dbGetQuery(.app$convert, query_species)
 
     if (dim(species_ranked)[1] == 0) {
       return(NULL)
@@ -123,7 +123,7 @@ convertID <- function(query, selectOrg) {
       " AND id IN ", querSetString
     )
 
-    result <- dbGetQuery(convert, querySTMT)
+    result <- dbGetQuery(.app$convert, querySTMT)
 
     if (dim(result)[1] == 0) {
       return(NULL)
@@ -134,7 +134,7 @@ convertID <- function(query, selectOrg) {
       "select distinct id,ens,idType from mapping where id IN ", querSetString
     )
 
-    convert_species <- connect_convert_db_org(datapath, selectOrg)
+    convert_species <- connect_convert_db_org(.app$datapath, selectOrg)
     result <- dbGetQuery(convert_species, querySTMT)
     dbDisconnect(convert_species)
 
@@ -239,7 +239,7 @@ geneInfo <- function(converted, selectOrg) {
     "select * from geneInfo;"
   )
 
-  convert_species <- connect_convert_db_org(datapath, selectOrg)
+  convert_species <- connect_convert_db_org(.app$datapath, selectOrg)
   x <- dbGetQuery(convert_species, querySTMT)
   dbDisconnect(convert_species)
 
@@ -274,8 +274,8 @@ geneInfo <- function(converted, selectOrg) {
 # Returns NULL if nothing maps, otherwise a data frame with columns
 # entrezgene_id and ensembl_gene_id.
 convertEnsembl2Entrez <- function(query, Species) {
-  speciesID <- orgInfo$id[which(orgInfo$ensembl_dataset == Species)]
-  convert_species <- connect_convert_db_org(datapath, speciesID)
+  speciesID <- .app$orgInfo$id[which(.app$orgInfo$ensembl_dataset == Species)]
+  convert_species <- connect_convert_db_org(.app$datapath, speciesID)
   # Find which ID type number this species' database uses for Entrez IDs.
   idType_Entrez <- dbGetQuery(convert_species, paste("select distinct * from idIndex where idType = 'entrezgene_id'"))
   if (dim(idType_Entrez)[1] != 1) {

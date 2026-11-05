@@ -19,50 +19,9 @@ library(visNetwork)
 library(dplyr)
 library(DT, verbose = FALSE) # for renderDataTable
 
-
-# define where database is located
-db_ver <<- "data115"
-db_url <<- "http://bioinformatics.sdstate.edu/data/"
-
-# if environmental variable is not set, use relative path
-datapath <<- Sys.getenv("IDEP_DATABASE")[1]
-# if not defined in the environment, use too levels above
-if (nchar(datapath) == 0) {
-  datapath <<- paste0("../../data/")
-}
-# Add version
-datapath <<- paste0(datapath, "/", db_ver, "/")
-org_info_file <<- paste0(datapath, "demo/orgInfo.db")
-if (!file.exists(org_info_file)) {
-  datapath <<- paste0("./", db_ver, "/")
-  org_info_file <<- paste0(datapath, "demo/orgInfo.db")
-}
-
-connect_convert_db <- function(datapath = datapath) {
-  if (!file.exists(org_info_file)) {
-    # download org_info and demo files to current folder
-    withProgress(message = "Download demo data and species database", {
-      incProgress(0.2)
-      file_name <- paste0(db_ver, ".tar.gz")
-      options(timeout = 300)
-      download.file(
-        url = paste0(db_url, db_ver, "/", file_name),
-        destfile = file_name,
-        mode = "wb",
-        quiet = FALSE
-      )
-      untar(file_name) # untar and unzip the files
-      file.remove(file_name) # delete the tar file to save storage
-    })
-  }
-
-  return(DBI::dbConnect(
-    drv = RSQLite::dbDriver("SQLite"),
-    dbname = org_info_file,
-    flags = RSQLite::SQLITE_RO
-  ))
-}
-
+# Plain constants and settings. Data from the database (species table, menus,
+# file paths, ...) is loaded once at app start by load_app_data() in
+# R/app_data.R, which Shiny loads after this file.
 
 STRING_DB_VERSION <- "12.0" # what version of STRINGdb needs to be used
 Min_overlap <- 1
@@ -176,95 +135,7 @@ ENSG00000185515"
 
 mycolors <- sort(rainbow(20))[c(1, 20, 10, 11, 2, 19, 3, 12, 4, 13, 5, 14, 6, 15, 7, 16, 8, 17, 9, 18)] # 20 colors for kNN clusters
 
-
 sqlite <- dbDriver("SQLite")
-convert <- connect_convert_db()
-
-
-
-# Create a list for Select Input options
-orgInfo <- dbGetQuery(convert, paste("select distinct * from orgInfo "))
-orgInfo <- orgInfo[order(orgInfo$name), ]
-
-top_choices <- c(
-  #"Best matching species", 
-  #"**NEW SPECIES**", 
-  "Human",
-  "Mouse",
-  "Drosophila melanogaster",
-  "Zebrafish",
-  "Caenorhabditis elegans",
-  "Arabidopsis thaliana",
-  "Saccharomyces cerevisiae",
-  "Escherichia coli",
-  "Rat",
-  "Cow",
-  "Pig", 
-  "Chicken", 
-  "Macaque", 
-  "Dog",
-  "Zea mays", 
-  "Glycine max",
-  "Oryza sativa Indica Group", 
-  "Oryza sativa Japonica Group", 
-  "Vitis vinifera"
-)
-
-#org_info <- org_info[order(org_info$group), ]
-ix <- match(orgInfo$name2, top_choices)
-orgInfo <- orgInfo[order(ix), ]
-orgInfo <- orgInfo[order(orgInfo$group == paste0("STRINGv", STRING_DB_VERSION)), ]
-
-annotatedSpeciesCounts <- sort(table(orgInfo$group)) # total species, Ensembl, Plants, Metazoa, STRINGv10
-speciesChoice <- setNames(as.list(orgInfo$id), orgInfo$name2)
-# add a defult element to list    # new element name       value
-speciesChoice <- append(setNames("BestMatch", "Best matching species"), speciesChoice)
-# move one element to the 2nd place
-move2 <- function(i) c(speciesChoice[1], speciesChoice[i], speciesChoice[-c(1, i)])
-i <- which(names(speciesChoice) == "Vitis vinifera")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Oryza sativa Japonica Group")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Oryza sativa Indica Group")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Glycine max")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Zea mays")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Arabidopsis thaliana")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Saccharomyces cerevisiae")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Caenorhabditis elegans")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Drosophila melanogaster")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Dog")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Macaque")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Chicken")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Pig")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Zebrafish")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Cow")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Rat")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Mouse")
-speciesChoice <- move2(i)
-i <- which(names(speciesChoice) == "Human")
-speciesChoice <- move2(i)
-
-GO_levels <- dbGetQuery(convert, "select distinct id,level from GO
-                                 WHERE GO = 'biological_process'")
-level2Terms <- GO_levels[which(GO_levels$level %in% c(2, 3)), 1] # level 2 and 3
-
-quotes <- dbGetQuery(convert, " select * from quotes")
-quotes$quotes <- gsub("\\\"", "", quotes$quotes) # remove the quotes \"
-quotes <- paste0(quotes$quotes, " -- ", quotes$author)
 
 columnSelection <- list(
   "-log10(FDR)" = "EnrichmentFDR",
@@ -272,42 +143,3 @@ columnSelection <- list(
   "N. of Genes" = "nGenes",
   "Category Name" = "Pathway"
 )
-
-keggSpeciesID <- orgInfo[, c("ensembl_dataset", "name", "KEGG")]
-colnames(keggSpeciesID)[3] <- "kegg"
-
-# keggSpeciesID = read.csv(paste0(datapath,"data_go/KEGG_Species_ID.csv"))
-# List of GMT files in /gmt sub folder
-gmtFiles <- orgInfo$file
-gmtFiles <- paste(datapath, "/db/", gmtFiles, sep = "")
-# geneInfoFiles <- list.files(path = paste0(datapath, "geneInfo"), pattern = ".*GeneInfo\\.csv")
-# geneInfoFiles <- paste(datapath, "geneInfo/", geneInfoFiles, sep = "")
-
-
-
-#______________________________________________________________
-
-
-
-#' Connect to the convertIDs database for the species and return the
-#' objects.
-#'
-#' Create a database connection with the DBI package.
-#'
-#' @param datapath Folder path to the data file
-#' @param select_org The slected species
-#' @param idep_data  Data object that includes org_info
-#'
-#' @export
-#' @return Database connection.
-connect_convert_db_org <- function(datapath = datapath, select_org) {
-  ix <- which(orgInfo$id == select_org)
-  db_file <- orgInfo[ix, "file"]
-  return(try(
-    DBI::dbConnect(
-      drv = RSQLite::dbDriver("SQLite"),
-      dbname = paste0(datapath, "db/", db_file),
-      flags = RSQLite::SQLITE_RO
-    )
-  ))
-}

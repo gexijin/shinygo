@@ -9,6 +9,7 @@
 # Data last modified: 09-2-2021
 #######################################################
 server <- function(input, output, session) {
+  load_app_data() # database data shared by all sessions; only the first loads it
   options(warn = -1)
   welcome_modal <- shiny::modalDialog(
     title = "Find ShinyGO helpful? Send us an email today so it will be here next year.",
@@ -33,7 +34,7 @@ server <- function(input, output, session) {
   observe({
      # for gene ID example
 
-    updateSelectizeInput(session, "userSpecieIDexample", choices = speciesChoice, selected = speciesChoice[1])
+    updateSelectizeInput(session, "userSpecieIDexample", choices = .app$speciesChoice, selected = .app$speciesChoice[1])
 
     # load demo data when clicked
 
@@ -133,7 +134,7 @@ server <- function(input, output, session) {
         easyClose = TRUE,
 
         DT::renderDataTable({
-          df <- orgInfo[
+          df <- .app$orgInfo[
             ,
             c("ensembl_dataset", "academicName", "name",  "taxon_id", "group")
           ]
@@ -182,12 +183,12 @@ server <- function(input, output, session) {
     # find species ID from ensembl_dataset
     selected <- find_species_id_by_ensembl(
       input$clicked_row,
-      orgInfo
+      .app$orgInfo
     )
     # assign name
     selected <- setNames(
       selected,
-      find_species_by_id_name(selected, orgInfo)
+      findSpeciesByIdName(selected)
     )
 
     updateSelectizeInput(
@@ -198,7 +199,7 @@ server <- function(input, output, session) {
       server = TRUE
     )
     # update species name
-    selected_species_name(find_species_by_id_name(selected, orgInfo))
+    selected_species_name(findSpeciesByIdName(selected))
   })
 
   geneInfoLookup <- reactive({
@@ -261,7 +262,7 @@ server <- function(input, output, session) {
     tem <- input$genesColumnID
 
     isolate({
-      withProgress(message = sample(quotes, 1), detail = "enrichment analysis", {
+      withProgress(message = sample(.app$quotes, 1), detail = "enrichment analysis", {
         # gene info is passed to enable lookup of gene symbols
         tem <- geneInfoLookup()
         tem <- tem[which(tem$Set == "List"), ]
@@ -308,7 +309,7 @@ server <- function(input, output, session) {
     }
 
     enrichment <- significantOverlapsAll()
-    withProgress(message = sample(quotes, 1), detail = "Sorting and filtering pathways", {
+    withProgress(message = sample(.app$quotes, 1), detail = "Sorting and filtering pathways", {
       if (dim(enrichment$x)[2] > 1) { # when there is no overlap, returns a data frame with 1 row and 1 column
 
         # filter by FDR-------------------------------------------------------------
@@ -447,7 +448,7 @@ server <- function(input, output, session) {
   # Species match message ---------- stole from Gavin's code 4/20/22
   observe({
     req(
-      input$selectOrg == speciesChoice[[1]] # best matching species
+      input$selectOrg == .app$speciesChoice[[1]] # best matching species
       && !is.null(converted()) # finished
     )
     showNotification(
@@ -483,7 +484,7 @@ server <- function(input, output, session) {
   )
 
   output$orgInfoTable <- DT::renderDataTable({
-    df <- orgInfo[, c("ensembl_dataset", "name", "totalGenes")]
+    df <- .app$orgInfo[, c("ensembl_dataset", "name", "totalGenes")]
     colnames(df) <- c("Ensembl/STRING-db ID", "Name (Assembly)", "Total Genes")
     row.names(df) <- NULL
     df
@@ -507,7 +508,7 @@ server <- function(input, output, session) {
     tem <- input$selectOrg
     tem <- input$minFDR
     isolate({
-      withProgress(message = sample(quotes, 1), detail = "Looking up gene Info", {
+      withProgress(message = sample(.app$quotes, 1), detail = "Looking up gene Info", {
         tem <- converted()
         incProgress(0.1)
         tem2 <- geneInfoLookup()
@@ -653,7 +654,7 @@ server <- function(input, output, session) {
         return(significantOverlaps()$x)
       }
 
-      withProgress(message = sample(quotes, 1), detail = myMessage, {
+      withProgress(message = sample(.app$quotes, 1), detail = myMessage, {
         pathways <- significantOverlaps()$x
         # remove pathway ID  only in Ensembl species
         if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
@@ -1014,7 +1015,7 @@ server <- function(input, output, session) {
       return(NULL)
     }
     
-    find_taxon_by_id(input$selectOrg, orgInfo)
+    find_taxon_by_id(input$selectOrg, .app$orgInfo)
 
   })
 
@@ -1040,7 +1041,7 @@ server <- function(input, output, session) {
     }
 
     isolate({
-      withProgress(message = sample(quotes, 1), detail = "Mapping gene ids (5 minutes)", {
+      withProgress(message = sample(.app$quotes, 1), detail = "Mapping gene ids (5 minutes)", {
 
         # Intialization
         string_db <- STRINGdb$new(
@@ -1099,7 +1100,7 @@ server <- function(input, output, session) {
       return(NULL)
     }
     library(STRINGdb, verbose = FALSE)
-    withProgress(message = sample(quotes, 1), detail = "Enrichment analysis", {
+    withProgress(message = sample(.app$quotes, 1), detail = "Enrichment analysis", {
       tem <- input$STRINGdbGO
       # Intialization
       string_db <- STRINGdb$new(
@@ -1218,7 +1219,7 @@ server <- function(input, output, session) {
       }
 
       isolate({
-        withProgress(message = sample(quotes, 1), detail = "Enrichment analysis", {
+        withProgress(message = sample(.app$quotes, 1), detail = "Enrichment analysis", {
           # Intialization
           string_db <- STRINGdb$new(
             version = STRING_DB_VERSION, species = taxonomyID,
@@ -1261,7 +1262,7 @@ server <- function(input, output, session) {
     }
 
     isolate({
-      withProgress(message = sample(quotes, 1), detail = "PPI Enrichment and link", {
+      withProgress(message = sample(.app$quotes, 1), detail = "PPI Enrichment and link", {
         # Intialization
         string_db <- STRINGdb$new(
           version = STRING_DB_VERSION, species = taxonomyID,
@@ -1341,7 +1342,7 @@ server <- function(input, output, session) {
       }
       myMessage <- "Just a minute. Matching your genes with level 2 and level 3 Gene Ontology biological process terms.
 	       This can take up to 1 minute as we have to glue together a large number of gene names. "
-      withProgress(message = sample(quotes, 1), detail = myMessage, {
+      withProgress(message = sample(.app$quotes, 1), detail = myMessage, {
         tem <- significantOverlaps()
 
         incProgress(1, detail = paste("Done"))
@@ -2159,7 +2160,7 @@ server <- function(input, output, session) {
           fold <- convertEnsembl2Entrez(converted()$IDs, Species)
 
           fold <- fold$entrezgene_id
-          keggSpecies <- as.character(keggSpeciesID[which(keggSpeciesID[, 1] == Species), 3])
+          keggSpecies <- as.character(.app$keggSpeciesID[which(.app$keggSpeciesID[, 1] == Species), 3])
 
           if (nchar(keggSpecies) <= 2) {
             return(blank)
@@ -2220,7 +2221,7 @@ server <- function(input, output, session) {
     ####################################
 
     isolate({
-      withProgress(message = sample(quotes, 1), detail = "Visualzing expression on the genome", {
+      withProgress(message = sample(.app$quotes, 1), detail = "Visualzing expression on the genome", {
         # default plot
         fake <- data.frame(a = 1:3, b = 1:3)
         p <- ggplot(fake, aes(x = a, y = b)) +
