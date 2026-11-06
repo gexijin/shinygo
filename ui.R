@@ -31,7 +31,7 @@ ui <- fluidPage(
         mod_genes_ui(), # genes tab
         mod_groups_ui(), # groups tab
         mod_plots_ui(), # plots tab
-        mod_genome_ui(), # genome tab
+        mod_genome_ui("genome"), # genome tab
 
         mod_string_ui("string"), # STRING tab
         mod_about_ui() # about tab

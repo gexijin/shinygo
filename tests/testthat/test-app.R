@@ -66,7 +66,7 @@ test_that("app outputs for the yeast gene list are unchanged", {
       widget_data(out$enrichmentNetworkPlotInteractive, c("nodes", "edges")),
       function(df) df[setdiff(names(df), c("x", "y"))]
     ),
-    genome = widget_data(out$genomePlotly, "data"),
+    genome = widget_data(out$`genome-genomePlotly`, "data"),
     # Density plots: t-test results are only kept as these labels.
     gene_density_labels = grob_text(plots$gene_density_plot),
     # Tree: the app's own input, drawn by enrichmentPlot() as renderPlot does.
