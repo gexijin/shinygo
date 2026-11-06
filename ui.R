@@ -27,7 +27,7 @@ ui <- fluidPage(
         mod_chart_ui(), # enrichment chart tab
         mod_tree_ui(), # tree tab
         mod_network_ui(), # network tab
-        mod_kegg_ui(), # KEGG tab
+        mod_kegg_ui("kegg"), # KEGG tab
         mod_genes_ui("genes"), # genes tab
         mod_groups_ui("groups"), # groups tab
         mod_plots_ui(), # plots tab
