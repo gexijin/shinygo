@@ -60,7 +60,7 @@ test_that("app outputs for the yeast gene list are unchanged", {
     mapping_stats = out$mapping_stats,
     enrichment_kegg = out$EnrichmentTable,
     chart_kegg = plots$enrich_chart$data,
-    genes = out$conversionTable,
+    genes = out$`genes-conversionTable`,
     # Node x/y are layout positions, not results.
     network_kegg = lapply(
       widget_data(out$enrichmentNetworkPlotInteractive, c("nodes", "edges")),
@@ -80,7 +80,7 @@ test_that("app outputs for the yeast gene list are unchanged", {
   out <- app$get_values(output = TRUE)$output
   expect_snapshot_value(list(
     enrichment_gobp = out$EnrichmentTable,
-    groups = out$grouping
+    groups = out$`groups-grouping`
   ), style = "deparse")
 
   # Every sort option, with the other settings at their defaults.
