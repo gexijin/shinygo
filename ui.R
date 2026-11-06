@@ -30,7 +30,7 @@ ui <- fluidPage(
         mod_kegg_ui("kegg"), # KEGG tab
         mod_genes_ui("genes"), # genes tab
         mod_groups_ui("groups"), # groups tab
-        mod_plots_ui(), # plots tab
+        mod_plots_ui("plots"), # plots tab
         mod_genome_ui("genome"), # genome tab
 
         mod_string_ui("string"), # STRING tab
