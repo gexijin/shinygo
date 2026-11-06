@@ -23,7 +23,7 @@ ui <- fluidPage(
     mainPanel(
       tabsetPanel(
         id = "tabs", type = "tabs",
-        mod_enrichment_ui(), # enrichment tab
+        mod_enrichment_ui("enrichment"), # enrichment tab
         mod_chart_ui("chart"), # enrichment chart tab
         mod_tree_ui("tree"), # tree tab
         mod_network_ui("network"), # network tab

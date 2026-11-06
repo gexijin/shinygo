@@ -568,61 +568,6 @@ server <- function(input, output, session) {
     conversionTableData = conversionTableData
   )
 
-  output$EnrichmentTable <- renderTable(
-    {
-      if (input$goButton == 0) {
-        return(NULL)
-      }
-      tem <- input$input_text_b # just to make it re-calculate if user changes background
-
-      myMessage <- "Analyzing genes."
-
-      if (is.null(significantOverlaps())) {
-        return(NULL)
-      }
-      # this solves an error when there is no significant enrichment
-
-      if (ncol(significantOverlaps()$x) == 1) {
-        return(significantOverlaps()$x)
-      }
-
-      withProgress(message = sample(.app$quotes, 1), detail = myMessage, {
-        pathways <- significantOverlaps()$x
-        # remove pathway ID  only in Ensembl species
-        if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-          pathways$Pathway <- remove_pathway_id(pathways$Pathway, input$selectGO)
-        }
-        pathways$Pathway <- hyperText(pathways$Pathway, pathways$URL)
-
-        pathways$Membership <- NULL # internal, never displayed
-        pathways <- pathways[, -7]
-        # rownames(pathways) <- NULL
-        # pathways[, 1] <- as.numeric( format(pathways[, 1], scientific = TRUE, digits = 3 ) )
-        pathways[, 4] <- as.character(round(pathways[, 4], 1))
-        pathways[, 2] <- as.character(pathways[, 2]) # convert total genes into character 10/21/19
-        pathways[, 3] <- as.character(pathways[, 3]) # convert total genes into character 10/21/19
-        colnames(pathways)[5] <- "Pathways (click for details)"
-
-        incProgress(1, detail = paste("Done"))
-      })
-
-      if (dim(pathways)[2] > 1) pathways[, 2] <- as.character(pathways[, 2])
-
-      if (dim(pathways)[2] == 1) {
-        return(pathways)
-      } else {
-        return(pathways[, 1:5])
-      } # If no significant enrichment found x only has 1 column.
-    },
-    digits = -1,
-    spacing = "s",
-    striped = TRUE,
-    bordered = TRUE,
-    width = "auto",
-    hover = TRUE,
-    sanitize.text.function = function(x) x
-  )
-
   significantOverlaps2 <- reactive({
     if (input$goButton == 0) {
       return()
@@ -664,69 +609,17 @@ server <- function(input, output, session) {
     significantOverlaps = significantOverlaps
   )
 
-  # Ask what the Genes column should contain, then hand over the real download
-  # button. The Genes column is not part of the on-screen table, so this is the
-  # only point where the choice is visible to the user.
-  genes_column_dialog <- function(download_id, title) {
-    shiny::modalDialog(
-      title = title,
-      radioButtons(
-        inputId = "genesColumnID",
-        label = "How should genes be listed in the Genes column?",
-        choiceNames = c(
-          "Gene symbols where available, otherwise the ID you pasted",
-          "The gene IDs you pasted",
-          "Ensembl gene IDs"
-        ),
-        choiceValues = c("symbol", "input", "ensembl"),
-        selected = if (is.null(input$genesColumnID)) "symbol" else input$genesColumnID
-      ),
-      helpText(
-        "Some species have gene symbols for only part of the genome. For those,
-         the first option gives a mix of symbols and IDs. Choose one of the other
-         two if you need a single consistent ID type."
-      ),
-      footer = tagList(
-        modalButton("Cancel"),
-        downloadButton(download_id, "Download")
-      ),
-      easyClose = TRUE
-    )
-  }
-
-  observeEvent(input$askDownloadEnrichment, {
-    showModal(genes_column_dialog("downloadEnrichment", "Download top pathways"))
-  })
-
-  observeEvent(input$askDownloadEnrichmentAll, {
-    showModal(genes_column_dialog("downloadEnrichmentAll", "Download all pathways"))
-  })
-
-  # Membership is a list column carried for the tree, network and redundancy
-  # filter. It is internal, and write.csv cannot serialise it.
-  drop_membership <- function(df) {
-    if (is.data.frame(df) && "Membership" %in% colnames(df)) df$Membership <- NULL
-    df
-  }
-
-  output$downloadEnrichment <- downloadHandler(
-    filename = function() {
-      "enrichment.csv"
-    },
-    content = function(file) {
-      write.csv(drop_membership(significantOverlaps()$x), file, row.names = FALSE)
-      removeModal()
-    }
-  )
-
-  output$downloadEnrichmentAll <- downloadHandler(
-    filename = function() {
-      "enrichment_all.csv"
-    },
-    content = function(file) {
-      write.csv(drop_membership(significantOverlapsAll()$x), file, row.names = FALSE)
-      removeModal()
-    }
+  # Enrichment tab
+  mod_enrichment_server(
+    "enrichment",
+    goButton = reactive(input$goButton),
+    input_text_b = reactive(input$input_text_b),
+    show_pathway_id = reactive(input$show_pathway_id),
+    selectOrg = reactive(input$selectOrg),
+    selectGO = reactive(input$selectGO),
+    genesColumnID = reactive(input$genesColumnID),
+    significantOverlaps = significantOverlaps,
+    significantOverlapsAll = significantOverlapsAll
   )
 
 

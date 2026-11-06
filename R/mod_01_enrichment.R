@@ -1,4 +1,30 @@
-mod_enrichment_ui <- function() {
+# Enrichment tab module
+#
+# The main results: the welcome page before Submit, then the table of
+# significant pathways, the sort menu, a download of the top or all pathways,
+# and notes on the methods and on reading the results.
+#
+#   mod_enrichment_ui(id)      the tab
+#   mod_enrichment_server(id, goButton, input_text_b, show_pathway_id,
+#                         selectOrg, selectGO, genesColumnID,
+#                         significantOverlaps, significantOverlapsAll)
+#
+# Arguments of mod_enrichment_server(), all reactives from the main server:
+# the inputs of the same names (input_text_b is the background genes, read so
+# the table updates when they change), plus significantOverlaps (the pathways
+# shown) and significantOverlapsAll (all pathways, for the "all" download).
+#
+# Three things deliberately stay with the main app, without namespacing:
+#   - the "Sort by" menu (SortPathways), which significantOverlaps() reads, so
+#     the sort order also changes the Chart, Tree and Network tabs;
+#   - the download pop-up's "Genes column" choice (genesColumnID), which
+#     significantOverlapsAll() reads;
+#   - the welcome-page conditionalPanel()s, which check input.goButton.
+# ----------------------------------------------------------------------------
+
+
+mod_enrichment_ui <- function(id) {
+  ns <- NS(id)
     tabPanel("Enrichment",
       value = 1,
       conditionalPanel(
@@ -77,14 +103,14 @@ mod_enrichment_ui <- function() {
           )
         )
       ),
-      tableOutput("EnrichmentTable"),
+      tableOutput(ns("EnrichmentTable")),
       conditionalPanel(
         "input.goButton != 0",
         # These open a dialog to pick what the Genes column should hold,
         # then offer the real download. The Genes column is not shown in
         # the table above, so the choice only makes sense at download time.
-        actionButton("askDownloadEnrichment", "Top Pathways shown above", icon = icon("download")),
-        actionButton("askDownloadEnrichmentAll", "Results on all Pathways", icon = icon("download")),
+        actionButton(ns("askDownloadEnrichment"), "Top Pathways shown above", icon = icon("download")),
+        actionButton(ns("askDownloadEnrichmentAll"), "Results on all Pathways", icon = icon("download")),
         br(), br(),
         h3("Methods"),
         p("All query genes are converted to ENSEMBL gene IDs or STRING-db protein IDs,
@@ -177,4 +203,131 @@ mod_enrichment_ui <- function() {
               your initial expectations."),
       )
     )
-  }
+}
+
+
+mod_enrichment_server <- function(id, goButton, input_text_b, show_pathway_id,
+                                  selectOrg, selectGO, genesColumnID,
+                                  significantOverlaps, significantOverlapsAll) {
+  moduleServer(id, function(input, output, session) {
+    output$EnrichmentTable <- renderTable(
+      {
+        if (goButton() == 0) {
+          return(NULL)
+        }
+        tem <- input_text_b() # just to make it re-calculate if user changes background
+
+        myMessage <- "Analyzing genes."
+
+        if (is.null(significantOverlaps())) {
+          return(NULL)
+        }
+        # this solves an error when there is no significant enrichment
+
+        if (ncol(significantOverlaps()$x) == 1) {
+          return(significantOverlaps()$x)
+        }
+
+        withProgress(message = sample(.app$quotes, 1), detail = myMessage, {
+          pathways <- significantOverlaps()$x
+          # remove pathway ID  only in Ensembl species
+          if (!show_pathway_id() && as.integer(selectOrg()) > 0) {
+            pathways$Pathway <- remove_pathway_id(pathways$Pathway, selectGO())
+          }
+          pathways$Pathway <- hyperText(pathways$Pathway, pathways$URL)
+
+          pathways$Membership <- NULL # internal, never displayed
+          pathways <- pathways[, -7]
+          # rownames(pathways) <- NULL
+          # pathways[, 1] <- as.numeric( format(pathways[, 1], scientific = TRUE, digits = 3 ) )
+          pathways[, 4] <- as.character(round(pathways[, 4], 1))
+          pathways[, 2] <- as.character(pathways[, 2]) # convert total genes into character 10/21/19
+          pathways[, 3] <- as.character(pathways[, 3]) # convert total genes into character 10/21/19
+          colnames(pathways)[5] <- "Pathways (click for details)"
+
+          incProgress(1, detail = paste("Done"))
+        })
+
+        if (dim(pathways)[2] > 1) pathways[, 2] <- as.character(pathways[, 2])
+
+        if (dim(pathways)[2] == 1) {
+          return(pathways)
+        } else {
+          return(pathways[, 1:5])
+        } # If no significant enrichment found x only has 1 column.
+      },
+      digits = -1,
+      spacing = "s",
+      striped = TRUE,
+      bordered = TRUE,
+      width = "auto",
+      hover = TRUE,
+      sanitize.text.function = function(x) x
+    )
+
+    # Ask what the Genes column should contain, then hand over the real download
+    # button. The Genes column is not part of the on-screen table, so this is the
+    # only point where the choice is visible to the user.
+    genes_column_dialog <- function(download_id, title) {
+      shiny::modalDialog(
+        title = title,
+        radioButtons(
+          inputId = "genesColumnID",
+          label = "How should genes be listed in the Genes column?",
+          choiceNames = c(
+            "Gene symbols where available, otherwise the ID you pasted",
+            "The gene IDs you pasted",
+            "Ensembl gene IDs"
+          ),
+          choiceValues = c("symbol", "input", "ensembl"),
+          selected = if (is.null(genesColumnID())) "symbol" else genesColumnID()
+        ),
+        helpText(
+          "Some species have gene symbols for only part of the genome. For those,
+         the first option gives a mix of symbols and IDs. Choose one of the other
+         two if you need a single consistent ID type."
+        ),
+        footer = tagList(
+          modalButton("Cancel"),
+          downloadButton(session$ns(download_id), "Download")
+        ),
+        easyClose = TRUE
+      )
+    }
+
+    observeEvent(input$askDownloadEnrichment, {
+      showModal(genes_column_dialog("downloadEnrichment", "Download top pathways"))
+    })
+
+    observeEvent(input$askDownloadEnrichmentAll, {
+      showModal(genes_column_dialog("downloadEnrichmentAll", "Download all pathways"))
+    })
+
+    # Membership is a list column carried for the tree, network and redundancy
+    # filter. It is internal, and write.csv cannot serialise it.
+    drop_membership <- function(df) {
+      if (is.data.frame(df) && "Membership" %in% colnames(df)) df$Membership <- NULL
+      df
+    }
+
+    output$downloadEnrichment <- downloadHandler(
+      filename = function() {
+        "enrichment.csv"
+      },
+      content = function(file) {
+        write.csv(drop_membership(significantOverlaps()$x), file, row.names = FALSE)
+        removeModal()
+      }
+    )
+
+    output$downloadEnrichmentAll <- downloadHandler(
+      filename = function() {
+        "enrichment_all.csv"
+      },
+      content = function(file) {
+        write.csv(drop_membership(significantOverlapsAll()$x), file, row.names = FALSE)
+        removeModal()
+      }
+    )
+  })
+}

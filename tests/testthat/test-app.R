@@ -58,7 +58,7 @@ test_that("app outputs for the yeast gene list are unchanged", {
   expect_snapshot_value(list(
     selected_species = out$selected_species,
     mapping_stats = out$mapping_stats,
-    enrichment_kegg = out$EnrichmentTable,
+    enrichment_kegg = out$`enrichment-EnrichmentTable`,
     chart_kegg = plots$enrich_chart$data,
     genes = out$`genes-conversionTable`,
     # Node x/y are layout positions, not results.
@@ -79,7 +79,7 @@ test_that("app outputs for the yeast gene list are unchanged", {
   app$set_inputs(tabs = "1")
   out <- app$get_values(output = TRUE)$output
   expect_snapshot_value(list(
-    enrichment_gobp = out$EnrichmentTable,
+    enrichment_gobp = out$`enrichment-EnrichmentTable`,
     groups = out$`groups-grouping`
   ), style = "deparse")
 
@@ -90,7 +90,7 @@ test_that("app outputs for the yeast gene list are unchanged", {
   )
   by_sort <- lapply(sort_options, function(option) {
     app$set_inputs(SortPathways = option)
-    app$get_value(output = "EnrichmentTable")
+    app$get_value(output = "enrichment-EnrichmentTable")
   })
   names(by_sort) <- sort_options
   expect_snapshot_value(by_sort, style = "deparse")
@@ -101,5 +101,5 @@ test_that("app outputs for the yeast gene list are unchanged", {
     minFDR = 0.01, maxTerms = "50", minSetSize = 10, maxSetSize = 2000,
     removeRedudantSets = FALSE, abbreviatePathway = FALSE, show_pathway_id = TRUE
   )
-  expect_snapshot_value(app$get_value(output = "EnrichmentTable"), style = "deparse")
+  expect_snapshot_value(app$get_value(output = "enrichment-EnrichmentTable"), style = "deparse")
 })
