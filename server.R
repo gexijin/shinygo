@@ -644,233 +644,24 @@ server <- function(input, output, session) {
     tem
   })
 
-  # duplicate of the above, with the word wrapping. This is for use in the network plot
-  significantOverlaps3 <- reactive({
-    if (input$goButton == 0) {
-      return()
-    }
-    tem <- input$input_text_b # just to make it re-calculate if user changes background
-
-    tem <- significantOverlaps()
-    if (dim(tem$x)[2] == 1) {
-      return(NULL)
-    }
-    tem <- tem$x
-    colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes", "Membership")
-    tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
-
-    # remove pathway ID  only in Ensembl species
-    if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-      tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
-    }
-
-    if (input$wrapTextNetwork) {
-      tem$Pathways <- wrap_strings(tem$Pathways)
-    } # wrap long pathway names using default width of 30 10/21/19
-
-    tem$Direction <- "Diff"
-    tem
-  })
-
-  # duplicate of the above for word wrapping in static networkplot
-  significantOverlaps4 <- reactive({
-    if (input$goButton == 0) {
-      return()
-    }
-    tem <- input$input_text_b # just to make it re-calculate if user changes background
-    tem <- significantOverlaps()
-    if (dim(tem$x)[2] == 1) {
-      return(NULL)
-    }
-    tem <- tem$x
-    colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes", "Membership")
-    tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
-
-    # remove pathway ID  only in Ensembl species
-    if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-      tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
-    }
-    if (input$wrapTextNetworkStatic) {
-      tem$Pathways <- wrap_strings(tem$Pathways)
-    } # wrap long pathway names using default width of 30 10/21/19
-
-    tem$Direction <- "Diff"
-    tem
-  })
-
-  output$GOTermsTree <- renderPlot(
-    {
-      if (input$goButton == 0) {
-        return(NULL)
-      }
-      if (is.null(significantOverlaps2())) {
-        return(NULL)
-      }
-      tem <- input$maxTerms
-      # enrichmentPlot(significantOverlaps2(), 56  )
-      tree_plot()
-    },
-    height = function() {
-      round(max(350, min(2500, round(18 * as.numeric(input$maxTerms)))))
-    },
-    width = function() {
-      width1 <- round(max(350, min(1000, round(18 * as.numeric(input$maxTerms)))) * as.numeric(input$treeChartAspectRatio))
-      return(min(width1, 1000)) # max width is 1000
-    }
+  # Tree tab
+  mod_tree_server(
+    "tree",
+    goButton = reactive(input$goButton),
+    maxTerms = reactive(input$maxTerms),
+    significantOverlaps2 = significantOverlaps2
   )
 
 
-
-  tree_plot <- reactive({
-    if (input$goButton == 0) {
-      return(NULL)
-    }
-    if (is.null(significantOverlaps2())) {
-      return(NULL)
-    }
-    tem <- input$maxTerms
-    p <- enrichmentPlot(significantOverlaps2(), 45)
-    return(p)
-  })
-
-  download_tree <- mod_download_images_server(
-    "download_tree",
-    filename = "tree_plot",
-    figure = reactive({
-      tree_plot()
-    }),
-    width = 10,
-    height = round(10 / as.numeric(input$treeChartAspectRatio), 1)
-  )
-
-
-  output$enrichmentNetworkPlot <- renderPlot(
-    {
-      if (is.null(significantOverlaps4())) {
-        return(NULL)
-      }
-
-      enrichmentNetwork(significantOverlaps4(), layoutButton = input$layoutButtonStatic, edge.cutoff = input$edgeCutoff)
-    },
-    height = 900
-  )
-
-  output$enrichmentNetworkPlotDownload <- downloadHandler(
-    filename = "enrichmentPlotNetworkPathway.tiff",
-    content = function(file) {
-      tiff(file, width = 12, height = 12, units = "in", res = 300, compression = "lzw")
-      enrichmentNetwork(significantOverlaps4(), layoutButton = input$layoutButton, edge.cutoff = input$edgeCutoff)
-      dev.off()
-    }
-  )
-
-  # note the same code is used twice as above. They need to be updated together!!!
-  output$enrichmentNetworkPlotInteractive <- renderVisNetwork({
-    if (is.null(significantOverlaps3())) {
-      return(NULL)
-    }
-
-    g <- enrichmentNetwork(significantOverlaps3(), layoutButton = input$layoutButton, edge.cutoff = input$edgeCutoff)
-    data1 <- toVisNetworkData(g)
-
-    # Color codes: https://www.rapidtables.com/web/color/RGB_Color.html
-    data1$nodes$shape <- "dot"
-    # remove the color change of nodes
-    # data1$nodes <- subset(data1$nodes, select = -color)
-
-    data1$nodes$size <- 5 + data1$nodes$size^2
-    visNetwork(nodes = data1$nodes, edges = data1$edges, height = "700px", width = "700px") %>%
-      visIgraphLayout(layout = "layout_with_fr") %>%
-      visNodes(
-        color = list(
-          # background = "#32CD32",
-          border = "#000000",
-          highlight = "#FF8000"
-        ),
-        font = list(
-          color = "#000000",
-          size = 20
-        ),
-        borderWidth = 1,
-        shadow = list(enabled = TRUE, size = 10)
-      ) %>%
-      visEdges(
-        shadow = FALSE,
-        color = list(color = "#A9A9A9", highlight = "#FFD700")
-      ) %>%
-      visExport(
-        type = "jpeg",
-        name = "export-network",
-        float = "left",
-        label = "Export image",
-        background = "white",
-        style = ""
-      )
-  })
-
-  output$enrichmentNetworkPlotInteractiveDownload <- downloadHandler(
-    filename = "enrichmentPlotNetwork.html",
-    content = function(file) {
-      # jpeg(file, width = 12, height = 12, units = 'in', res = 300, compression = 'lzw')
-
-      g <- enrichmentNetwork(significantOverlaps3(), layoutButton = input$layoutButton, edge.cutoff = input$edgeCutoff)
-      data1 <- toVisNetworkData(g)
-
-      # Color codes: https://www.rapidtables.com/web/color/RGB_Color.html
-      data1$nodes$shape <- "dot"
-      # remove the color change of nodes
-      # data1$nodes <- subset(data1$nodes, select = -color)
-
-      data1$nodes$size <- 5 + data1$nodes$size^2
-      g2 <-
-        visNetwork(nodes = data1$nodes, edges = data1$edges, height = "700px", width = "700px") %>%
-        visIgraphLayout(layout = "layout_with_fr") %>%
-        visNodes(
-          color = list(
-            # background = "#32CD32",
-            border = "#000000",
-            highlight = "#FF8000"
-          ),
-          font = list(
-            color = "#000000",
-            size = 20
-          ),
-          borderWidth = 1,
-          shadow = list(enabled = TRUE, size = 10)
-        ) %>%
-        visEdges(
-          shadow = FALSE,
-          color = list(color = "#A9A9A9", highlight = "#FFD700")
-        ) %>%
-        visSave(file = file, background = "white")
-    }
-  )
-
-  output$downloadNodes <- downloadHandler(
-    filename = function() {
-      "network_nodes.csv"
-    },
-    content = function(file) {
-      g <- enrichmentNetwork(significantOverlaps3(), layoutButton = input$layoutButton, edge.cutoff = input$edgeCutoff)
-      data1 <- toVisNetworkData(g)
-      data1$nodes$shape <- "dot"
-      data1$nodes$size <- 5 + data1$nodes$size^2
-
-      write.csv(data1$nodes, file, row.names = FALSE)
-    }
-  )
-  output$downloadEdges <- downloadHandler(
-    filename = function() {
-      "network_edges.csv"
-    },
-    content = function(file) {
-      g <- enrichmentNetwork(significantOverlaps3(), layoutButton = input$layoutButton, edge.cutoff = input$edgeCutoff)
-      data1 <- toVisNetworkData(g)
-      data1$nodes$shape <- "dot"
-      data1$nodes$size <- 5 + data1$nodes$size^2
-
-      write.csv(data1$edges, file, row.names = FALSE)
-    }
+  # Network tab
+  mod_network_server(
+    "network",
+    goButton = reactive(input$goButton),
+    input_text_b = reactive(input$input_text_b),
+    show_pathway_id = reactive(input$show_pathway_id),
+    selectOrg = reactive(input$selectOrg),
+    selectGO = reactive(input$selectGO),
+    significantOverlaps = significantOverlaps
   )
 
   # Ask what the Genes column should contain, then hand over the real download

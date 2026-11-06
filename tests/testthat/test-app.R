@@ -63,7 +63,7 @@ test_that("app outputs for the yeast gene list are unchanged", {
     genes = out$`genes-conversionTable`,
     # Node x/y are layout positions, not results.
     network_kegg = lapply(
-      widget_data(out$enrichmentNetworkPlotInteractive, c("nodes", "edges")),
+      widget_data(out$`network-enrichmentNetworkPlotInteractive`, c("nodes", "edges")),
       function(df) df[setdiff(names(df), c("x", "y"))]
     ),
     genome = widget_data(out$`genome-genomePlotly`, "data"),

@@ -25,8 +25,8 @@ ui <- fluidPage(
         id = "tabs", type = "tabs",
         mod_enrichment_ui(), # enrichment tab
         mod_chart_ui(), # enrichment chart tab
-        mod_tree_ui(), # tree tab
-        mod_network_ui(), # network tab
+        mod_tree_ui("tree"), # tree tab
+        mod_network_ui("network"), # network tab
         mod_kegg_ui("kegg"), # KEGG tab
         mod_genes_ui("genes"), # genes tab
         mod_groups_ui("groups"), # groups tab
