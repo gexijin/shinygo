@@ -15,7 +15,6 @@
 #   gmtFiles       path of each species' database file
 #   keggSpeciesID  Ensembl dataset -> KEGG species code
 #   quotes         quotes shown in the progress messages
-#   GO_levels, level2Terms, annotatedSpeciesCounts   loaded but not used
 # ----------------------------------------------------------------------------
 
 
@@ -82,8 +81,6 @@ load_app_data <- function() {
   orgInfo <- orgInfo[order(orgInfo$group == paste0("STRINGv", STRING_DB_VERSION)), ]
   .app$orgInfo <- orgInfo
 
-  .app$annotatedSpeciesCounts <- sort(table(orgInfo$group)) # species per group
-
   # Species menu: "Best matching species" first, then the common species in a
   # fixed order. move2() moves element i to second place, so the species
   # below end up in reverse order: Human, Mouse, Rat, ...
@@ -127,10 +124,6 @@ load_app_data <- function() {
   i <- which(names(speciesChoice) == "Human")
   speciesChoice <- move2(i)
   .app$speciesChoice <- speciesChoice
-
-  .app$GO_levels <- dbGetQuery(.app$convert, "select distinct id,level from GO
-                                 WHERE GO = 'biological_process'")
-  .app$level2Terms <- .app$GO_levels[which(.app$GO_levels$level %in% c(2, 3)), 1] # level 2 and 3
 
   quotes <- dbGetQuery(.app$convert, " select * from quotes")
   quotes$quotes <- gsub("\\\"", "", quotes$quotes) # remove the quotes \"

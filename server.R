@@ -20,26 +20,6 @@ server <- function(input, output, session) {
 
   options(warn = -1)
 
-  welcome_modal <- shiny::modalDialog(
-    title = "Find ShinyGO helpful? Send us an email today so it will be here next year.",
-    tags$h3("We are still working on it until June 5th!"),
-    tags$p("We need your help to support our NIH grant proposal due June 5th."),
- 
-    tags$p(
-      " Please take a few minutes to send us an email today:  ",
-      a(
-        " gelabinfo@gmail.com",
-        href = "mailto:gelabinfo@gmail.com",
-        target = "_blank"
-      ), 
-      "  Thank you!"
-    ),
-
-    easyClose = FALSE,
-    size = "l"
-  )
-
-
   # Sidebar: species, menus and messages --------------------------------------
   # Pop-up modal for gene assembl information ----
   observeEvent(input$genome_assembl_button, {
@@ -122,7 +102,6 @@ server <- function(input, output, session) {
     selected_species_name(findSpeciesByIdName(selected))
   })
 
-  #shiny::showModal(welcome_modal)
   observe({
      # for gene ID example
 
@@ -685,61 +664,6 @@ server <- function(input, output, session) {
     selectOrg = reactive(input$selectOrg),
     minFDR = reactive(input$minFDR),
     conversionTableData = conversionTableData
-  )
-
-
-  # Not shown anywhere --------------------------------------------------------
-  output$species <- renderTable(
-    {
-      if (input$goButton == 0) {
-        return()
-      }
-      tem <- input$selectGO
-      tem <- input$selectOrg
-      tem <- input$minFDR
-      isolate({ # tem <- convertID(input$input_text,input$selectOrg );
-        withProgress(message = "Converting gene IDs", {
-          tem <- converted()
-          incProgress(1, detail = paste("Done"))
-        })
-
-        if (is.null(tem)) {
-          as.data.frame("ID not recognized.")
-        } else {
-          tem$speciesMatched
-        }
-      }) # avoid showing things initially
-    },
-    digits = -1,
-    spacing = "s",
-    striped = TRUE,
-    bordered = TRUE,
-    width = "auto",
-    hover = T
-  )
-
-  output$orgInfoTable <- DT::renderDataTable({
-    df <- .app$orgInfo[, c("ensembl_dataset", "name", "totalGenes")]
-    colnames(df) <- c("Ensembl/STRING-db ID", "Name (Assembly)", "Total Genes")
-    row.names(df) <- NULL
-    df
-  })
-
-  output$tableDetail <- renderTable(
-    {
-      if (input$goButton == 0) {
-        return()
-      }
-
-      tem <- significantOverlaps()
-      tem$x
-    },
-    digits = -1,
-    spacing = "s",
-    striped = TRUE,
-    bordered = TRUE,
-    width = "auto",
-    hover = T
   )
 
 

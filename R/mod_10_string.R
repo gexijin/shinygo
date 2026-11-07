@@ -55,8 +55,6 @@ mod_string_ui <- function(id) {
           shinyGO is retrieving a sub-network, calculating PPI enrichment,
           and generating custom URLs to the STRING website containing your genes. This can take 5 minutes. Patience will pay off! "),
       sliderInput(ns("nGenesPPI"), label = h5("Genes to include:"), min = 0, max = 400, value = 20, step = 10),
-      # ,htmlOutput("stringDB_network_link")
-      # ,tags$head(tags$style("#stringDB_network_link{color: blue; font-size: 15px;}"))
 
       plotOutput(ns("stringDB_network1"))
     )
@@ -241,18 +239,6 @@ mod_string_server <- function(id, goButton, selectOrg, minFDR, conversionTableDa
       }
     ) # downloadHandler
 
-    # observeEvent(input$STRING, {
-    #   taxonomyID = findTaxonomyID()
-    #   if(is.null(taxonomyID)) {
-    #     return(NULL)
-    #   } else {
-    #     stringDB_GO_enrichmentData(input = input,
-    #                                output = output,
-    #                                taxonomyID = taxonomyID)
-    #   } #end of if else
-    # })# end of observeEvent
-
-
     output$stringDB_network1 <- renderPlot(
       {
         if (goButton() == 0) {
@@ -299,52 +285,5 @@ mod_string_server <- function(id, goButton, selectOrg, minFDR, conversionTableDa
       width = 1000,
       height = 600
     )
-
-    output$stringDB_network_link <- renderUI({
-
-      tem <- input$STRINGdbGO
-      tem <- input$nGenesPPI
-      taxonomyID <- findTaxonomyID()
-      if (is.null(taxonomyID)) {
-        return(NULL)
-      }
-
-      ####################################
-      if (is.null(STRINGdb_geneList())) {
-        return(NULL)
-      }
-
-      isolate({
-        withProgress(message = sample(.app$quotes, 1), detail = "PPI Enrichment and link", {
-          # Intialization
-          string_db <- STRINGdb::STRINGdb$new(
-            version = STRING_DB_VERSION, species = taxonomyID,
-            score_threshold = 0, input_directory = ""
-          )
-          # upregulated
-          ids <- STRINGdb_geneList()[[1]]
-
-          ngenes1 <- input$nGenesPPI
-          if (ngenes1 < 2) ngenes1 <- 2
-
-          if (length(ids) > ngenes1) { # n of genes cannot be more than 400
-            ids <- ids[1:ngenes1]
-          }
-          incProgress(1 / 4)
-          link1 <- string_db$get_link(ids)
-
-
-          tem <- paste("<a href=\"", link1, "\" target=\"_blank\"> Click here for an interactive and annotated network </a>")
-          # 	Pval1 = string_db$get_ppi_enrichment( ids)
-          #    tem2 = paste("<h5> PPI enrichment P value: ")
-          # 	tem2 = paste0(tem2, sprintf("%-3.2e",Pval1[1]))
-          # 	tem2 = paste(tem2, ".</h5>  <h5> Small P value indicates more PPIs among your proteins than background. </h5>" )
-          # 	tem = paste(tem2,tem )
-          return(HTML(tem))
-
-          incProgress(1)
-        }) # progress
-      }) # isolate
-    })
   })
 }

@@ -15,9 +15,6 @@
 #   converted, geneInfoLookup the user's genes and their annotation
 #   converted_background, geneInfoLookup_background
 #                             the same for the background genes, if any
-#
-# Note: the plotly code reads input$MAwindowCutoff, which no part of the UI
-# defines, so it is always NULL.
 # ----------------------------------------------------------------------------
 
 
@@ -156,7 +153,6 @@ mod_genome_server <- function(id, goButton, selectOrg, converted, geneInfoLookup
       tem <- selectOrg()
       tem <- input$MAwindowSize
       tem <- input$MAwindowSteps
-      tem <- input$MAwindowCutoff
       tem <- input$ignoreNonCoding
       tem <- input$chRegionPval
       tem <- input$labelGeneSymbol
@@ -317,7 +313,6 @@ mod_genome_server <- function(id, goButton, selectOrg, converted, geneInfoLookup
 
               windowSize <- as.numeric(input$MAwindowSize) # Mb
               steps <- as.numeric(input$MAwindowSteps) # step size is then windowSize / steps
-              cutoff <- as.numeric(input$MAwindowCutoff)
 
               totalN <- dim(x0)[1] # total genes
               listN <- dim(subset(x0, Set == "List"))[1] # genes in list
