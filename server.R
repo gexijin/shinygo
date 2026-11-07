@@ -1,16 +1,25 @@
-####################################################
-# Author: Steven Ge Xijin.Ge@sdstate.edu
-# Lab: Ge Lab
-# R version 4.0.5
-# Project: ShinyGO v76
-# File: server.R
-# Purpose of file:main server logic of app
-# Start data: NA (mm-dd-yyyy)
-# Data last modified: 09-2-2021
-#######################################################
+# Main server
+#
+# Everything shared by the tabs: database setup, the sidebar (species picker,
+# menus, messages), gene ID conversion and the enrichment results. Each tab's
+# own code is in its module in R/mod_*.R; this file passes it the inputs and
+# reactives it needs. Originally by Steven Ge (Xijin.Ge@sdstate.edu), Ge Lab.
+#
+# The shared reactives the modules use:
+#   converted(), converted_background()   gene IDs from convertID()
+#   geneInfoLookup(), geneInfoLookup_background()   gene annotation
+#   conversionTableData()   the gene table (Genes and STRING tabs)
+#   significantOverlapsAll()   FindOverlap() results, all pathways
+#   significantOverlaps()      the same, filtered and sorted for display
+#   significantOverlaps2()     the same, prepared for the Tree tab
+# ----------------------------------------------------------------------------
+
 server <- function(input, output, session) {
+  # Setup ---------------------------------------------------------------------
   load_app_data() # database data shared by all sessions; only the first loads it
+
   options(warn = -1)
+
   welcome_modal <- shiny::modalDialog(
     title = "Find ShinyGO helpful? Send us an email today so it will be here next year.",
     tags$h3("We are still working on it until June 5th!"),
@@ -30,97 +39,8 @@ server <- function(input, output, session) {
     size = "l"
   )
 
-  #shiny::showModal(welcome_modal)
-  observe({
-     # for gene ID example
 
-    updateSelectizeInput(session, "userSpecieIDexample", choices = .app$speciesChoice, selected = .app$speciesChoice[1])
-
-    # load demo data when clicked
-
-    if (input$useDemo1) {
-      updateTextInput(session, "input_text", value = ExampleGeneList1)
-    }
-
-
-    # update species for STRING-db related API access
-    # tried to solve the double reflashing problems
-    # https://stackoverflow.com/questions/30991900/avoid-double-refresh-of-plot-in-shiny
-
-
-  })
-  # click_saved <- reactiveValues(GO = NULL)
-  # observeEvent(eventExpr = input$selectGO, handlerExpr = { click_saved$GO <- input$selectGO })
-
-  #-----------hide tabs when N/A----------------------------------
-  observeEvent(input$selectGO, {
-
-    # Show KEGG tab only when KEGG is selected  #disabled as of 4/8/2022. Confused biologists.
-    # if(input$selectGO == "KEGG") {
-    #  showTab(inputId = "tabs", target = "2")
-    # } else {
-    # hideTab(inputId = "tabs", target = "2")
-    # }
-
-    # Show Groups tab only when GOBP is selected
-    if (input$selectGO == "GOBP" | input$selectGO == "GOCC" | input$selectGO == "GOMF") {
-      showTab(inputId = "tabs", target = "7")
-    } else {
-      hideTab(inputId = "tabs", target = "7")
-    }
-  })
-
-  observe({
-    # Hide genome tab when STRINGdb is matched
-    showTab(inputId = "tabs", target = "8")
-
-    if (input$goButton != 0 && !is.null(converted()$speciesMatched)) {
-      if (grepl("STRING", converted()$speciesMatched[1, 1])) {
-        hideTab(inputId = "tabs", target = "8")
-      }
-    }
-  })
-
-  # this defines an reactive object that can be accessed from other rendering functions
-  converted <- reactive({
-    if (input$goButton == 0 | nchar(input$input_text) < 20) {
-      return()
-    }
-
-    converted <- convertID(input$input_text, input$selectOrg)
-
-    # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
-    if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
-      gene_info <- geneInfo(converted, input$selectOrg)
-
-      # geneInfo() returns a single-column "ID not recognized!" frame when
-      # nothing maps, most often because the gene list and the selected species
-      # do not match. That frame has no `duplicated` column, so filter(!duplicated)
-      # resolves to base::duplicated and aborts the reactive, taking every
-      # downstream tab with it. Warn and carry on instead.
-      if (is.data.frame(gene_info) && "duplicated" %in% colnames(gene_info)) {
-        converted$IDs <- gene_info |>
-          filter(!duplicated) |>
-          filter(ensembl_gene_id %in% converted$IDs) |>
-          pull(ensembl_gene_id)
-        #conversionTable is not changed. Not unique.
-      } else {
-        showNotification(
-          paste(
-            "No gene information found for these genes in",
-            findSpeciesByIdName(input$selectOrg),
-            "- please check that the selected species is correct. Reset and try again."
-          ),
-          id = "species_mismatch",
-          type = "warning",
-          duration = 15
-        )
-      }
-    }
-    converted
-
-  })
-
+  # Sidebar: species, menus and messages --------------------------------------
   # Pop-up modal for gene assembl information ----
   observeEvent(input$genome_assembl_button, {
     shiny::showModal(
@@ -202,6 +122,190 @@ server <- function(input, output, session) {
     selected_species_name(findSpeciesByIdName(selected))
   })
 
+  #shiny::showModal(welcome_modal)
+  observe({
+     # for gene ID example
+
+    updateSelectizeInput(session, "userSpecieIDexample", choices = .app$speciesChoice, selected = .app$speciesChoice[1])
+
+    # load demo data when clicked
+
+    if (input$useDemo1) {
+      updateTextInput(session, "input_text", value = ExampleGeneList1)
+    }
+
+
+    # update species for STRING-db related API access
+    # tried to solve the double reflashing problems
+    # https://stackoverflow.com/questions/30991900/avoid-double-refresh-of-plot-in-shiny
+
+
+  })
+
+  output$showGeneIDs4Species <- renderTable(
+    {
+      if (input$userSpecieIDexample == 0) {
+        return()
+      }
+      withProgress(message = "Retrieving gene IDs (2 minutes)", {
+        geneIDs <- showGeneIDs(species = input$userSpecieIDexample, nGenes = 10)
+        incProgress(1, detail = paste("Done"))
+      })
+      geneIDs
+    },
+    digits = -1,
+    spacing = "s",
+    striped = TRUE,
+    bordered = TRUE,
+    width = "auto",
+    hover = T
+  )
+
+  output$mapping_stats <- renderText({
+    req(input$goButton)
+    req(converted())
+    n_genes <- length(converted()$originalIDs)
+    n_mapped <- length(converted()$IDs)
+
+    paste0(n_genes, " IDs mapped to ", n_mapped, " (", round(n_mapped / n_genes * 100, 0), "%) ", tolower(converted()$species$name2), " genes.")
+  })
+
+  output$selectGO1 <- renderUI({ # gene set for pathway analysis
+    if (input$goButton == 0) {
+      return(NULL)
+    }
+
+    choices <- gmtCategory(converted(), input$selectOrg)
+    if (length(choices) > 12) { # more than 12 categories in human and mouse, we default to GOBP
+      selected <- "GOBP"
+    } else { # otherwise all gene sets
+      selected <- "All"
+    }
+    if ("KEGG" %in% choices) {
+      selected <- "KEGG"
+    }
+
+
+    selectInput("selectGO",
+      label = h5("Pathway database:"),
+      choices = choices,
+      selected = selected
+    )
+  })
+
+  # Species match message ---------- stole from Gavin's code 4/20/22
+  observe({
+    req(
+      input$selectOrg == .app$speciesChoice[[1]] # best matching species
+      && !is.null(converted()) # finished
+    )
+    showNotification(
+      ui = paste(
+        gsub("\\(.*", "", converted()$speciesMatched[1, ]),
+        ": is the best matching species. If that is incorrect,
+                     please use the dropdown to select
+                    your species."
+      ),
+      id = "species_match",
+      duration = NULL,
+      type = "error"
+    )
+  })
+
+  observe({
+    req(!is.null(significantOverlapsAll() )) # stop if null
+    req(input$goButton != 0)
+    req(significantOverlapsAll()$x[1,1] == "ID not recognized!" )
+
+    shiny::showModal(
+      shiny::modalDialog(
+        size = "s",
+        p("None of the gene IDs mapped to the IDs of the selected species.
+           From ShinyGO 0.80, you have to select the correct species first.
+           If you do not select, it defaults to human.
+          "),
+        easyClose = TRUE
+      )
+    )
+
+  })
+
+
+  # Show or hide tabs ---------------------------------------------------------
+  # click_saved <- reactiveValues(GO = NULL)
+  # observeEvent(eventExpr = input$selectGO, handlerExpr = { click_saved$GO <- input$selectGO })
+
+  #-----------hide tabs when N/A----------------------------------
+  observeEvent(input$selectGO, {
+
+    # Show KEGG tab only when KEGG is selected  #disabled as of 4/8/2022. Confused biologists.
+    # if(input$selectGO == "KEGG") {
+    #  showTab(inputId = "tabs", target = "2")
+    # } else {
+    # hideTab(inputId = "tabs", target = "2")
+    # }
+
+    # Show Groups tab only when GOBP is selected
+    if (input$selectGO == "GOBP" | input$selectGO == "GOCC" | input$selectGO == "GOMF") {
+      showTab(inputId = "tabs", target = "7")
+    } else {
+      hideTab(inputId = "tabs", target = "7")
+    }
+  })
+
+  observe({
+    # Hide genome tab when STRINGdb is matched
+    showTab(inputId = "tabs", target = "8")
+
+    if (input$goButton != 0 && !is.null(converted()$speciesMatched)) {
+      if (grepl("STRING", converted()$speciesMatched[1, 1])) {
+        hideTab(inputId = "tabs", target = "8")
+      }
+    }
+  })
+
+
+  # Gene ID conversion and gene information -----------------------------------
+  # this defines an reactive object that can be accessed from other rendering functions
+  converted <- reactive({
+    if (input$goButton == 0 | nchar(input$input_text) < 20) {
+      return()
+    }
+
+    converted <- convertID(input$input_text, input$selectOrg)
+
+    # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
+    if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
+      gene_info <- geneInfo(converted, input$selectOrg)
+
+      # geneInfo() returns a single-column "ID not recognized!" frame when
+      # nothing maps, most often because the gene list and the selected species
+      # do not match. That frame has no `duplicated` column, so filter(!duplicated)
+      # resolves to base::duplicated and aborts the reactive, taking every
+      # downstream tab with it. Warn and carry on instead.
+      if (is.data.frame(gene_info) && "duplicated" %in% colnames(gene_info)) {
+        converted$IDs <- gene_info |>
+          filter(!duplicated) |>
+          filter(ensembl_gene_id %in% converted$IDs) |>
+          pull(ensembl_gene_id)
+        #conversionTable is not changed. Not unique.
+      } else {
+        showNotification(
+          paste(
+            "No gene information found for these genes in",
+            findSpeciesByIdName(input$selectOrg),
+            "- please check that the selected species is correct. Reset and try again."
+          ),
+          id = "species_mismatch",
+          type = "warning",
+          duration = 15
+        )
+      }
+    }
+    converted
+
+  })
+
   geneInfoLookup <- reactive({
     if (input$goButton == 0) {
       return()
@@ -248,6 +352,68 @@ server <- function(input, output, session) {
     geneInfo(converted_background(), input$selectOrg) # uses converted gene ids thru converted() call
   })
 
+  conversionTableData <- reactive({
+    if (input$goButton == 0) {
+      return()
+    } # still have problems when geneInfo is not found!!!!!
+    tem <- input$selectGO
+    tem <- input$selectOrg
+    tem <- input$minFDR
+    isolate({
+      withProgress(message = sample(.app$quotes, 1), detail = "Looking up gene Info", {
+        tem <- converted()
+        incProgress(0.1)
+        tem2 <- geneInfoLookup()
+        incProgress(0.3)
+        incProgress(0.6)
+        if (is.null(tem)) {
+          # Must be assigned: the function ends in return(merged), so leaving
+          # this unassigned falls through to "object 'merged' not found" and
+          # the user gets a stack trace instead of the message.
+          merged <- as.data.frame("ID not recognized.")
+        } else {
+          # some STRINGdb species has geneInfo, alought incomplete.
+          if (dim(tem2)[1] <= 1 | grepl("STRINGdb", converted()$species$name2)) {
+            merged <- tem$conversionTable
+            ix <- which(colnames(merged) == "ensembl_gene_id")
+            colnames(merged)[ix] <- "STRINGdb ID"
+          } else { # if gene info is  available
+            #         if('chromosome_name' %in% colnames(tem2)) {
+            merged <- merge(tem$conversionTable, tem2, by = "ensembl_gene_id")
+
+            merged <- subset(merged, select = c(
+              User_input, symbol, ensembl_gene_id, entrezgene_id,
+              gene_biotype, Species, chromosome_name, start_position,
+              description, percentage_gc_content, transcript_count,
+              genomeSpan, cds_length, transcript_length, FiveUTR,
+              ThreeUTR, nExons
+            ))
+
+            tem3 <- as.data.frame(tem$originalIDs)
+            colnames(tem3) <- "User_input"
+            merged <- merge(merged, tem3, all = T)
+            merged$ensembl_gene_id[which(is.na(merged$ensembl_gene_id))] <- "Not mapped"
+            chrName <- suppressWarnings(as.numeric(as.character(merged$chromosome_name)))
+            merged <- merged[order(
+              merged$gene_biotype,
+              chrName,
+              merged$start_position
+            ), ]
+            merged$start_position <- merged$start_position / 1e6
+            colnames(merged)[1:9] <- c(
+              "Pasted", "Symbol", "Ensembl Gene ID", "Entrez",
+              "Type", "Species", "Chr", "Position (Mbp)", "Description"
+            )
+          }
+        }
+        incProgress(0.9)
+        return(merged)
+      })
+    }) # avoid showing things initially
+  })
+
+
+  # Enrichment results, shared by the tabs ------------------------------------
   significantOverlapsAll <- reactive({
     if (input$goButton == 0 | is.null(input$selectGO) | nchar(input$input_text) < 20) {
       return()
@@ -279,24 +445,6 @@ server <- function(input, output, session) {
         return(enrichment)
       })
     })
-  })
-
-  observe({
-    req(!is.null(significantOverlapsAll() )) # stop if null
-    req(input$goButton != 0)
-    req(significantOverlapsAll()$x[1,1] == "ID not recognized!" )
-
-    shiny::showModal(
-      shiny::modalDialog(
-        size = "s",
-        p("None of the gene IDs mapped to the IDs of the selected species.
-           From ShinyGO 0.80, you have to select the correct species first.
-           If you do not select, it defaults to human.
-          "),
-        easyClose = TRUE
-      )
-    )
-
   })
 
   # Filtering and ranking pathways
@@ -415,6 +563,132 @@ server <- function(input, output, session) {
     return(enrichment)
   })
 
+  significantOverlaps2 <- reactive({
+    if (input$goButton == 0) {
+      return()
+    }
+    tem <- input$input_text_b # just to make it re-calculate if user changes background
+
+    tem <- significantOverlaps()
+    if (dim(tem$x)[2] == 1) {
+      return(NULL)
+    }
+    tem <- tem$x
+    colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes", "Membership")
+    tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
+    tem$Direction <- "Diff"
+    # remove pathway ID  only in Ensembl species
+    if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
+      tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
+    }
+    tem
+  })
+
+
+  # Tabs (modules), in tab order ----------------------------------------------
+  # Enrichment tab
+  mod_enrichment_server(
+    "enrichment",
+    goButton = reactive(input$goButton),
+    input_text_b = reactive(input$input_text_b),
+    show_pathway_id = reactive(input$show_pathway_id),
+    selectOrg = reactive(input$selectOrg),
+    selectGO = reactive(input$selectGO),
+    genesColumnID = reactive(input$genesColumnID),
+    significantOverlaps = significantOverlaps,
+    significantOverlapsAll = significantOverlapsAll
+  )
+
+  # Chart tab. Returns the chart, which the test hook below also reads.
+  enrichChartObject <- mod_chart_server(
+    "chart",
+    goButton = reactive(input$goButton),
+    maxTerms = reactive(input$maxTerms),
+    selectGO = reactive(input$selectGO),
+    selectOrg = reactive(input$selectOrg),
+    show_pathway_id = reactive(input$show_pathway_id),
+    abbreviatePathway = reactive(input$abbreviatePathway),
+    ggplot2_theme = reactive(input$ggplot2_theme),
+    significantOverlaps = significantOverlaps
+  )
+
+  # Tree tab
+  mod_tree_server(
+    "tree",
+    goButton = reactive(input$goButton),
+    maxTerms = reactive(input$maxTerms),
+    significantOverlaps2 = significantOverlaps2
+  )
+
+  # Network tab
+  mod_network_server(
+    "network",
+    goButton = reactive(input$goButton),
+    input_text_b = reactive(input$input_text_b),
+    show_pathway_id = reactive(input$show_pathway_id),
+    selectOrg = reactive(input$selectOrg),
+    selectGO = reactive(input$selectGO),
+    significantOverlaps = significantOverlaps
+  )
+
+  # KEGG tab
+  mod_kegg_server(
+    "kegg",
+    goButton = reactive(input$goButton),
+    selectOrg = reactive(input$selectOrg),
+    selectGO = reactive(input$selectGO),
+    significantOverlaps = significantOverlaps,
+    converted = converted
+  )
+
+  # Genes tab
+  mod_genes_server(
+    "genes",
+    goButton = reactive(input$goButton),
+    selectOrg = reactive(input$selectOrg),
+    conversionTableData = conversionTableData
+  )
+
+  # Groups tab
+  mod_groups_server(
+    "groups",
+    goButton = reactive(input$goButton),
+    significantOverlaps = significantOverlaps
+  )
+
+  # Plots tab. Returns the density plots, which the test hook below also reads.
+  gene_density_plot <- mod_plots_server(
+    "plots",
+    goButton = reactive(input$goButton),
+    selectOrg = reactive(input$selectOrg),
+    ggplot2_theme = reactive(input$ggplot2_theme),
+    geneInfoLookup = geneInfoLookup,
+    converted_background = converted_background,
+    geneInfoLookup_background = geneInfoLookup_background
+  )
+
+  # Genome tab
+  mod_genome_server(
+    "genome",
+    goButton = reactive(input$goButton),
+    selectOrg = reactive(input$selectOrg),
+    converted = converted,
+    geneInfoLookup = geneInfoLookup,
+    converted_background = converted_background,
+    geneInfoLookup_background = geneInfoLookup_background
+  )
+
+  # STRING tab
+  mod_string_server(
+    "string",
+    goButton = reactive(input$goButton),
+    selectOrg = reactive(input$selectOrg),
+    minFDR = reactive(input$minFDR),
+    conversionTableData = conversionTableData
+  )
+
+
+  # Not shown anywhere --------------------------------------------------------
   output$species <- renderTable(
     {
       if (input$goButton == 0) {
@@ -444,216 +718,11 @@ server <- function(input, output, session) {
     hover = T
   )
 
-
-  # Species match message ---------- stole from Gavin's code 4/20/22
-  observe({
-    req(
-      input$selectOrg == .app$speciesChoice[[1]] # best matching species
-      && !is.null(converted()) # finished
-    )
-    showNotification(
-      ui = paste(
-        gsub("\\(.*", "", converted()$speciesMatched[1, ]),
-        ": is the best matching species. If that is incorrect,
-                     please use the dropdown to select
-                    your species."
-      ),
-      id = "species_match",
-      duration = NULL,
-      type = "error"
-    )
-  })
-
-  output$showGeneIDs4Species <- renderTable(
-    {
-      if (input$userSpecieIDexample == 0) {
-        return()
-      }
-      withProgress(message = "Retrieving gene IDs (2 minutes)", {
-        geneIDs <- showGeneIDs(species = input$userSpecieIDexample, nGenes = 10)
-        incProgress(1, detail = paste("Done"))
-      })
-      geneIDs
-    },
-    digits = -1,
-    spacing = "s",
-    striped = TRUE,
-    bordered = TRUE,
-    width = "auto",
-    hover = T
-  )
-
   output$orgInfoTable <- DT::renderDataTable({
     df <- .app$orgInfo[, c("ensembl_dataset", "name", "totalGenes")]
     colnames(df) <- c("Ensembl/STRING-db ID", "Name (Assembly)", "Total Genes")
     row.names(df) <- NULL
     df
-  })
-
-  output$mapping_stats <- renderText({
-    req(input$goButton)
-    req(converted())
-    n_genes <- length(converted()$originalIDs)
-    n_mapped <- length(converted()$IDs)
-
-    paste0(n_genes, " IDs mapped to ", n_mapped, " (", round(n_mapped / n_genes * 100, 0), "%) ", tolower(converted()$species$name2), " genes.")
-  })
-
-
-  conversionTableData <- reactive({
-    if (input$goButton == 0) {
-      return()
-    } # still have problems when geneInfo is not found!!!!!
-    tem <- input$selectGO
-    tem <- input$selectOrg
-    tem <- input$minFDR
-    isolate({
-      withProgress(message = sample(.app$quotes, 1), detail = "Looking up gene Info", {
-        tem <- converted()
-        incProgress(0.1)
-        tem2 <- geneInfoLookup()
-        incProgress(0.3)
-        incProgress(0.6)
-        if (is.null(tem)) {
-          # Must be assigned: the function ends in return(merged), so leaving
-          # this unassigned falls through to "object 'merged' not found" and
-          # the user gets a stack trace instead of the message.
-          merged <- as.data.frame("ID not recognized.")
-        } else {
-          # some STRINGdb species has geneInfo, alought incomplete.
-          if (dim(tem2)[1] <= 1 | grepl("STRINGdb", converted()$species$name2)) {
-            merged <- tem$conversionTable
-            ix <- which(colnames(merged) == "ensembl_gene_id")
-            colnames(merged)[ix] <- "STRINGdb ID"
-          } else { # if gene info is  available
-            #         if('chromosome_name' %in% colnames(tem2)) {
-            merged <- merge(tem$conversionTable, tem2, by = "ensembl_gene_id")
-
-            merged <- subset(merged, select = c(
-              User_input, symbol, ensembl_gene_id, entrezgene_id,
-              gene_biotype, Species, chromosome_name, start_position,
-              description, percentage_gc_content, transcript_count,
-              genomeSpan, cds_length, transcript_length, FiveUTR,
-              ThreeUTR, nExons
-            ))
-
-            tem3 <- as.data.frame(tem$originalIDs)
-            colnames(tem3) <- "User_input"
-            merged <- merge(merged, tem3, all = T)
-            merged$ensembl_gene_id[which(is.na(merged$ensembl_gene_id))] <- "Not mapped"
-            chrName <- suppressWarnings(as.numeric(as.character(merged$chromosome_name)))
-            merged <- merged[order(
-              merged$gene_biotype,
-              chrName,
-              merged$start_position
-            ), ]
-            merged$start_position <- merged$start_position / 1e6
-            colnames(merged)[1:9] <- c(
-              "Pasted", "Symbol", "Ensembl Gene ID", "Entrez",
-              "Type", "Species", "Chr", "Position (Mbp)", "Description"
-            )
-          }
-        }
-        incProgress(0.9)
-        return(merged)
-      })
-    }) # avoid showing things initially
-  })
-
-  # Genes tab
-  mod_genes_server(
-    "genes",
-    goButton = reactive(input$goButton),
-    selectOrg = reactive(input$selectOrg),
-    conversionTableData = conversionTableData
-  )
-
-  significantOverlaps2 <- reactive({
-    if (input$goButton == 0) {
-      return()
-    }
-    tem <- input$input_text_b # just to make it re-calculate if user changes background
-
-    tem <- significantOverlaps()
-    if (dim(tem$x)[2] == 1) {
-      return(NULL)
-    }
-    tem <- tem$x
-    colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes", "Membership")
-    tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
-    tem$Direction <- "Diff"
-    # remove pathway ID  only in Ensembl species
-    if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-      tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
-    }
-    tem
-  })
-
-  # Tree tab
-  mod_tree_server(
-    "tree",
-    goButton = reactive(input$goButton),
-    maxTerms = reactive(input$maxTerms),
-    significantOverlaps2 = significantOverlaps2
-  )
-
-
-  # Network tab
-  mod_network_server(
-    "network",
-    goButton = reactive(input$goButton),
-    input_text_b = reactive(input$input_text_b),
-    show_pathway_id = reactive(input$show_pathway_id),
-    selectOrg = reactive(input$selectOrg),
-    selectGO = reactive(input$selectGO),
-    significantOverlaps = significantOverlaps
-  )
-
-  # Enrichment tab
-  mod_enrichment_server(
-    "enrichment",
-    goButton = reactive(input$goButton),
-    input_text_b = reactive(input$input_text_b),
-    show_pathway_id = reactive(input$show_pathway_id),
-    selectOrg = reactive(input$selectOrg),
-    selectGO = reactive(input$selectGO),
-    genesColumnID = reactive(input$genesColumnID),
-    significantOverlaps = significantOverlaps,
-    significantOverlapsAll = significantOverlapsAll
-  )
-
-
-  # STRING tab
-  mod_string_server(
-    "string",
-    goButton = reactive(input$goButton),
-    selectOrg = reactive(input$selectOrg),
-    minFDR = reactive(input$minFDR),
-    conversionTableData = conversionTableData
-  )
-
-
-  output$selectGO1 <- renderUI({ # gene set for pathway analysis
-    if (input$goButton == 0) {
-      return(NULL)
-    }
-
-    choices <- gmtCategory(converted(), input$selectOrg)
-    if (length(choices) > 12) { # more than 12 categories in human and mouse, we default to GOBP
-      selected <- "GOBP"
-    } else { # otherwise all gene sets
-      selected <- "All"
-    }
-    if ("KEGG" %in% choices) {
-      selected <- "KEGG"
-    }
-
-
-    selectInput("selectGO",
-      label = h5("Pathway database:"),
-      choices = choices,
-      selected = selected
-    )
   })
 
   output$tableDetail <- renderTable(
@@ -673,61 +742,8 @@ server <- function(input, output, session) {
     hover = T
   )
 
-  # Groups tab
-  mod_groups_server(
-    "groups",
-    goButton = reactive(input$goButton),
-    significantOverlaps = significantOverlaps
-  )
 
-
-  # Plots tab. Returns the density plots, which the test hook below also reads.
-  gene_density_plot <- mod_plots_server(
-    "plots",
-    goButton = reactive(input$goButton),
-    selectOrg = reactive(input$selectOrg),
-    ggplot2_theme = reactive(input$ggplot2_theme),
-    geneInfoLookup = geneInfoLookup,
-    converted_background = converted_background,
-    geneInfoLookup_background = geneInfoLookup_background
-  )
-
-  # Chart tab. Returns the chart, which the test hook below also reads.
-  enrichChartObject <- mod_chart_server(
-    "chart",
-    goButton = reactive(input$goButton),
-    maxTerms = reactive(input$maxTerms),
-    selectGO = reactive(input$selectGO),
-    selectOrg = reactive(input$selectOrg),
-    show_pathway_id = reactive(input$show_pathway_id),
-    abbreviatePathway = reactive(input$abbreviatePathway),
-    ggplot2_theme = reactive(input$ggplot2_theme),
-    significantOverlaps = significantOverlaps
-  )
-
-
-  # KEGG tab
-  mod_kegg_server(
-    "kegg",
-    goButton = reactive(input$goButton),
-    selectOrg = reactive(input$selectOrg),
-    selectGO = reactive(input$selectGO),
-    significantOverlaps = significantOverlaps,
-    converted = converted
-  )
-
-
-  # Genome tab
-  mod_genome_server(
-    "genome",
-    goButton = reactive(input$goButton),
-    selectOrg = reactive(input$selectOrg),
-    converted = converted,
-    geneInfoLookup = geneInfoLookup,
-    converted_background = converted_background,
-    geneInfoLookup_background = geneInfoLookup_background
-  )
-
+  # Test hook -----------------------------------------------------------------
   # Test-only hook (ignored outside shinytest2): the Chart, Tree and Plots tabs
   # render as images, so tests/testthat/test-app.R reads the plot objects (and
   # the tree's input) instead.
