@@ -547,20 +547,7 @@ server <- function(input, output, session) {
       return()
     }
     tem <- input$input_text_b # just to make it re-calculate if user changes background
-
-    tem <- significantOverlaps()
-    if (dim(tem$x)[2] == 1) {
-      return(NULL)
-    }
-    tem <- tem$x
-    colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes", "Membership")
-    tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
-    tem$Direction <- "Diff"
-    # remove pathway ID  only in Ensembl species
-    if (!input$show_pathway_id && as.integer(input$selectOrg) > 0) {
-      tem$Pathways <- remove_pathway_id(tem$Pathways, input$selectGO)
-    }
-    tem
+    prepare_pathways(significantOverlaps(), input$show_pathway_id, input$selectOrg, input$selectGO)
   })
 
 

@@ -5,6 +5,7 @@
 #
 #   FindOverlap()        the enrichment analysis
 #   gmtCategory()        pathway databases available for a species (the menu)
+#   prepare_pathways()   results -> the table the Tree and Network tabs use
 #   hyperText()          pathway names -> clickable links
 #   remove_pathway_id()  "Path:hsa00270 Cysteine ..." -> "Cysteine ..."
 #   proper()             capitalise the first letter
@@ -402,6 +403,36 @@ gmtCategory <- function(converted, selectOrg) {
 
 
 # Display helpers -------------------------------------------------------------
+
+# The enrichment results as the Tree and Network tabs need them:
+#   - columns renamed to adj.Pval, nGenesList, nGenesCategor, Fold, Pathways,
+#     URL, Genes, Membership
+#   - link HTML removed from the pathway names
+#   - pathway IDs removed from the names, unless show_pathway_id is TRUE
+#     (Ensembl species only, selectOrg > 0)
+#   - names wrapped onto several lines if wrap is TRUE
+#   - a Direction column, always "Diff"
+# enrichment is FindOverlap()'s result as kept in significantOverlaps().
+# Returns NULL when there are no significant pathways.
+prepare_pathways <- function(enrichment, show_pathway_id, selectOrg, selectGO, wrap = FALSE) {
+  if (dim(enrichment$x)[2] == 1) {
+    return(NULL)
+  }
+  tem <- enrichment$x
+  colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes", "Membership")
+  tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
+
+  # remove pathway ID  only in Ensembl species
+  if (!show_pathway_id && as.integer(selectOrg) > 0) {
+    tem$Pathways <- remove_pathway_id(tem$Pathways, selectGO)
+  }
+  if (wrap) {
+    tem$Pathways <- wrap_strings(tem$Pathways) # default width of 30
+  }
+  tem$Direction <- "Diff"
+  tem
+}
+
 
 # Turn pathway names into links that open in a new tab, for the ones whose URL
 # starts with http: or https:. Returns textVector unchanged if the URLs are

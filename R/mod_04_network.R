@@ -18,8 +18,8 @@
 #   significantOverlaps  the enrichment results
 #
 # significantOverlaps3() and significantOverlaps4() prepare the pathways for
-# the interactive and the static network; they differ only in which "Wrap
-# text" box they read.
+# the interactive and the static network with prepare_pathways(); they differ
+# only in which "Wrap text" box they read.
 #
 # The interactive network and its downloads share network_vis_data() and
 # build_visnetwork() from fct_plots.R.
@@ -65,58 +65,26 @@ mod_network_ui <- function(id) {
 mod_network_server <- function(id, goButton, input_text_b, show_pathway_id, selectOrg,
                                selectGO, significantOverlaps) {
   moduleServer(id, function(input, output, session) {
-    # duplicate of the above, with the word wrapping. This is for use in the network plot
+    # The pathways for the interactive network, wrapped if "Wrap text" is ticked.
     significantOverlaps3 <- reactive({
       if (goButton() == 0) {
         return()
       }
       tem <- input_text_b() # just to make it re-calculate if user changes background
-
-      tem <- significantOverlaps()
-      if (dim(tem$x)[2] == 1) {
-        return(NULL)
-      }
-      tem <- tem$x
-      colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes", "Membership")
-      tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
-
-      # remove pathway ID  only in Ensembl species
-      if (!show_pathway_id() && as.integer(selectOrg()) > 0) {
-        tem$Pathways <- remove_pathway_id(tem$Pathways, selectGO())
-      }
-
-      if (input$wrapTextNetwork) {
-        tem$Pathways <- wrap_strings(tem$Pathways)
-      } # wrap long pathway names using default width of 30 10/21/19
-
-      tem$Direction <- "Diff"
-      tem
+      prepare_pathways(significantOverlaps(), show_pathway_id(), selectOrg(), selectGO(),
+        wrap = input$wrapTextNetwork
+      )
     })
 
-    # duplicate of the above for word wrapping in static networkplot
+    # The pathways for the static network, wrapped if its "Wrap text" is ticked.
     significantOverlaps4 <- reactive({
       if (goButton() == 0) {
         return()
       }
       tem <- input_text_b() # just to make it re-calculate if user changes background
-      tem <- significantOverlaps()
-      if (dim(tem$x)[2] == 1) {
-        return(NULL)
-      }
-      tem <- tem$x
-      colnames(tem) <- c("adj.Pval", "nGenesList", "nGenesCategor", "Fold", "Pathways", "URL", "Genes", "Membership")
-      tem$Pathways <- gsub(".*'_blank'>|</a>", "", tem$Pathways) # remove URL
-
-      # remove pathway ID  only in Ensembl species
-      if (!show_pathway_id() && as.integer(selectOrg()) > 0) {
-        tem$Pathways <- remove_pathway_id(tem$Pathways, selectGO())
-      }
-      if (input$wrapTextNetworkStatic) {
-        tem$Pathways <- wrap_strings(tem$Pathways)
-      } # wrap long pathway names using default width of 30 10/21/19
-
-      tem$Direction <- "Diff"
-      tem
+      prepare_pathways(significantOverlaps(), show_pathway_id(), selectOrg(), selectGO(),
+        wrap = input$wrapTextNetworkStatic
+      )
     })
 
     output$enrichmentNetworkPlot <- renderPlot(
