@@ -6,6 +6,8 @@
 #   enrichmentPlot()     Tree tab: clustering tree of enriched pathways
 #   enrichmentNetwork()  Network tab: network of enriched pathways
 #   enrich.net2()        builds (and optionally draws) that network
+#   network_vis_data()   that network -> visNetwork nodes and edges
+#   build_visnetwork()   the interactive network's layout and styling
 #   refine_ggplot2()     apply the user's chosen ggplot2 theme
 #   fake_plot()          placeholder plot that shows a message
 #   mark_significance()  0.000234 -> "P=0.00023 ***"
@@ -120,6 +122,42 @@ enrichmentNetwork <- function(enrichedTerms, layoutButton = 0, edge.cutoff = 5) 
     vertex.label.color = "black", show.legend = FALSE,
     layoutButton = layoutButton, edge.cutoff = edge.cutoff
   )
+}
+
+
+# Nodes and edges of an enrichmentNetwork() graph for visNetwork, with round
+# nodes sized by the number of genes. Used for the Network tab and its
+# downloads.
+network_vis_data <- function(g) {
+  data1 <- toVisNetworkData(g)
+  data1$nodes$shape <- "dot"
+  data1$nodes$size <- 5 + data1$nodes$size^2
+  data1
+}
+
+
+# The interactive network from network_vis_data(): Fruchterman-Reingold
+# layout, black-bordered nodes and grey edges. Shared by the Network tab and
+# its HTML download. Colour codes: https://www.rapidtables.com/web/color/RGB_Color.html
+build_visnetwork <- function(data1) {
+  visNetwork(nodes = data1$nodes, edges = data1$edges, height = "700px", width = "700px") %>%
+    visIgraphLayout(layout = "layout_with_fr") %>%
+    visNodes(
+      color = list(
+        border = "#000000",
+        highlight = "#FF8000"
+      ),
+      font = list(
+        color = "#000000",
+        size = 20
+      ),
+      borderWidth = 1,
+      shadow = list(enabled = TRUE, size = 10)
+    ) %>%
+    visEdges(
+      shadow = FALSE,
+      color = list(color = "#A9A9A9", highlight = "#FFD700")
+    )
 }
 
 

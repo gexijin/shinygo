@@ -20,6 +20,9 @@
 # significantOverlaps3() and significantOverlaps4() prepare the pathways for
 # the interactive and the static network; they differ only in which "Wrap
 # text" box they read.
+#
+# The interactive network and its downloads share network_vis_data() and
+# build_visnetwork() from fct_plots.R.
 # ----------------------------------------------------------------------------
 
 
@@ -136,40 +139,19 @@ mod_network_server <- function(id, goButton, input_text_b, show_pathway_id, sele
       }
     )
 
-    # note the same code is used twice as above. They need to be updated together!!!
+    # The graph for the interactive network and its downloads. A function, not
+    # a reactive(): enrichmentNetwork() sets the random seed that the layout
+    # step after it relies on, so each output builds the graph just before use.
+    network_graph <- function() {
+      enrichmentNetwork(significantOverlaps3(), layoutButton = input$layoutButton, edge.cutoff = input$edgeCutoff)
+    }
+
     output$enrichmentNetworkPlotInteractive <- renderVisNetwork({
       if (is.null(significantOverlaps3())) {
         return(NULL)
       }
 
-      g <- enrichmentNetwork(significantOverlaps3(), layoutButton = input$layoutButton, edge.cutoff = input$edgeCutoff)
-      data1 <- toVisNetworkData(g)
-
-      # Color codes: https://www.rapidtables.com/web/color/RGB_Color.html
-      data1$nodes$shape <- "dot"
-      # remove the color change of nodes
-      # data1$nodes <- subset(data1$nodes, select = -color)
-
-      data1$nodes$size <- 5 + data1$nodes$size^2
-      visNetwork(nodes = data1$nodes, edges = data1$edges, height = "700px", width = "700px") %>%
-        visIgraphLayout(layout = "layout_with_fr") %>%
-        visNodes(
-          color = list(
-            # background = "#32CD32",
-            border = "#000000",
-            highlight = "#FF8000"
-          ),
-          font = list(
-            color = "#000000",
-            size = 20
-          ),
-          borderWidth = 1,
-          shadow = list(enabled = TRUE, size = 10)
-        ) %>%
-        visEdges(
-          shadow = FALSE,
-          color = list(color = "#A9A9A9", highlight = "#FFD700")
-        ) %>%
+      build_visnetwork(network_vis_data(network_graph())) %>%
         visExport(
           type = "jpeg",
           name = "export-network",
@@ -183,37 +165,7 @@ mod_network_server <- function(id, goButton, input_text_b, show_pathway_id, sele
     output$enrichmentNetworkPlotInteractiveDownload <- downloadHandler(
       filename = "enrichmentPlotNetwork.html",
       content = function(file) {
-        # jpeg(file, width = 12, height = 12, units = 'in', res = 300, compression = 'lzw')
-
-        g <- enrichmentNetwork(significantOverlaps3(), layoutButton = input$layoutButton, edge.cutoff = input$edgeCutoff)
-        data1 <- toVisNetworkData(g)
-
-        # Color codes: https://www.rapidtables.com/web/color/RGB_Color.html
-        data1$nodes$shape <- "dot"
-        # remove the color change of nodes
-        # data1$nodes <- subset(data1$nodes, select = -color)
-
-        data1$nodes$size <- 5 + data1$nodes$size^2
-        g2 <-
-          visNetwork(nodes = data1$nodes, edges = data1$edges, height = "700px", width = "700px") %>%
-          visIgraphLayout(layout = "layout_with_fr") %>%
-          visNodes(
-            color = list(
-              # background = "#32CD32",
-              border = "#000000",
-              highlight = "#FF8000"
-            ),
-            font = list(
-              color = "#000000",
-              size = 20
-            ),
-            borderWidth = 1,
-            shadow = list(enabled = TRUE, size = 10)
-          ) %>%
-          visEdges(
-            shadow = FALSE,
-            color = list(color = "#A9A9A9", highlight = "#FFD700")
-          ) %>%
+        build_visnetwork(network_vis_data(network_graph())) %>%
           visSave(file = file, background = "white")
       }
     )
@@ -223,25 +175,16 @@ mod_network_server <- function(id, goButton, input_text_b, show_pathway_id, sele
         "network_nodes.csv"
       },
       content = function(file) {
-        g <- enrichmentNetwork(significantOverlaps3(), layoutButton = input$layoutButton, edge.cutoff = input$edgeCutoff)
-        data1 <- toVisNetworkData(g)
-        data1$nodes$shape <- "dot"
-        data1$nodes$size <- 5 + data1$nodes$size^2
-
-        write.csv(data1$nodes, file, row.names = FALSE)
+        write.csv(network_vis_data(network_graph())$nodes, file, row.names = FALSE)
       }
     )
+
     output$downloadEdges <- downloadHandler(
       filename = function() {
         "network_edges.csv"
       },
       content = function(file) {
-        g <- enrichmentNetwork(significantOverlaps3(), layoutButton = input$layoutButton, edge.cutoff = input$edgeCutoff)
-        data1 <- toVisNetworkData(g)
-        data1$nodes$shape <- "dot"
-        data1$nodes$size <- 5 + data1$nodes$size^2
-
-        write.csv(data1$edges, file, row.names = FALSE)
+        write.csv(network_vis_data(network_graph())$edges, file, row.names = FALSE)
       }
     )
   })
