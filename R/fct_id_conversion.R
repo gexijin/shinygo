@@ -7,6 +7,7 @@
 #   cleanGeneSet()          tidy a vector of IDs before lookup
 #   remove_gene_version()   ENSG00000211459.2 -> ENSG00000211459
 #   geneInfo()              annotation for every gene in a species
+#   drop_duplicate_genes()  keep one Ensembl ID per gene
 #   convertEnsembl2Entrez() Ensembl gene IDs -> Entrez IDs (for KEGG)
 #
 # Species IDs come from orgInfo: positive IDs are Ensembl genomes, negative
@@ -262,6 +263,18 @@ geneInfo <- function(converted, selectOrg) {
   Set[which(is.na(Set))] <- "Genome"
   Set[which(Set != "Genome")] <- "List"
   return(cbind(x, Set))
+}
+
+
+# Keep one Ensembl ID per gene: drop the IDs that geneInfo() marks as
+# duplicated (mostly the same gene on patched chromosomes). gene_info must be
+# geneInfo()'s full table for an Ensembl species, with its `duplicated` column.
+# The IDs come back in gene_info's order. The conversion table is not changed.
+drop_duplicate_genes <- function(ids, gene_info) {
+  gene_info |>
+    filter(!duplicated) |>
+    filter(ensembl_gene_id %in% ids) |>
+    pull(ensembl_gene_id)
 }
 
 

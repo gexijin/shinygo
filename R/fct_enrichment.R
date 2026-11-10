@@ -5,6 +5,8 @@
 #
 #   FindOverlap()        the enrichment analysis
 #   gmtCategory()        pathway databases available for a species (the menu)
+#   find_pathway_db()    which file in gmtFiles is the species' database
+#   filter_sort_pathways() FindOverlap() results -> the pathways shown
 #   prepare_pathways()   results -> the table the Tree and Network tabs use
 #   hyperText()          pathway names -> clickable links
 #   remove_pathway_id()  "Path:hsa00270 Cysteine ..." -> "Cysteine ..."
@@ -81,7 +83,7 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
 
   # Find the species' pathway database; totalGenes (orgInfo's 7th column) is
   # its number of genes, the default background size.
-  ix <- grep(converted$species[1, 1], .app$gmtFiles)
+  ix <- find_pathway_db(converted, selectOrg)
   totalGenes <- converted$species[1, 7]
 
   errorMessage <- list(
@@ -91,13 +93,7 @@ FindOverlap <- function(converted, gInfo, GO, selectOrg, convertedB = NULL, gInf
   if (length(ix) == 0) {
     return(errorMessage)
   }
-
-  # If a species was selected (not "BestMatch"), use it directly.
   if (selectOrg != .app$speciesChoice[[1]]) {
-    ix <- grep(findSpeciesById(selectOrg)[1, 1], .app$gmtFiles)
-    if (length(ix) == 0) {
-      return(idNotRecognized)
-    }
     totalGenes <- .app$orgInfo[which(.app$orgInfo$id == as.numeric(selectOrg)), 7]
   }
   pathway <- dbConnect(sqlite, .app$gmtFiles[ix], flags = SQLITE_RO)
@@ -363,17 +359,9 @@ gmtCategory <- function(converted, selectOrg) {
   if (length(querySet) == 0) {
     return(idNotRecognized)
   }
-  ix <- grep(converted$species[1, 1], .app$gmtFiles)
+  ix <- find_pathway_db(converted, selectOrg)
   if (length(ix) == 0) {
     return(idNotRecognized)
-  }
-
-  # If a species was selected (not "BestMatch"), use it directly.
-  if (selectOrg != .app$speciesChoice[[1]]) {
-    ix <- grep(findSpeciesById(selectOrg)[1, 1], .app$gmtFiles)
-    if (length(ix) == 0) {
-      return(idNotRecognized)
-    }
   }
   pathway <- dbConnect(sqlite, .app$gmtFiles[ix], flags = SQLITE_RO)
   geneSetCategory <- dbGetQuery(pathway, "select distinct * from categories ")
@@ -399,6 +387,144 @@ gmtCategory <- function(converted, selectOrg) {
 
   dbDisconnect(pathway)
   return(categoryChoices)
+}
+
+
+# Choose and order the pathways to show, from FindOverlap()'s results, using
+# the sidebar settings:
+#   minFDR            keep pathways with FDR below this
+#   sort_by           the "Sort by" menu (Select by FDR, sort by Fold
+#                     Enrichment; Sort by FDR; ...by Fold Enrichment, which
+#                     also drops pathways of min_gene_fold genes or fewer;
+#                     ...by Genes; ...by Category Name; ...by FDR & Fold
+#                     Enrichment, the average of the two ranks)
+#   maxTerms          number of pathways to keep
+#   remove_redundant  drop a pathway that shares more than
+#                     redudantGeneSetsRatio of its genes and over half of the
+#                     words in its name with a pathway ranked above it
+#   abbreviate        shorten "Positive regulation" to "Pos. reg." and so on
+#   progress          called with progress steps; incProgress in the app
+# Returns enrichment with $x filtered and sorted. If x holds a message instead
+# of results, enrichment is returned unchanged.
+filter_sort_pathways <- function(enrichment, minFDR, sort_by, maxTerms, remove_redundant,
+                                 abbreviate, progress = function(amount) NULL) {
+  if (dim(enrichment$x)[2] > 1) { # when there is no overlap, returns a data frame with 1 row and 1 column
+
+    # filter by FDR-------------------------------------------------------------
+    enrichment$x <- enrichment$x[enrichment$x[, 1] < minFDR, ]
+
+    progress(0.1)
+    # Sort and keep top pathways -------------------------------------------------------
+    if (sort_by == "Select by FDR, sort by Fold Enrichment") {
+      # sort by FDR
+      enrichment$x <- enrichment$x[order(enrichment$x[, 1]), ]
+      # filter/top 20
+      if (dim(enrichment$x)[1] > as.integer(maxTerms)) {
+        enrichment$x <- enrichment$x[1:as.integer(maxTerms), ]
+      }
+      # rank by fold
+      enrichment$x <- enrichment$x[order(enrichment$x[, 4], decreasing = TRUE), ]
+    } else {
+      if (sort_by == "Sort by FDR") {
+        enrichment$x <- enrichment$x[order(enrichment$x[, 1]), ]
+      }
+      if (sort_by == "Sort by Fold Enrichment") {
+        enrichment$x <- enrichment$x[order(enrichment$x[, 4], decreasing = TRUE), ]
+        # when sorting by fold, sometimes tiny pathways on top. Here we require at
+        # least 10 genes
+        enrichment$x <- enrichment$x[which(enrichment$x[, 3] > min_gene_fold), ]
+      }
+      if (sort_by == "Sort by Genes") {
+        enrichment$x <- enrichment$x[order(enrichment$x[, 2], decreasing = TRUE), ]
+      }
+      if (sort_by == "Sort by Category Name") {
+        enrichment$x <- enrichment$x[order(enrichment$x[, 5]), ]
+      }
+      if (sort_by == "Sort by FDR & Fold Enrichment") {
+        fdr_rank <- rank(enrichment$x[, 1]) # rank by FDR
+        fold_rank <- rank(-1 * enrichment$x[, 4]) # rank by fold_enrichment, descending
+        average_rank <- (fdr_rank + fold_rank) / 2
+        enrichment$x <- enrichment$x[order(average_rank), ]
+      }
+    }
+    progress(0.3)
+
+    # preliminary filtering to save time on string manipulations
+    if (dim(enrichment$x)[1] > 3 * as.integer(maxTerms)) {
+      enrichment$x <- enrichment$x[1:(3 * as.integer(maxTerms)), ]
+    }
+
+
+    # remove redudant gene sets-------------------------------------------
+    if (remove_redundant) reduced <- redudantGeneSetsRatio else reduced <- FALSE
+    progress(0.2)
+    # reduced=FALSE no filtering,  reduced = 0.9 filter sets overlap with 90%
+    if (reduced != FALSE && dim(enrichment$x)[1] > 5) {
+      n <- nrow(enrichment$x)
+      flag1 <- rep(TRUE, n)
+      # Membership as Ensembl ids, straight from FindOverlap(). The old
+      # split on " |  |   " was a workaround for parsing the display
+      # string; there is nothing to parse now.
+      geneLists <- lapply(enrichment$x$Membership, as.character)
+      pathways <- lapply(
+        enrichment$x$Pathway,
+        function(y) unlist(strsplit(as.character(y), " |  |   "))
+      )
+      for (i in 2:n) {
+        for (j in 1:(i - 1)) {
+          if (flag1[j]) { # skip if this one is already removed
+            ratio1 <- length(intersect(geneLists[[i]], geneLists[[j]])) /
+              length(union(geneLists[[i]], geneLists[[j]]))
+
+            # if sufficient genes overlap
+            if (ratio1 > reduced) {
+              # are pathway names similar
+              ratio2 <- length(intersect(pathways[[i]], pathways[[j]])) /
+                length(union(pathways[[i]], pathways[[j]]))
+              # if 50% of the words in the pathway name shared
+              if (ratio2 > 0.5) {
+                flag1[i] <- FALSE
+              }
+            }
+          }
+        }
+      }
+      # remove similar pathways
+      enrichment$x <- enrichment$x[which(flag1), ]
+    }
+    progress(0.9)
+
+    # keep top pathways
+    if (dim(enrichment$x)[1] > as.integer(maxTerms)) {
+      enrichment$x <- enrichment$x[1:as.integer(maxTerms), ]
+    }
+
+    if (abbreviate) {
+      enrichment$x[, 5] <- gsub("Positive regulation", "Pos. reg.", enrichment$x[, 5])
+      enrichment$x[, 5] <- gsub("Negative regulation", "Neg. reg.", enrichment$x[, 5])
+      enrichment$x[, 5] <- gsub("Regulation", "Reg.", enrichment$x[, 5])
+      enrichment$x[, 5] <- gsub(" regulation ", " reg. ", enrichment$x[, 5])
+      enrichment$x[, 5] <- gsub(" process ", " proc. ", enrichment$x[, 5])
+      enrichment$x[, 5] <- substr(enrichment$x[, 5], 1, 100) # maximum 80 characters
+    }
+  }
+  enrichment
+}
+
+
+# Which entry of .app$gmtFiles is the species' pathway database: the species
+# convertID() recorded in converted$species, or the selected species unless
+# selectOrg is "BestMatch". convertID() records the selected species, so both
+# name the same database. Returns integer(0) if there is no database file.
+find_pathway_db <- function(converted, selectOrg) {
+  ix <- grep(converted$species[1, 1], .app$gmtFiles)
+  if (length(ix) == 0) {
+    return(ix)
+  }
+  if (selectOrg != .app$speciesChoice[[1]]) {
+    ix <- grep(findSpeciesById(selectOrg)[1, 1], .app$gmtFiles)
+  }
+  ix
 }
 
 

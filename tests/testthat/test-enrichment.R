@@ -61,3 +61,25 @@ test_that("enrichment against a custom background is unchanged", {
   result <- run_enrichment("GOBP", convertedB = b$converted, gInfoB = b$gene_info)
   expect_snapshot_value(result$x, style = "deparse")
 })
+
+test_that("filter_sort_pathways() is unchanged for every sort option", {
+  skip_if_no_db()
+  result <- run_enrichment("GOBP")
+  shown <- function(...) {
+    x <- app_env()$filter_sort_pathways(result, ...)$x
+    data.frame(Pathway = x$Pathway, FDR = x[, 1])
+  }
+  sort_options <- c(
+    "Select by FDR, sort by Fold Enrichment", "Sort by FDR", "Sort by Fold Enrichment",
+    "Sort by Genes", "Sort by Category Name", "Sort by FDR & Fold Enrichment"
+  )
+  by_sort <- lapply(sort_options, function(option) {
+    shown(minFDR = 0.05, sort_by = option, maxTerms = "20", remove_redundant = TRUE, abbreviate = TRUE)
+  })
+  names(by_sort) <- sort_options
+  by_sort$`no redundancy removal, not abbreviated, 50 pathways` <- shown(
+    minFDR = 0.05, sort_by = "Select by FDR, sort by Fold Enrichment", maxTerms = "50",
+    remove_redundant = FALSE, abbreviate = FALSE
+  )
+  expect_snapshot_value(by_sort, style = "deparse")
+})

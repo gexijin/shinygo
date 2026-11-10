@@ -263,11 +263,7 @@ server <- function(input, output, session) {
       # resolves to base::duplicated and aborts the reactive, taking every
       # downstream tab with it. Warn and carry on instead.
       if (is.data.frame(gene_info) && "duplicated" %in% colnames(gene_info)) {
-        converted$IDs <- gene_info |>
-          filter(!duplicated) |>
-          filter(ensembl_gene_id %in% converted$IDs) |>
-          pull(ensembl_gene_id)
-        #conversionTable is not changed. Not unique.
+        converted$IDs <- drop_duplicate_genes(converted$IDs, gene_info)
       } else {
         showNotification(
           paste(
@@ -304,12 +300,10 @@ server <- function(input, output, session) {
     converted <- convertID(input$input_text_b, input$selectOrg)
     if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
       gene_info <- geneInfo(converted, input$selectOrg)
-      # remove ensembl gene IDs mapped to the same gene (marked as duplicated in gene info)
-      converted$IDs <- gene_info |>
-        filter(!duplicated) |>
-        filter(ensembl_gene_id %in% converted$IDs) |>
-        pull(ensembl_gene_id)
-      #conversionTable is not changed. Not unique.
+      # Note: unlike converted(), no check that gene_info has a `duplicated`
+      # column, so a background list that maps to nothing stops here with an
+      # error.
+      converted$IDs <- drop_duplicate_genes(converted$IDs, gene_info)
     }
 
     # if more than 100k genes, take samples
@@ -437,106 +431,15 @@ server <- function(input, output, session) {
 
     enrichment <- significantOverlapsAll()
     withProgress(message = sample(.app$quotes, 1), detail = "Sorting and filtering pathways", {
-      if (dim(enrichment$x)[2] > 1) { # when there is no overlap, returns a data frame with 1 row and 1 column
-
-        # filter by FDR-------------------------------------------------------------
-        enrichment$x <- enrichment$x[enrichment$x[, 1] < input$minFDR, ]
-
-        incProgress(0.1)
-        # Sort and keep top pathways -------------------------------------------------------
-        if (input$SortPathways == "Select by FDR, sort by Fold Enrichment") {
-          # sort by FDR
-          enrichment$x <- enrichment$x[order(enrichment$x[, 1]), ]
-          # filter/top 20
-          if (dim(enrichment$x)[1] > as.integer(input$maxTerms)) {
-            enrichment$x <- enrichment$x[1:as.integer(input$maxTerms), ]
-          }
-          # rank by fold
-          enrichment$x <- enrichment$x[order(enrichment$x[, 4], decreasing = TRUE), ]
-        } else {
-          if (input$SortPathways == "Sort by FDR") {
-            enrichment$x <- enrichment$x[order(enrichment$x[, 1]), ]
-          }
-          if (input$SortPathways == "Sort by Fold Enrichment") {
-            enrichment$x <- enrichment$x[order(enrichment$x[, 4], decreasing = TRUE), ]
-            # when sorting by fold, sometimes tiny pathways on top. Here we require at
-            # least 10 genes
-            enrichment$x <- enrichment$x[which(enrichment$x[, 3] > min_gene_fold), ]
-          }
-          if (input$SortPathways == "Sort by Genes") {
-            enrichment$x <- enrichment$x[order(enrichment$x[, 2], decreasing = TRUE), ]
-          }
-          if (input$SortPathways == "Sort by Category Name") {
-            enrichment$x <- enrichment$x[order(enrichment$x[, 5]), ]
-          }
-          if (input$SortPathways == "Sort by FDR & Fold Enrichment") {
-            fdr_rank <- rank(enrichment$x[, 1]) # rank by FDR
-            fold_rank <- rank(-1 * enrichment$x[, 4]) # rank by fold_enrichment, descending
-            average_rank <- (fdr_rank + fold_rank) / 2
-            enrichment$x <- enrichment$x[order(average_rank), ]
-          }
-        }
-        incProgress(0.3)
-
-        # preliminary filtering to save time on string manipulations
-        if (dim(enrichment$x)[1] > 3 * as.integer(input$maxTerms)) {
-          enrichment$x <- enrichment$x[1:(3 * as.integer(input$maxTerms)), ]
-        }
-
-
-        # remove redudant gene sets-------------------------------------------
-        if (input$removeRedudantSets) reduced <- redudantGeneSetsRatio else reduced <- FALSE
-        incProgress(0.2)
-        # reduced=FALSE no filtering,  reduced = 0.9 filter sets overlap with 90%
-        if (reduced != FALSE && dim(enrichment$x)[1] > 5) {
-          n <- nrow(enrichment$x)
-          flag1 <- rep(TRUE, n)
-          # Membership as Ensembl ids, straight from FindOverlap(). The old
-          # split on " |  |   " was a workaround for parsing the display
-          # string; there is nothing to parse now.
-          geneLists <- lapply(enrichment$x$Membership, as.character)
-          pathways <- lapply(
-            enrichment$x$Pathway,
-            function(y) unlist(strsplit(as.character(y), " |  |   "))
-          )
-          for (i in 2:n) {
-            for (j in 1:(i - 1)) {
-              if (flag1[j]) { # skip if this one is already removed
-                ratio1 <- length(intersect(geneLists[[i]], geneLists[[j]])) /
-                  length(union(geneLists[[i]], geneLists[[j]]))
-
-                # if sufficient genes overlap
-                if (ratio1 > reduced) {
-                  # are pathway names similar
-                  ratio2 <- length(intersect(pathways[[i]], pathways[[j]])) /
-                    length(union(pathways[[i]], pathways[[j]]))
-                  # if 50% of the words in the pathway name shared
-                  if (ratio2 > 0.5) {
-                    flag1[i] <- FALSE
-                  }
-                }
-              }
-            }
-          }
-          # remove similar pathways
-          enrichment$x <- enrichment$x[which(flag1), ]
-        }
-        incProgress(0.9)
-
-        # keep top pathways
-        if (dim(enrichment$x)[1] > as.integer(input$maxTerms)) {
-          enrichment$x <- enrichment$x[1:as.integer(input$maxTerms), ]
-        }
-
-        if (input$abbreviatePathway) {
-          enrichment$x[, 5] <- gsub("Positive regulation", "Pos. reg.", enrichment$x[, 5])
-          enrichment$x[, 5] <- gsub("Negative regulation", "Neg. reg.", enrichment$x[, 5])
-          enrichment$x[, 5] <- gsub("Regulation", "Reg.", enrichment$x[, 5])
-          enrichment$x[, 5] <- gsub(" regulation ", " reg. ", enrichment$x[, 5])
-          enrichment$x[, 5] <- gsub(" process ", " proc. ", enrichment$x[, 5])
-          enrichment$x[, 5] <- substr(enrichment$x[, 5], 1, 100) # maximum 80 characters
-        }
-      }
+      enrichment <- filter_sort_pathways(
+        enrichment,
+        minFDR = input$minFDR,
+        sort_by = input$SortPathways,
+        maxTerms = input$maxTerms,
+        remove_redundant = input$removeRedudantSets,
+        abbreviate = input$abbreviatePathway,
+        progress = incProgress
+      )
     }) # progress bar
 
     return(enrichment)
