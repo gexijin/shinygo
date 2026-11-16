@@ -50,7 +50,7 @@ mod_groups_server <- function(id, goButton, significantOverlaps) {
 
     output$downloadGrouping <- downloadHandler(
       filename = function() {
-        "GO_Gropus.csv"
+        "GO_Groups.csv"
       },
       content = function(file) {
         write.csv(significantOverlaps()$groupings, file, row.names = FALSE)

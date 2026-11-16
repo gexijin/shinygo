@@ -300,9 +300,23 @@ server <- function(input, output, session) {
     converted <- convertID(input$input_text_b, input$selectOrg)
     if(as.numeric(input$selectOrg) > 0) { # if it is ENSEMBL, not STRING species
       gene_info <- geneInfo(converted, input$selectOrg)
-      # Note: unlike converted(), no check that gene_info has a `duplicated`
-      # column, so a background list that maps to nothing stops here with an
-      # error.
+      # Nothing in the background list mapped (geneInfo() then returns a
+      # one-cell "ID not recognized!" frame with no `duplicated` column). Say
+      # so and drop the background, so the analysis uses the whole genome,
+      # instead of stopping with an error.
+      if (!(is.data.frame(gene_info) && "duplicated" %in% colnames(gene_info))) {
+        showNotification(
+          paste(
+            "None of the background genes were recognized for",
+            findSpeciesByIdName(input$selectOrg),
+            "- the analysis uses all genes in the genome as the background instead."
+          ),
+          id = "background_mismatch",
+          type = "warning",
+          duration = 15
+        )
+        return(NULL)
+      }
       converted$IDs <- drop_duplicate_genes(converted$IDs, gene_info)
     }
 

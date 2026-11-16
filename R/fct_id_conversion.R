@@ -9,6 +9,7 @@
 #   geneInfo()              annotation for every gene in a species
 #   drop_duplicate_genes()  keep one Ensembl ID per gene
 #   convertEnsembl2Entrez() Ensembl gene IDs -> Entrez IDs (for KEGG)
+#   showGeneIDs()           example gene IDs of each ID type, for a species
 #
 # Species IDs come from orgInfo: positive IDs are Ensembl genomes, negative
 # IDs are STRING-db genomes.
@@ -314,4 +315,67 @@ convertEnsembl2Entrez <- function(query, Species) {
   colnames(result) <- c("entrezgene_id", "ensembl_gene_id")
 
   return(result)
+}
+
+
+# Example gene IDs for each ID type in a species' database, for the "Gene IDs
+# examples" pop-up. Returns a data frame with one row per ID type: symbols
+# first, then RefSeq, then Ensembl, with descriptions (long gene names) last.
+showGeneIDs <- function(species, nGenes = 10) {
+  if (species == "BestMatch") {
+    return(as.data.frame("Select a species above."))
+  }
+  convert_species <- connect_convert_db_org(.app$datapath, species)
+
+  idTypes <- dbGetQuery(
+    convert_species,
+    paste0(" select DISTINCT idType from mapping;")
+  ) # slow
+
+  idTypes <- idTypes[, 1, drop = TRUE]
+
+  if (nGenes > 100) nGenes <- 100 # upper limit
+
+  # For each ID type, fetch 50 times as many IDs as needed and pick nGenes at
+  # random (500 IDs for the default 10).
+  for (k in 1:length(idTypes)) {
+    result <- dbGetQuery(
+      convert_species,
+      paste0(" select  id,idType from mapping where idType ='", idTypes[k], "'
+                                 LIMIT ", 50 * nGenes)
+    )
+    result <- result[sample(1:(50 * nGenes), nGenes), ]
+    if (k == 1) {
+      resultAll <- result
+    } else {
+      resultAll <- rbind(resultAll, result)
+    }
+  }
+
+  # Replace ID type numbers with their names.
+  idNames <- dbGetQuery(
+    convert_species,
+    paste0(
+      " SELECT id,idType from idIndex where id IN ('",
+      paste(idTypes, collapse = "', '"), "') "
+    )
+  )
+  dbDisconnect(convert_species)
+  resultAll <- merge(resultAll, idNames, by.x = "idType", by.y = "id")
+
+  # One row per ID type, with its examples joined by "; ".
+  resultAll <- resultAll %>%
+    select(id, idType.y) %>%
+    group_by(idType.y) %>%
+    summarise(Examples = paste0(id, collapse = "; "))
+
+  colnames(resultAll)[1] <- "ID Type"
+  # Each sort moves one kind to the top, so the last sort wins: symbols first,
+  # then RefSeq, then Ensembl. Descriptions go to the bottom.
+  resultAll <- resultAll[order(grepl("ensembl", resultAll$"ID Type"), decreasing = TRUE), ]
+  resultAll <- resultAll[order(grepl("refseq", resultAll$"ID Type"), decreasing = TRUE), ]
+  resultAll <- resultAll[order(grepl("symbol", resultAll$"ID Type"), decreasing = TRUE), ]
+  resultAll <- resultAll[order(grepl("description", resultAll$"ID Type"), decreasing = FALSE), ]
+
+  return(resultAll)
 }

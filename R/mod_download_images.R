@@ -48,9 +48,8 @@ mod_download_images_server <- function(id, filename, figure, width = 8, height =
       }
     })
 
-    # BUG NOTE: this checks input$width, not input$height, before using the height.
     figure_height <- reactive({
-      if (is.numeric(input$width)) {
+      if (is.numeric(input$height)) {
         return(max(min_size, min(max_size, input$height, na.rm = TRUE)))
       } else {
         return(height)
