@@ -305,126 +305,22 @@ mod_plots_server <- function(id, goButton, selectOrg, ggplot2_theme, geneInfoLoo
               # increase fonts
               theme_set(theme_gray(base_size = 20))
 
-              # Coding Sequence length
-              if (sum(!is.na(x2$cds_length)) >= minGenes && length(unique(x2$cds_length)) > 2 &&
-                length(which(x2$Set == "List")) > minGenes) {
-                Pval <- t.test(log(cds_length) ~ Set, data = x2)$p.value
-                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
-
-
-                p1 <- ggplot(x2, aes(cds_length, fill = Set, colour = Set)) +
-                  geom_density(alpha = 0.1) +
-                  scale_x_log10() +
-                  labs(x = "Coding sequence length (bp)", y = "Density") +
-                  annotate("text", x = min(x2$cds_length) + 50, y = .5, label = sig, size = 6) +
-                  # annotate("text",x= max(x2$cds_length), y = densMode(x2$cds_length)$y, label=sig, size=8, hjust=1) +
-                  guides(color = guide_legend(nrow = 2)) +
-                  theme(
-                    legend.key = element_rect(color = NA, fill = NA),
-                    legend.key.size = unit(1.2, "line")
-                  ) +
-                  theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
-              } else {
-                p1 <- fake_plot("Coding Sequence length plot not available.")
+              # Five log-scale charts, drawn the same way (density_panel() in
+              # fct_plots.R). The UTR charts leave out zero lengths.
+              panels <- list(
+                list("cds_length", "Coding sequence length (bp)", "Coding Sequence length plot not available.", 50, FALSE),
+                list("transcript_length", "Transcript length (bp)", "Transcript length plot not available.", 100, FALSE),
+                list("genomeSpan", "Genome span (bp)", "Genome span plot not available.", 200, FALSE),
+                list("FiveUTR", "5' UTR length (bp)", "5' UTR plot not available.", 5, TRUE),
+                list("ThreeUTR", "3' UTR length (bp)", "3' UTR plot not available.", 5, TRUE)
+              )
+              plots <- list()
+              for (k in seq_along(panels)) {
+                a <- panels[[k]]
+                plots[[k]] <- density_panel(x2, col = a[[1]], xlab = a[[2]], missing_text = a[[3]],
+                  label_offset = a[[4]], positive_only = a[[5]])
+                incProgress(k / 8)
               }
-
-              incProgress(1 / 8)
-
-              # Transcript length------------
-              if (sum(!is.na(x2$transcript_length)) >= minGenes &&
-                length(unique(x2$transcript_length)) > 2 &&
-                length(which(x2$Set == "List")) > minGenes) {
-                Pval <- t.test(log(transcript_length) ~ Set, data = x2[which(!is.na(x2$transcript_length)), ])$p.value
-                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
-
-                p2 <- ggplot(x2, aes(transcript_length, fill = Set, colour = Set)) +
-                  geom_density(alpha = 0.1) +
-                  scale_x_log10() +
-                  annotate("text", x = min(x2$transcript_length) + 100, y = .5, label = sig, size = 6) +
-                  # annotate("text",x= max(x2$transcript_length), y = densMode(x2$transcript_length)$y, label=sig, size=8, hjust=1) +
-                  labs(x = "Transcript length (bp)", y = "Density") +
-                  guides(color = guide_legend(nrow = 2)) +
-                  theme(
-                    legend.key = element_rect(color = NA, fill = NA),
-                    legend.key.size = unit(1.2, "line")
-                  ) +
-                  theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
-              } else {
-                p2 <- fake_plot("Transcript length plot not available.")
-              }
-              incProgress(2 / 8)
-
-              # Genome span ------------
-
-              if (sum(!is.na(x2$genomeSpan)) >= minGenes && length(unique(x2$genomeSpan)) > 2 && length(which(x2$Set == "List")) > minGenes) {
-                Pval <- t.test(log(genomeSpan) ~ Set, data = x2[which(!is.na(x2$genomeSpan)), ])$p.value
-                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
-                p3 <- ggplot(x2, aes(genomeSpan, fill = Set, colour = Set)) +
-                  geom_density(alpha = 0.1) +
-                  scale_x_log10() +
-                  annotate("text", x = min(x2$genomeSpan) + 200, y = .5, label = sig, size = 6) +
-                  # annotate("text",x= max(x2$genomeSpan), y = densMode(x2$genomeSpan)$y, label=sig, size=8, hjust=1) +
-                  labs(x = "Genome span (bp)", y = "Density") +
-                  guides(color = guide_legend(nrow = 2)) +
-                  theme(
-                    legend.key = element_rect(color = NA, fill = NA),
-                    legend.key.size = unit(1.2, "line")
-                  ) +
-                  theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
-              } else {
-                p3 <- fake_plot("Genome span plot not available.")
-              }
-
-              incProgress(3 / 8)
-
-              # 5' UTR ------------
-
-              if (sum(!is.na(x2$FiveUTR)) >= minGenes && length(unique(x2$FiveUTR)) > 2 && length(which(x2$Set == "List")) > minGenes) {
-                Pval <- t.test(log(FiveUTR) ~ Set, data = x2[which(!is.na(x2$FiveUTR) & x2$FiveUTR > 0), ])$p.value
-                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
-
-                p4 <- ggplot(x2, aes(FiveUTR, fill = Set, colour = Set)) +
-                  geom_density(alpha = 0.1) +
-                  scale_x_log10() +
-                  annotate("text",
-                    x = min(x2[which(!is.na(x2$FiveUTR) & x2$FiveUTR > 0), "FiveUTR"]) + 5,
-                    y = .5, label = sig, size = 6
-                  ) +
-                  # annotate("text",x= max(x2$FiveUTR), y = densMode(x2$FiveUTR)$y, label=sig, size=8, hjust=1) +
-                  labs(x = "5' UTR length (bp)", y = "Density") +
-                  guides(color = guide_legend(nrow = 2)) +
-                  theme(
-                    legend.key = element_rect(color = NA, fill = NA),
-                    legend.key.size = unit(1.2, "line")
-                  ) +
-                  theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
-              } else {
-                p4 <- fake_plot("5' UTR plot not available.")
-              }
-
-              incProgress(4 / 8)
-
-              # 3' UTR ------------
-              if (sum(!is.na(x2$ThreeUTR)) >= minGenes && length(unique(x2$ThreeUTR)) > 2 && length(which(x2$Set == "List")) > minGenes) {
-                Pval <- t.test(log(ThreeUTR) ~ Set, data = x2[which(!is.na(x2$ThreeUTR) & x2$ThreeUTR > 0), ])$p.value
-                sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
-
-                p5 <- ggplot(x2, aes(ThreeUTR, fill = Set, colour = Set)) +
-                  geom_density(alpha = 0.1) +
-                  scale_x_log10() +
-                  annotate("text", x = min(x2[which(!is.na(x2$ThreeUTR) & x2$ThreeUTR > 0), "ThreeUTR"]) + 5, y = .5, label = sig, size = 6) +
-                  # annotate("text",x= max(x2$ThreeUTR), y = densMode(x2$ThreeUTR)$y, label=sig, size=8, hjust=1) +
-                  labs(x = "3' UTR length (bp)", y = "Density") +
-                  guides(color = guide_legend(nrow = 2)) +
-                  theme(
-                    legend.key = element_rect(color = NA, fill = NA),
-                    legend.key.size = unit(1.2, "line")
-                  ) +
-                  theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
-              } else {
-                p5 <- fake_plot("3' UTR plot not available.")
-              }
-              incProgress(5 / 8)
 
               # GC content ------------
               # add this filter here to avoid, errors in t.test
@@ -451,38 +347,10 @@ mod_plots_server <- function(id, goButton, selectOrg, ggplot2_theme, geneInfoLoo
               }
 
               incProgress(6 / 8)
-              p1 <- refine_ggplot2(
-                p = p1,
-                gridline = FALSE,
-                ggplot2_theme = ggplot2_theme()
-              )
-              p2 <- refine_ggplot2(
-                p = p2,
-                gridline = FALSE,
-                ggplot2_theme = ggplot2_theme()
-              )
-              p3 <- refine_ggplot2(
-                p = p3,
-                gridline = FALSE,
-                ggplot2_theme = ggplot2_theme()
-              )
-              p4 <- refine_ggplot2(
-                p = p4,
-                gridline = FALSE,
-                ggplot2_theme = ggplot2_theme()
-              )
-              p5 <- refine_ggplot2(
-                p = p5,
-                gridline = FALSE,
-                ggplot2_theme = ggplot2_theme()
-              )
-              p6 <- refine_ggplot2(
-                p = p6,
-                gridline = FALSE,
-                ggplot2_theme = ggplot2_theme()
-              )
+              plots[[6]] <- p6
+              plots <- lapply(plots, refine_ggplot2, gridline = FALSE, ggplot2_theme = ggplot2_theme())
               incProgress(7 / 8, detail = paste("Done"))
-              gridExtra::grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 1)
+              do.call(gridExtra::grid.arrange, c(plots, ncol = 1))
             }
         })
       }) # isolate

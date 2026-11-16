@@ -9,6 +9,7 @@
 #   network_vis_data()   that network -> visNetwork nodes and edges
 #   build_visnetwork()   the interactive network's layout and styling
 #   refine_ggplot2()     apply the user's chosen ggplot2 theme
+#   density_panel()      one Plots-tab density chart (log scale, with t-test)
 #   fake_plot()          placeholder plot that shows a message
 #   mark_significance()  0.000234 -> "P=0.00023 ***"
 #   wrap_strings()       wrap long labels onto several lines
@@ -326,6 +327,41 @@ refine_ggplot2 <- function(p, gridline, ggplot2_theme = "light") {
   }
 
   return(p)
+}
+
+# One density chart for the Plots tab: a gene characteristic (column col of
+# x2, on a log scale) for the user's genes against the background, with the
+# t-test P value of the log values written near the left edge.
+#   xlab           x-axis title
+#   missing_text   shown instead when there are too few genes with a value
+#   label_offset   how far right of the smallest value to put the P value
+#   positive_only  leave out zero values (UTR lengths) from the test and label
+density_panel <- function(x2, col, xlab, missing_text, label_offset, positive_only = FALSE) {
+  if (!(sum(!is.na(x2[[col]])) >= minGenes && length(unique(x2[[col]])) > 2 &&
+    length(which(x2$Set == "List")) > minGenes)) {
+    return(fake_plot(missing_text))
+  }
+  if (positive_only) {
+    tested <- x2[which(!is.na(x2[[col]]) & x2[[col]] > 0), ]
+    label_x <- min(tested[[col]]) + label_offset
+  } else {
+    tested <- x2[which(!is.na(x2[[col]])), ]
+    label_x <- min(x2[[col]]) + label_offset
+  }
+  Pval <- t.test(as.formula(paste0("log(", col, ") ~ Set")), data = tested)$p.value
+  sig <- mark_significance(Pval, PvalGeneInfo2, PvalGeneInfo1, PvalGeneInfo)
+
+  ggplot(x2, aes(.data[[col]], fill = Set, colour = Set)) +
+    geom_density(alpha = 0.1) +
+    scale_x_log10() +
+    annotate("text", x = label_x, y = .5, label = sig, size = 6) +
+    labs(x = xlab, y = "Density") +
+    guides(color = guide_legend(nrow = 2)) +
+    theme(
+      legend.key = element_rect(color = NA, fill = NA),
+      legend.key.size = unit(1.2, "line")
+    ) +
+    theme(plot.margin = unit(c(0, 0, 1, 0), "cm"))
 }
 
 # An empty plot with a message in the middle, e.g. "Not available.", for when
